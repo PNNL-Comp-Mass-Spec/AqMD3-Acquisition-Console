@@ -21,12 +21,16 @@ add_executable (AqMD3_console
 	src/acquisitionbuffer.cpp
 	src/streamingcontext.cpp
 	src/server.cpp
+	src/cstzs1context.cpp
+	src/cstcontext.cpp
 	include/digitizer.h
 	include/server.h
 	include/acquisitionbufferpool.h
 	include/acquisitionbuffer.h
 	include/streamingcontext.h
 	Include/server.h
+	Include/cstzs1context.h
+	Include/cstcontext.h
 )
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)
 target_link_libraries(AqMD3_console PRIVATE protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite)
