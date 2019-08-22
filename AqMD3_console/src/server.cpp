@@ -1,5 +1,4 @@
 #include "../include/server.h"
-//#include "../include/message.pb.h"
 #include "../include/digitizer.h"
 #include "../include/acquisitionbufferpool.h"
 

@@ -19,13 +19,13 @@ add_executable (AqMD3_console
 	src/server.cpp
 	src/acquisitionbufferpool.cpp
 	src/acquisitionbuffer.cpp
-	src/acquisitioncontext.cpp
+	src/streamingcontext.cpp
 	src/server.cpp
 	include/digitizer.h
 	include/server.h
 	include/acquisitionbufferpool.h
 	include/acquisitionbuffer.h
-	include/acquisitioncontext.h
+	include/streamingcontext.h
 	Include/server.h
 )
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)

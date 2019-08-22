@@ -1,7 +1,7 @@
-#ifndef  DIGITIZER_H
+#ifndef DIGITIZER_H
 #define DIGITIZER_H
 
-#include "acquisitioncontext.h"
+#include "streamingcontext.h"
 #include "acquisitionbufferpool.h"
 #include "acquireddata.h"
 #include "AqMD3.h"
