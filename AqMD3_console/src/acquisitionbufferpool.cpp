@@ -4,7 +4,7 @@ AcquisitionBuffer* AcquisitionBufferPool::next_available()
 {
 	if (available.size() == 0)
 		return nullptr; //throw exception
-	
+
 	AcquisitionBuffer* buf = available.front();
 	available.pop_front();
 

@@ -5,19 +5,31 @@
 #include "AqMD3.h"
 
 #include <chrono>
+#include <string>
 
 class StreamingContext {
 private:
-	ViSession session;
+	ViSession* session;
 	AcquisitionBufferPool data;
 	AcquisitionBufferPool markers;
-public:
-	StreamingContext(ViSession& session, AcquisitionBufferPool &data, AcquisitionBufferPool &markers)
-		: session(session), data(data), markers(markers)
-	{}
+	std::string markersChannel;
+	std::string samplesChannel;
 
-	virtual AcquiredData* acquire(ViConstString dataStream, ViConstString markerStream, int32_t triggers,
-		std::chrono::milliseconds timeoutMs) = 0;
+public:
+	StreamingContext(ViSession* session, AcquisitionBufferPool &data, AcquisitionBufferPool &markers,
+		std::string markersChannel, std::string samplesChannel) :
+			session(session),
+			data(data),
+			markers(markers),
+			markersChannel(markersChannel),
+			samplesChannel(samplesChannel)
+	{}
+	~StreamingContext()
+	{
+		delete session;
+	}
+
+	virtual std::unique_ptr<AcquiredData> acquire(int32_t triggers, std::chrono::milliseconds timeoutMs) = 0;
 
 	void start();
 	void stop();

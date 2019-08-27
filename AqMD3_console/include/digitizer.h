@@ -8,19 +8,22 @@
 #include <tuple>
 #include <memory>
 #include <chrono>
+#include <string>
 
 class Digitizer {
 private:
-	ViChar *digitizer;
-	ViChar *options;
+	std::string digitizer;
+	std::string options;
+
+public:
+	std::unique_ptr<StreamingContext> configure_cst();
+	std::unique_ptr<StreamingContext> configure_cst_zs1();
 
 public:
 	Digitizer() :
 		digitizer("PXI3::0::0::INSTR"),
 		options("Simulate=false, DriverSetup= Model=SA220P")
 	{}
-
-	ViSession& configure();
 };
 
 #endif // ! DIGITIZER_H

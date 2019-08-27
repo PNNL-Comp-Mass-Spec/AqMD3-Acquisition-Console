@@ -1,31 +1,68 @@
 #include "../include/acquisitionbuffer.h"
 
+int AcquisitionBuffer::get_size()
+{
+	return data.size();
+}
+
 int AcquisitionBuffer::get_id()
 {
 	return id;
 }
 
-int AcquisitionBuffer::space_available()
+int AcquisitionBuffer::get_available()
 {
-	return capacity - count;
+	return data.size() - acquired_index - offset;
 }
 
-int32_t* AcquisitionBuffer::get_raw()
+int AcquisitionBuffer::get_unprocessed()
 {
-	return &data[count];
+	return acquired_index - processed_index - offset;
 }
 
-int32_t* AcquisitionBuffer::get_raw_at(int indx)
+int AcquisitionBuffer::get_processed()
 {
-	return &data[count];
+	return processed_index;
 }
 
-void AcquisitionBuffer::reduce_available(int num)
+inline int AcquisitionBuffer::get_acquired()
 {
-	capacity += num;
+	return acquired_index;
+}
+
+int32_t* AcquisitionBuffer::get_raw_data()
+{
+	return data.data();
+}
+
+int32_t* AcquisitionBuffer::get_raw_unprocessed()
+{
+	return &data[processed_index + offset];
+}
+
+int32_t* AcquisitionBuffer::get_raw_unaquired()
+{
+	return &data[acquired_index + offset];
+}
+
+void AcquisitionBuffer::advance_processed(int num)
+{
+	processed_index += num;
+}
+
+void AcquisitionBuffer::advance_acquired(int num)
+{
+	acquired_index += num;
+}
+
+void AcquisitionBuffer::advance_offset(int num)
+{
+	offset += num;
 }
 
 void AcquisitionBuffer::reset()
 {
-	count = 0;
+	processed_index = 0;
+	acquired_index = 0;
+	offset = 0;
 }

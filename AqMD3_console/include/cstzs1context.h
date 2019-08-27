@@ -5,12 +5,12 @@
 
 class CstZm1Context : public StreamingContext {
 public:
-	CstZm1Context(ViSession& session, AcquisitionBufferPool &data, AcquisitionBufferPool &markers)
-		: StreamingContext(session, data, markers)
+	CstZm1Context(ViSession* session, AcquisitionBufferPool &data, AcquisitionBufferPool &markers,
+		std::string markersChannel, std::string samplesChannel)
+		: StreamingContext(session, data, markers, markersChannel, samplesChannel)
 	{}
 
-	AcquiredData* acquire(ViConstString dataStream, ViConstString markerStream, int32_t triggers,
-		std::chrono::milliseconds timeoutMs) override;
+	std::unique_ptr<AcquiredData> acquire(int32_t triggers, std::chrono::milliseconds timeoutMs) override;
 };
 
 #endif // !CST_ZS1_CONTEXT_H

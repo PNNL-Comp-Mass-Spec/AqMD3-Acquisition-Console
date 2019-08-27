@@ -95,7 +95,7 @@ void digitizer_worker(zmq::socket_t &pusher, Digitizer &digitizer, std::conditio
 
 	int triggers = 5000;
 
-	auto session = digitizer.configure();
+	auto session = digitizer.configure_cst();
 
 	char sampleStreamName[] = "StreamCh1";
 	char markerStreamName[] = "MarkersCh1";

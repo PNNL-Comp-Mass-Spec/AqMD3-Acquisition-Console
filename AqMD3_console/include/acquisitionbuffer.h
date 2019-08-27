@@ -3,26 +3,36 @@
 
 #include <vector>
 
+// split into producer and consumer interfaces
 class AcquisitionBuffer {
 private:
 	int id;
 	std::vector<int32_t> data;
-	int capacity;
-	int count;
+	int acquired_index;
+	int processed_index;
+	int offset;
 
 public:
 	AcquisitionBuffer(int id, size_t size) :
 		id(id),
 		data(size),
-		capacity(size),
-		count(0)
+		acquired_index(0),
+		processed_index(0),
+		offset(0)
 	{}
 
+	int get_size();
 	int get_id();
-	int space_available();
-	int32_t* get_raw();
-	int32_t* get_raw_at(int indx);
-	void reduce_available(int num);
+	int get_available();
+	int get_unprocessed();
+	int get_processed();
+	int get_acquired();
+	int32_t* get_raw_data();
+	int32_t* get_raw_unprocessed();
+	int32_t* get_raw_unaquired();
+	void advance_offset(int num);
+	void advance_processed(int num);
+	void advance_acquired(int num);
 	void reset();
 };
 
