@@ -9,8 +9,8 @@ find_package(cppzmq CONFIG REQUIRED)
 find_package(protobuf CONFIG REQUIRED)
 find_package(Snappy CONFIG REQUIRED)
 
-include_directories("C:/Program Files/IVI Foundation/IVI/Include")
-link_directories("C:/Program Files/IVI Foundation/IVI/Lib_x64/msc")
+#include_directories("C:/Program Files/IVI Foundation/IVI/Include")
+#link_directories("C:/Program Files/IVI Foundation/IVI/Lib_x64/msc")
 
 # Add source to this project's executable.
 add_executable (AqMD3_console 
@@ -33,8 +33,12 @@ add_executable (AqMD3_console
 	Include/cstcontext.h
 )
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)
-target_link_libraries(AqMD3_console PRIVATE protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite)
-target_link_libraries(AqMD3_console PRIVATE AqMD3)
+target_link_libraries(AqMD3_console PRIVATE protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite)#
 target_link_libraries(AqMD3_console PRIVATE Snappy::snappy)
+
+target_link_libraries(AqMD3_console PRIVATE AqMD3)
+
+target_include_directories(AqMD3_console PUBLIC ${PROJECT_SOURCE_DIR}/include/AqMD3)
+target_link_libraries(AqMD3_console PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/AqMD3.lib)
 
 target_link_libraries ( AqMD3_console PUBLIC i::uimf)
