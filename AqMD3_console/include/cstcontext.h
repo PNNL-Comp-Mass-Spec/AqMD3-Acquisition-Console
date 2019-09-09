@@ -3,14 +3,14 @@
 
 #include "streamingcontext.h"
 
-class CstContext : public StreamingContext {
+class CstContext/* : public StreamingContext */ {
 public:
-	CstContext(ViSession* session, AcquisitionBufferPool &data, AcquisitionBufferPool &markers,
+	CstContext(ViSession session, AcquisitionBufferPool *samples, AcquisitionBufferPool *markers,
 		std::string markersChannel, std::string samplesChannel)
-		: StreamingContext(session, data, markers, markersChannel, samplesChannel)
+		//: StreamingContext(session, samples, markers, markersChannel, samplesChannel)
 	{}
 
-	std::unique_ptr<AcquiredData> acquire(int32_t triggers, std::chrono::milliseconds timeoutMs) override;
+	//AcquiredData acquire(int32_t triggers, std::chrono::milliseconds timeoutMs) override;
 };
 
 #endif // !CST_CONTEXT_H

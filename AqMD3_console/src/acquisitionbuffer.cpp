@@ -25,7 +25,7 @@ int AcquisitionBuffer::get_processed()
 	return processed_index;
 }
 
-inline int AcquisitionBuffer::get_acquired()
+int AcquisitionBuffer::get_acquired()
 {
 	return acquired_index;
 }
@@ -65,4 +65,9 @@ void AcquisitionBuffer::reset()
 	processed_index = 0;
 	acquired_index = 0;
 	offset = 0;
+}
+
+void AcquisitionBuffer::reset_processed() 
+{
+	processed_index = 0;
 }

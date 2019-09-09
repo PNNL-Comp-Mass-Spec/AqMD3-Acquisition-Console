@@ -2,7 +2,14 @@
 #include "../include/digitizer.h"
 #include "../include/acquisitionbufferpool.h"
 
+#define NOMINMAX 
+#undef min
+#undef max
+#include "../include/message.pb.h"
+
+#include <queue>
 #include <thread>
+#include <numeric>
 
 static void RespondAck(zmq::socket_t &router, std::string &client) {
 	/* begin response */
@@ -44,9 +51,9 @@ static std::tuple<std::string, std::vector<std::string>> GetResponse(zmq::socket
 	return std::make_tuple(client, vec);
 }
 
-void Server::run() {
+void Server::run() 
+{
 	should_run = true;
-	Digitizer dig;
 
 	zmq::socket_t router(context, ZMQ_ROUTER);
 	zmq::socket_t publisher(context, ZMQ_PUB);
@@ -87,28 +94,4 @@ void Server::run() {
 
 void Server::stop() {
 	should_run = false;
-}
-
-void digitizer_worker(zmq::socket_t &pusher, Digitizer &digitizer, std::condition_variable &sig, std::mutex &lockable) {
-	std::unique_lock<std::mutex> lock(lockable);
-	sig.wait(lock);
-
-	int triggers = 5000;
-
-	auto session = digitizer.configure_cst();
-
-	char sampleStreamName[] = "StreamCh1";
-	char markerStreamName[] = "MarkersCh1";
-
-	for (int i = 0; i < 10; i++)
-	{
-		//auto result = digitizer.acquire(
-		//	session,
-		//	*data,
-		//	*markers,
-		//	std::chrono::milliseconds(1),
-		//	sampleStreamName,
-		//	markerStreamName,
-		//	10000);
-	}
 }

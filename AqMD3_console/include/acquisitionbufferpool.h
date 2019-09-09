@@ -17,8 +17,9 @@ public:
 		available(count)
 	{
 		for (int i = 0; i < count; i++)
-			available.push_front(new AcquisitionBuffer(i, buf_size));
+			available.push_front(new AcquisitionBuffer(i, buf_size));		
 	}
+
 	~AcquisitionBufferPool()
 	{
 		for (auto& buf : available)

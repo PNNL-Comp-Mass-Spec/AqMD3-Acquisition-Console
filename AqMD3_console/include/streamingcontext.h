@@ -4,32 +4,32 @@
 #include "acquireddata.h"
 #include "AqMD3.h"
 
+#include <memory>
 #include <chrono>
 #include <string>
 
 class StreamingContext {
-private:
-	ViSession* session;
-	AcquisitionBufferPool data;
-	AcquisitionBufferPool markers;
+protected:
+	ViSession session;
+	AcquisitionBufferPool *samples;
+	AcquisitionBufferPool *markers;
 	std::string markersChannel;
 	std::string samplesChannel;
 
 public:
-	StreamingContext(ViSession* session, AcquisitionBufferPool &data, AcquisitionBufferPool &markers,
+	StreamingContext(ViSession session, AcquisitionBufferPool *samples, AcquisitionBufferPool *markers,
 		std::string markersChannel, std::string samplesChannel) :
 			session(session),
-			data(data),
+			samples(samples),
 			markers(markers),
 			markersChannel(markersChannel),
 			samplesChannel(samplesChannel)
 	{}
-	~StreamingContext()
-	{
-		delete session;
+	~StreamingContext() {
+		delete samples, markers;
 	}
 
-	virtual std::unique_ptr<AcquiredData> acquire(int32_t triggers, std::chrono::milliseconds timeoutMs) = 0;
+	virtual AcquiredData acquire(int32_t triggers, std::chrono::milliseconds timeoutMs) = 0;
 
 	void start();
 	void stop();
