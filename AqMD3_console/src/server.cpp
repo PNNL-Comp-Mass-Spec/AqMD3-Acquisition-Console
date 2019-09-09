@@ -1,33 +1,32 @@
 #include "../include/server.h"
-#include "../include/digitizer.h"
-#include "../include/acquisitionbufferpool.h"
 
 #define NOMINMAX 
 #undef min
 #undef max
 #include "../include/message.pb.h"
 
-#include <queue>
-#include <thread>
-#include <numeric>
+#include <map>
 
-static void RespondAck(zmq::socket_t &router, std::string &client) {
+inline void Server::respond(std::string &client, std::string response) {
 	/* begin response */
 	// addr frame
 	zmq::message_t client_addr_frame(client.size());
 	memcpy((void *)client_addr_frame.data(), client.data(), client.size());
+	router.send(client_addr_frame, ZMQ_SNDMORE);
 
 	// null frame
 	zmq::message_t null_frame(0);
+	router.send(null_frame, ZMQ_SNDMORE);
 
 	// message frame
-	zmq::message_t ack_frame(3);
-	memcpy((void *)ack_frame.data(), "ack", 3);
+	zmq::message_t response_frame(response.size());
+	memcpy((void *)response_frame.data(), response.data(), response.size());
+	router.send(response_frame);
 }
 
-static std::tuple<std::string, std::vector<std::string>> GetResponse(zmq::socket_t &router) {
+inline std::tuple<std::string, std::vector<std::string>> Server::receive() {
 	zmq::message_t message;
-	std::vector<std::string> vec;
+	std::vector<std::string> payload;
 
 	int more;
 	size_t more_size = sizeof(more);
@@ -45,31 +44,19 @@ static std::tuple<std::string, std::vector<std::string>> GetResponse(zmq::socket
 		router.recv(&message);
 		router.getsockopt(ZMQ_RCVMORE, &more, &more_size);
 		std::string msg = std::string(static_cast<char*>(message.data()), message.size());
-		vec.push_back(msg);
+		payload.push_back(msg);
 	} while (more);
 
-	return std::make_tuple(client, vec);
+	return std::make_tuple(client, payload);
 }
 
 void Server::run() 
 {
 	should_run = true;
 
-	zmq::socket_t router(context, ZMQ_ROUTER);
-	zmq::socket_t publisher(context, ZMQ_PUB);
-
-	std::string r_addr = "";
-	std::string p_addr = "";
-
-	router.bind(r_addr.c_str());
-	publisher.bind(p_addr.c_str());
-
 	zmq::pollitem_t items[] = {
 		{static_cast<void*>(router), 0, ZMQ_POLLIN, 0 }
 	};
-
-	std::condition_variable sig;
-	std::mutex lock;
 
 	while (should_run)
 	{
@@ -80,18 +67,21 @@ void Server::run()
 
 		std::string id;
 		std::vector<std::string> msgs;
-		std::tie(id, msgs) = GetResponse(router);
-		RespondAck(router, id);
+		std::tie(id, msgs) = receive();
 
 		if (msgs.size() <= 0)
 			continue;
 
-		if (msgs[0] == "acquire") {
-			
-		}
+		if (message_handler != NULL)
+			message_handler(ReceivedRequest(this, id, msgs));
 	}
 }
 
 void Server::stop() {
 	should_run = false;
+}
+
+void Server::register_hander(std::function<void(ReceivedRequest)> handler)
+{
+	message_handler = handler;
 }

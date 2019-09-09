@@ -40,31 +40,80 @@ static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, 
 
 bool shouldExit;
 
+static std::map<std::string, std::string> GetMapsNoParams() {
+	return {
+		{"num instruments", "1"},
+		{"info", "info"},
+		{"init", "ack"},
+		{"trig class", ""},
+		{"trig source", ""},
+		{"mode", ""},
+		{"config digitizer", ""},
+		{"post samples", ""},
+		{"pre samples", ""},
+		{"setup array", "ack"},
+		{"tof width", "tof width"},
+		{"stop", "ack"},
+		{"reset timestamps", "ack"},
+	};
+}
+
+static std::map<std::string, std::string> GetMapsParamReq() {
+	return {
+		{"horizontal", "ack"},
+		{"vertical", "ack"},
+		{"acquire frame", "ack"},
+		{"acquire", "ack"},
+		{"invert", "ack"},
+		{"enable io port", "ack"},
+		{"disable io port", "ack"},
+	};
+}
+
+
 int main() {
-	shouldExit = false;
+	//shouldExit = false;
 
-	zmq::context_t context(1);
-	zmq::socket_t pub(context, ZMQ_PUB);
-	pub.bind("tcp://*:6546");
+	//zmq::context_t context(1);
+	//zmq::socket_t pub(context, ZMQ_PUB);
+	//pub.bind("tcp://*:6546");
 
-	cout << "sleeping 1s" << endl;
-	this_thread::sleep_for(1s);
+	//cout << "sleeping 1s" << endl;
+	//this_thread::sleep_for(1s);
 
-	queue<AcquiredData> queue;
-	mutex locker;
-	condition_variable cond;
-	cout << "start" << endl << endl;
+	//queue<AcquiredData> queue;
+	//mutex locker;
+	//condition_variable cond;
+	//cout << "start" << endl << endl;
 
-	Digitizer digitizer("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
-	std::shared_ptr<StreamingContext> dig_context = digitizer.configure_cst_zs1();
+	//Digitizer digitizer("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
+	//std::shared_ptr<StreamingContext> dig_context = digitizer.configure_cst_zs1();
 
-	thread ar[2];
-	ar[0] = std::thread(publish_worker, std::ref(pub), std::ref(cond), std::ref(locker), std::ref(queue), dig_context);
-	ar[1] = std::thread(digitizer_worker, std::ref(cond), std::ref(queue), dig_context);
+	//thread ar[2];
+	//ar[0] = std::thread(publish_worker, std::ref(pub), std::ref(cond), std::ref(locker), std::ref(queue), dig_context);
+	//ar[1] = std::thread(digitizer_worker, std::ref(cond), std::ref(queue), dig_context);
 
-	for (int i = 0; i < 2; i++) {
-		ar[i].join();
-	}
+	//for (int i = 0; i < 2; i++) {
+	//	ar[i].join();
+	//}
+
+	auto server = new Server("tcp://*:5555");
+
+	auto reqsP = GetMapsParamReq();
+	auto reqsNP = GetMapsNoParams();
+
+	server->register_hander([](Server::ReceivedRequest req) {
+		return; 
+	});
+
+	thread t([&] { server->run(); });
+
+	getchar();
+
+	server->stop();
+
+	t.join();
+	getchar();
 
 	return 0;
 }
