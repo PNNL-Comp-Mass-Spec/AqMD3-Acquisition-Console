@@ -52,3 +52,6 @@ target_link_libraries(AqMD3_console PRIVATE AqMD3)
 #target_link_libraries(AqMD3_console STATIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/AqMD3)
 
 target_link_libraries ( AqMD3_console PUBLIC i::uimf)
+
+find_path(PICOSHA_INCLUDE_DIR picosha2.h)
+include_directories(${PICOSHA_INCLUDE_DIR})
