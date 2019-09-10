@@ -7,24 +7,50 @@
 
 #include <map>
 
-inline void Server::respond(std::string &client, std::string response) {
-	/* begin response */
-	// addr frame
-	zmq::message_t client_addr_frame(client.size());
-	memcpy((void *)client_addr_frame.data(), client.data(), client.size());
-	router.send(client_addr_frame, ZMQ_SNDMORE);
+static inline bool send(zmq::socket_t& socket, const std::string& message) {
 
-	// null frame
-	zmq::message_t null_frame(0);
-	router.send(null_frame, ZMQ_SNDMORE);
-
-	// message frame
-	zmq::message_t response_frame(response.size());
-	memcpy((void *)response_frame.data(), response.data(), response.size());
-	router.send(response_frame);
+	zmq::message_t zmq_msg(message.size());
+	memcpy((void *)zmq_msg.data(), message.data(), message.size());
+	return socket.send(zmq_msg);
 }
 
-inline std::tuple<std::string, std::vector<std::string>> Server::receive() {
+static inline bool send_more(zmq::socket_t& socket, const std::string& message) {
+	
+	zmq::message_t zmq_msg(message.size());
+	memcpy((void *)zmq_msg.data(), message.data(), message.size());
+	return socket.send(zmq_msg, ZMQ_SNDMORE);
+}
+
+void Server::respond(const std::string& client, const std::string& response) {
+	// addr frame
+	send_more(router, client);
+	// null frame
+	send_more(router, "");
+	// message frame
+	send(router, response);
+}
+
+void Server::respond_more(const std::string& client, const std::vector<std::string>& responses) {
+	
+	if (responses.size() == 0)
+		return;
+	if (responses.size() == 1) {
+		this->respond(client, responses[0]);
+		return;
+	}
+
+	send_more(router, client);
+	send_more(router, "");
+
+	for (auto& response = responses.begin(); response != std::prev(responses.end()); response++)
+	{
+		send_more(router, *response);
+	}
+
+	send(router, responses.back());
+}
+
+std::tuple<std::string, std::vector<std::string>> Server::receive() {
 	zmq::message_t message;
 	std::vector<std::string> payload;
 
@@ -73,7 +99,7 @@ void Server::run()
 			continue;
 
 		if (message_handler != NULL)
-			message_handler(ReceivedRequest(this, id, msgs));
+			message_handler(ReceivedRequest(*this, id, msgs));
 	}
 }
 
@@ -81,7 +107,7 @@ void Server::stop() {
 	should_run = false;
 }
 
-void Server::register_hander(std::function<void(ReceivedRequest)> handler)
+void Server::register_handler(std::function<void(const ReceivedRequest)> handler)
 {
 	message_handler = handler;
 }

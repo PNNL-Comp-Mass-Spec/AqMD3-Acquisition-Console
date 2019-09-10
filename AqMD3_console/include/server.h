@@ -10,14 +10,13 @@
 
 class Server {
 public:
-	class ReceivedRequest
-	{
+	class ReceivedRequest {
 	private:
 		std::string sender_id;
-		Server* server;
+		Server& server;
 
 	public:
-		ReceivedRequest(Server* server, std::string sender, std::vector<std::string> const payload)
+		ReceivedRequest(Server& server, std::string sender, std::vector<std::string> payload)
 			: server(server)
 			, sender_id(sender)
 			, payload(payload)
@@ -25,7 +24,8 @@ public:
 
 		std::vector<std::string> const payload;
 
-		void send_response(std::string response) { server->respond(sender_id, response); }
+		void send_response(const std::string& response) { server.respond(sender_id, response); }
+		void send_responses(const std::vector<std::string>& responses) { server.respond_more(sender_id, responses); }
 	};
 
 private:
@@ -37,7 +37,8 @@ private:
 	std::function<void(ReceivedRequest)> message_handler;
 
 	std::tuple<std::string, std::vector<std::string>> receive();
-	void respond(std::string &client, std::string response);
+	void respond(const std::string& client, const std::string& response);
+	void respond_more(const std::string& client, const std::vector<std::string>& responses);
 
 public: 
 	Server(std::string addr)
@@ -53,7 +54,6 @@ public:
 	void run();
 	void stop();
 
-	void register_hander(std::function<void(ReceivedRequest)> handler);
+	void register_handler(std::function<void(const ReceivedRequest)> handler);
 };
-
 #endif // !SERVER_H
