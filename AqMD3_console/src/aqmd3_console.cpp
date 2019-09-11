@@ -1,6 +1,5 @@
 ﻿// FalkorAcquisition.cpp : Defines the entry point for the application.
-//
-//#include "UIMFWriter/UIMFWriter.h"
+
 
 #include "../include/acquisitionbufferpool.h"
 #include "../include/server.h"
@@ -17,6 +16,7 @@
 #include "AqMD3.h"
 
 #include <zmq.hpp>
+#include <picosha2.h>
 
 #include <iostream>
 #include <thread>
@@ -38,82 +38,136 @@ using namespace std;
 static void digitizer_worker(std::condition_variable &sig, queue<AcquiredData>& resultsQueue, shared_ptr<StreamingContext> context);
 static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, shared_ptr<StreamingContext> context);
 
-bool shouldExit;
-
-static std::map<std::string, std::string> GetMapsNoParams() {
-	return {
-		{"num instruments", "1"},
-		{"info", "info"},
-		{"init", "ack"},
-		{"trig class", ""},
-		{"trig source", ""},
-		{"mode", ""},
-		{"config digitizer", ""},
-		{"post samples", ""},
-		{"pre samples", ""},
-		{"setup array", "ack"},
-		{"tof width", "tof width"},
-		{"stop", "ack"},
-		{"reset timestamps", "ack"},
-	};
-}
-
-static std::map<std::string, std::string> GetMapsParamReq() {
-	return {
-		{"horizontal", "ack"},
-		{"vertical", "ack"},
-		{"acquire frame", "ack"},
-		{"acquire", "ack"},
-		{"invert", "ack"},
-		{"enable io port", "ack"},
-		{"disable io port", "ack"},
-	};
-}
-
+bool should_exit = false;
 
 int main() {
-	//shouldExit = false;
-
-	//zmq::context_t context(1);
-	//zmq::socket_t pub(context, ZMQ_PUB);
-	//pub.bind("tcp://*:6546");
-
-	//cout << "sleeping 1s" << endl;
-	//this_thread::sleep_for(1s);
-
-	//queue<AcquiredData> queue;
-	//mutex locker;
-	//condition_variable cond;
-	//cout << "start" << endl << endl;
-
-	//Digitizer digitizer("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
-	//std::shared_ptr<StreamingContext> dig_context = digitizer.configure_cst_zs1();
-
-	//thread ar[2];
-	//ar[0] = std::thread(publish_worker, std::ref(pub), std::ref(cond), std::ref(locker), std::ref(queue), dig_context);
-	//ar[1] = std::thread(digitizer_worker, std::ref(cond), std::ref(queue), dig_context);
-
-	//for (int i = 0; i < 2; i++) {
-	//	ar[i].join();
-	//}
-
 	auto server = new Server("tcp://*:5555");
 
-	auto reqsP = GetMapsParamReq();
-	auto reqsNP = GetMapsNoParams();
+	server->register_handler([&](Server::ReceivedRequest req) 
+	{
+		for (auto& payload = req.payload.begin(); payload != req.payload.end(); payload++)
+		{
+			if (*payload == "num instruments")
+			{
+				continue;
+			}
 
-	server->register_hander([](Server::ReceivedRequest req) {
+			if (*payload == "info")
+			{
+				continue;
+			}
+
+			if (*payload == "init")
+			{
+				continue;
+			}
+
+			if (*payload == "horizontal")
+			{
+				continue;
+			}
+
+			if (*payload == "vertical")
+			{
+				continue;
+			}
+
+			if (*payload == "trig class")
+			{
+				continue;
+			}
+
+			if (*payload == "trig source")
+			{
+				continue;
+			}
+
+			if (*payload == "mode")
+			{
+				continue;
+			}
+
+			if (*payload == "config digitizer")
+			{
+				continue;
+			}
+
+			if (*payload == "post samples")
+			{
+				continue;
+			}
+
+			if (*payload == "pre samples")
+			{
+				continue;
+			}
+
+			if (*payload == "setup array")
+			{
+				continue;
+			}
+
+			if (*payload == "acquire frame")
+			{
+				continue;
+			}
+
+			if (*payload == "acquire")
+			{
+				vector<string> to_send(2);
+
+				TofWidthMessage tofMsg;
+				tofMsg.set_num_samples(100000);
+				tofMsg.set_pusher_pulse_width(94016);
+
+				to_send[0] = (tofMsg.SerializeAsString());
+
+				vector<uint8_t> hash(picosha2::k_digest_size);
+				picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
+
+				to_send[1] = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
+				req.send_responses(to_send);
+			}
+
+			if (*payload == "tof width")
+			{
+				continue;
+			}
+
+			if (*payload == "stop")
+			{
+				continue;
+			}
+
+			if (*payload == "invert")
+			{
+				continue;
+			}
+
+			if (*payload == "reset timestamps")
+			{
+				continue;
+			}
+
+			if (*payload == "enable io port")
+			{
+				continue;
+			}
+
+			if (*payload == "disable io port")
+			{
+				continue;
+			}
+		}
+
 		return; 
 	});
 
 	thread t([&] { server->run(); });
 
 	getchar();
-
 	server->stop();
-
 	t.join();
-	getchar();
 
 	return 0;
 }
@@ -132,7 +186,7 @@ static void digitizer_worker(std::condition_variable &sig, queue<AcquiredData>& 
 		cout << "\tacquire time: " << (t2 - t1).count() << endl;
 		sig.notify_one();
 	}
-	shouldExit = true;
+	should_exit = true;
 }
 
 static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, shared_ptr<StreamingContext> context)
@@ -140,7 +194,7 @@ static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, 
 
 	int i = 0;
 
-	while (!shouldExit)
+	while (!should_exit)
 	{
 		{
 			std::unique_lock<std::mutex> lock(lockable);
