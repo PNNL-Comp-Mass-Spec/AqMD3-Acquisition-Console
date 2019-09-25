@@ -53,11 +53,20 @@ int main() {
 	auto server = new Server("tcp://*:5555");
 	SA220 digitizer("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
 
+	// print configuration of I/O B
+	//digitizer.enable_io_port();
+	//digitizer.disable_io_port();
+
+	digitizer.set_record_size(94016);
+	digitizer.set_sampling_rate(1000000000.0);
+	digitizer.set_trigger_parameters(digitizer.trigger_external, 0.5, true);
+
 	condition_variable signal;
 	queue<AcquiredData> dataQueue;
 	mutex lock;
 
-	auto dig = digitizer.configure_cst_zs1(digitizer.samples_channel_1, digitizer.markers_channel_2, 700, 100);
+	// std::string channel, int16_t threshold, uint16_t hysteresis, uint8_t pre_samples, uint8_t post_samples
+	auto dig = digitizer.configure_cst_zs1("Channel1", 1400, 100, 0, 0);
 
 	zmq::context_t context(1);
 	zmq::socket_t publisher(context, ZMQ_PUB);

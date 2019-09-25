@@ -31,6 +31,14 @@ public:
 		//std::cout << "samples overhead: " << samples_overhead << std::endl;
 	}
 
+	//CstZm1Context(ViSession session, int64_t data_buffer_size, int32_t data_buffer_count,
+	//	int64_t markers_buffer_size,
+	//	int32_t markers_buffer_count,
+	//  std::string markers_channel, std::string samples_channel)
+	//  : StreamingContext(session, data_buffer_size, data_buffer_count, 
+	//  markers_buffer_size, markers_buffer_count, markers_channel, samples_channel)
+	//{}
+
 	AcquiredData acquire(int32_t triggers, std::chrono::milliseconds timeoutMs) override;
 };
 

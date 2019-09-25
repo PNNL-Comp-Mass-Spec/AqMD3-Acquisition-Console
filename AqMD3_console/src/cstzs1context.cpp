@@ -129,7 +129,7 @@ AcquiredData CstZm1Context::acquire(int32_t triggers, std::chrono::milliseconds 
 					&availableElementsMarkers, &actualElementsMarkers, &firstElementMarkers);
 			} while (actualElementsMarkers < min_target_records);
 
-			cout << "\tacquired: " << actualElementsMarkers << endl;
+			cout << "\tacquired maker elements: " << actualElementsMarkers << endl;
 
 			markersBuffer->advance_offset(firstElementMarkers);
 			markersBuffer->advance_acquired(actualElementsMarkers);

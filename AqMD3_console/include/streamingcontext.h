@@ -29,6 +29,12 @@ public:
 		delete samples, markers;
 	}
 
+	//StreamingContext(ViSession session, int64_t data_buffer_size, int32_t data_buffer_count,
+	//	int64_t markers_buffer_size,
+	//	int32_t markers_buffer_count,
+	//  std::string markers_channel, std::string samples_channel)
+	//{}
+
 	virtual AcquiredData acquire(int32_t triggers, std::chrono::milliseconds timeoutMs) = 0;
 
 	void start();
