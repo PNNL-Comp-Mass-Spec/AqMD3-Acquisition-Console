@@ -17,7 +17,7 @@ int AcquisitionBuffer::get_available()
 
 int AcquisitionBuffer::get_unprocessed()
 {
-	return acquired_index - processed_index - offset;
+	return acquired_index - processed_index;
 }
 
 int AcquisitionBuffer::get_processed()
@@ -70,4 +70,10 @@ void AcquisitionBuffer::reset()
 void AcquisitionBuffer::reset_processed() 
 {
 	processed_index = 0;
+	acquired_index = 0;
+}
+
+std::vector<int32_t>::const_iterator AcquisitionBuffer::begin()
+{
+	return data.begin() + offset;
 }

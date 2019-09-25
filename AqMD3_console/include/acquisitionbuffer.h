@@ -6,8 +6,8 @@
 
 class AcquisitionBuffer {
 private:
-	int id;
 	std::vector<int32_t> data;
+	int id;
 	int acquired_index;
 	int processed_index;
 	int offset;
@@ -20,17 +20,17 @@ public:
 		processed_index(0),
 		offset(0)
 	{
-		uint64_t const alignmentMask = uint64_t(64 - 1);
-		for (size_t i = 0; i < 16; ++i)
-		{
-			uint64_t const ptr = reinterpret_cast<uint64_t>(&data[i]);
-			if ((ptr & alignmentMask) == 0)
-			{
-				std::cout << "offset" << offset << std::endl;
-				offset = i;
-				break;
-			}
-		}
+		//uint64_t const alignmentMask = uint64_t(64 - 1);
+		//for (size_t i = 0; i < 16; ++i)
+		//{
+		//	uint64_t const ptr = reinterpret_cast<uint64_t>(&data[i]);
+		//	if ((ptr & alignmentMask) == 0)
+		//	{
+		//		// std::cout << "offset" << offset << std::endl;
+		//		offset = i;
+		//		break;
+		//	}
+		//}
 	}
 
 	int get_size();
@@ -47,6 +47,7 @@ public:
 	void advance_acquired(int num);
 	void reset();
 	void reset_processed();
+	std::vector<int32_t>::const_iterator begin();
 };
 
 #endif // !ACQUISITION_BUFFER_H

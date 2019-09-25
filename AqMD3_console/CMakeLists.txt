@@ -12,6 +12,9 @@ find_package(Snappy CONFIG REQUIRED)
 include_directories("C:/Program Files/IVI Foundation/IVI/Include")
 link_directories("C:/Program Files/IVI Foundation/IVI/Lib_x64/msc")
 
+include_directories("C:/Program Files/IVI Foundation/VISA/Win64/Include")
+#link_directories("C:/Program Files/IVI Foundation/VISA/Win64L/lib_x64/msc")
+
 # Add source to this project's executable.
 add_executable (AqMD3_console 
 	src/aqmd3_console.cpp
@@ -27,6 +30,7 @@ add_executable (AqMD3_console
 	src/acquisitioncontext.cpp
 	src/dgtcontext.cpp
 	src/acquireddata.cpp
+	src/sa220.cpp
 	include/digitizer.h
 	include/server.h
 	include/acquisitionbufferpool.h
@@ -36,20 +40,18 @@ add_executable (AqMD3_console
 	include/cstzs1context.h
 	include/cstcontext.h
 	include/message.pb.h
-	#include/AqMD3/AqMD3.h
-	#include/AqMD3/IviVisaType.h
 	include/acquisitioncontext.h
 	include/dgtcontext.h
 	include/acquireddata.h
+	include/sa220.h
 )
+
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)
 target_link_libraries(AqMD3_console PRIVATE protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite)#
 target_link_libraries(AqMD3_console PRIVATE Snappy::snappy)
 
 target_link_libraries(AqMD3_console PRIVATE AqMD3)
-
-#target_include_directories(AqMD3_console PUBLIC ${PROJECT_SOURCE_DIR}/include/AqMD3)
-#target_link_libraries(AqMD3_console STATIC ${CMAKE_CURRENT_SOURCE_DIR}/lib/AqMD3)
+target_link_libraries(AqMD3_console PRIVATE AqLio)
 
 target_link_libraries ( AqMD3_console PUBLIC i::uimf)
 

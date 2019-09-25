@@ -12,21 +12,12 @@
 #include <string>
 
 class Digitizer {
-private:
-	std::string resource;
-	std::string options;
+protected:
 	ViSession session;
 
 public:
-	//std::unique_ptr<StreamingContext> configure_cst();
-	std::shared_ptr<StreamingContext> configure_cst_zs1();
-	//std::unique_ptr<AcquisitionContext> configure_dgt();
-	
-public:
-	Digitizer(std::string resource, std::string options) :
-		session(VI_NULL),
-		resource(resource), //resource("PXI3::0::0::INSTR"),
-		options(options) //options("Simulate=false, DriverSetup= Model=SA220P")
+	Digitizer(std::string resource, std::string options) 
+		: session(VI_NULL)
 	{
 		AqMD3_InitWithOptions((ViChar *)resource.c_str(), VI_FALSE, VI_FALSE, options.c_str(), &session);
 	}
@@ -34,6 +25,29 @@ public:
 	{
 		AqMD3_close(session);
 	}
+
+	std::shared_ptr<StreamingContext> configure_cst(std::string samples_channel, std::string markers_channel);
+	std::shared_ptr<StreamingContext> configure_cst_zs1(std::string samples_channel, std::string markers_channel, int16_t threshold, uint16_t hysteresis = 100);
+
+protected:
+	std::pair<std::string, bool> check_call(ViStatus&& status) {
+		
+		ViInt32 ec;
+		ViChar error_message[512];
+
+		if (status > 0)
+		{
+			AqMD3_GetError(VI_NULL, &ec, sizeof(error_message), error_message);
+			return std::pair<std::string, bool>("Error Code: " + std::to_string(ec) + "Error Message: " + error_message, false);
+
+		}
+		else if (status < 0)
+		{
+			AqMD3_GetError(VI_NULL, &ec, sizeof(error_message), error_message);
+			return std::pair<std::string, bool>("Error Code: " + std::to_string(ec) + "Error Message: " + error_message, true);
+		}
+	}
+
 };
 
 #endif // ! DIGITIZER_H
