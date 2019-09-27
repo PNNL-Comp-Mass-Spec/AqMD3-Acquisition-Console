@@ -12,16 +12,17 @@
 #include <string>
 
 class Digitizer {
-protected:
-	ViSession session;
-
+public:
 	enum ErrorType {
 		None,
 		Warning,
 		Error,
 	};
 
-public:
+protected:
+	ViSession session;
+
+public: 
 	Digitizer(std::string resource, std::string options) 
 		: session(VI_NULL)
 	{
@@ -32,20 +33,14 @@ public:
 		AqMD3_close(session);
 	}
 
-	virtual std::shared_ptr<StreamingContext> configure_cst(std::string samples_channel, std::string markers_channel) = 0;
-	//virtual std::shared_ptr<StreamingContext> configure_cst_zs1(std::string samples_channel, std::string markers_channel, int16_t threshold, uint16_t hysteresis, 
-	//	uint8_t pre_samples, uint8_t post_samples) = 0;
-	virtual std::shared_ptr<StreamingContext> configure_cst_zs1(std::string channel, int16_t threshold, uint16_t hysteresis, uint8_t pre_samples, uint8_t post_samples) = 0;
+	virtual std::shared_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers) = 0;
+	virtual std::shared_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, int16_t threshold, uint16_t hysteresis, uint8_t pre_samples, uint8_t post_samples) = 0;
 
 private:
 	std::pair<std::string, ErrorType> check_error(ViStatus status) {
 		
 		ViInt32 ec;
 		ViChar error_message[512];
-
-		// There also exists a clear error funtion:
-		//		ViStatus _VI_FUNC AqMD3_ClearError(ViSession Vi)	
-		// but doesn't seem necessary at the momemnt
 
 		if (status > 0)
 		{
@@ -85,8 +80,8 @@ protected:
 	std::pair<std::string, ErrorType> apply_setup();
 	std::pair<std::string, ErrorType> self_calibrate();
 
-	//std::pair<std::string, ErrorType> start_acquisition();
-	//std::pair<std::string, ErrorType> abort_acquisition();
+	std::pair<std::string, ErrorType> begin_acquisition();
+	std::pair<std::string, ErrorType> abort_acquisition();
 };
 
 #endif // ! DIGITIZER_H

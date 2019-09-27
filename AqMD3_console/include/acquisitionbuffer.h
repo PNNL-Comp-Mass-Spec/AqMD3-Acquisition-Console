@@ -13,25 +13,13 @@ private:
 	int offset;
 
 public:
-	AcquisitionBuffer(int id, size_t size) :
-		id(id),
-		data(size),
-		acquired_index(0),
-		processed_index(0),
-		offset(0)
-	{
-		//uint64_t const alignmentMask = uint64_t(64 - 1);
-		//for (size_t i = 0; i < 16; ++i)
-		//{
-		//	uint64_t const ptr = reinterpret_cast<uint64_t>(&data[i]);
-		//	if ((ptr & alignmentMask) == 0)
-		//	{
-		//		// std::cout << "offset" << offset << std::endl;
-		//		offset = i;
-		//		break;
-		//	}
-		//}
-	}
+	AcquisitionBuffer(int id, size_t size) 
+		: id(id)
+		, data(size)
+		, acquired_index(0)
+		, processed_index(0)
+		, offset(0)
+	{}
 
 	int get_size();
 	int get_id();
@@ -46,8 +34,6 @@ public:
 	void advance_processed(int num);
 	void advance_acquired(int num);
 	void reset();
-	void reset_processed();
-	std::vector<int32_t>::const_iterator begin();
 };
 
 #endif // !ACQUISITION_BUFFER_H

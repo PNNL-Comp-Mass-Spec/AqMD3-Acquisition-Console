@@ -5,37 +5,39 @@
 #include <tuple>
 #include <exception>
 
-AcquiredData CstZm1Context::acquire(int32_t triggers, std::chrono::milliseconds timeoutMs)
+AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 {
 	int trig_count = 0;
 	int gate_count = 0;
 	uint64_t to_acquire = 0;
 	vector<TriggerData> stamps;
-	bool preprocess = false;
-	int min_target_records = triggers * 16;
 
-	AcquisitionBuffer* markersBuffer = nullptr;
-	if (unprocessed_buf == nullptr)
+	bool preprocess = false;
+	int min_target_records = triggers_per_read * 16;
+	cout << "ACQUIRING " << triggers_per_read << " TRIGGERS\n";
+
+
+	AcquisitionBuffer* markers_buffer = nullptr;
+	if (unprocessed_buffer == nullptr)
 	{
-		markersBuffer = markers->next_available();
+		markers_buffer = markers_buffer_pool.next_available();
 	}
 	else
 	{
-		markersBuffer = unprocessed_buf;
+		markers_buffer = unprocessed_buffer;
 		preprocess = true;
 	}
 
-	AcquisitionBuffer* samplesBuffer = samples->next_available();
+	AcquisitionBuffer* samples_buffer = samples_buffer_pool->next_available();
 
-	ViInt64 firstElementMarkers;
-	ViInt64 availableElementsMarkers = 0;
-	ViInt64 actualElementsMarkers = markersBuffer->get_unprocessed();
-
-	while (trig_count < triggers)
+	ViInt64 first_element_markers;
+	ViInt64 available_elements_markers = 0;
+	ViInt64 actual_elements_markers = markers_buffer->get_unprocessed();
+	while (trig_count < triggers_per_read)
 	{
-		for (int i = 0; i < actualElementsMarkers / 16; i++)
+		for (int i = 0; i < actual_elements_markers / 16; i++)
 		{
-			int32_t *seg = markersBuffer->get_raw_unprocessed();
+			int32_t *seg = markers_buffer->get_raw_unprocessed();
 			uint32_t header = seg[0];
 
 			switch (header & 0x000000FF)
@@ -43,7 +45,7 @@ AcquiredData CstZm1Context::acquire(int32_t triggers, std::chrono::milliseconds 
 			case 0x01:
 			{
 				++trig_count;
-				if (trig_count > triggers)
+				if (trig_count > triggers_per_read)
 					goto process;
 
 				uint64_t low = seg[1];
@@ -52,7 +54,7 @@ AcquiredData CstZm1Context::acquire(int32_t triggers, std::chrono::milliseconds 
 				uint64_t timestampHigh = uint64_t(high) << 24;
 				std::cout << "\tindex: " << (header >> 8) << endl;
 				stamps.emplace_back(timestampHigh | timestampLow, header >> 8, (-1 * (seg[1] & 0x000000ff))/256);
-				markersBuffer->advance_processed(16);
+				markers_buffer->advance_processed(16);
 
 				break;
 			}
@@ -81,18 +83,18 @@ AcquiredData CstZm1Context::acquire(int32_t triggers, std::chrono::milliseconds 
 						if (stamps.size() == 0)
 						{
 							cout << "\tNo elements in stamps - discarding acquired elements." << endl;
-							markersBuffer->advance_processed(16);
+							markers_buffer->advance_processed(16);
 							break;
 						}
 
-						stamps.back().gate_cage.emplace_back((s - 1) * 8, (e - 1) * 8, to_acquire_samples, to_acquire_memory_blocks);
+						stamps.back().gate_data.emplace_back((s - 1) * 8, (e - 1) * 8, to_acquire_samples, to_acquire_memory_blocks);
 						++gate_count;
 
 						to_acquire += to_acquire_memory_blocks;
 					}
 				}
 
-				markersBuffer->advance_processed(16);
+				markers_buffer->advance_processed(16);
 				break;
 			}
 			case 0x08:	// Should never get here
@@ -107,59 +109,59 @@ AcquiredData CstZm1Context::acquire(int32_t triggers, std::chrono::milliseconds 
 
 		if (preprocess)
 		{
-			markers->return_in_use(markersBuffer);
-			markersBuffer = markers->next_available();
+			markers_buffer_pool.return_in_use(markers_buffer);
+			markers_buffer = markers_buffer_pool.next_available();
 			preprocess = false;
 		}
 
-		firstElementMarkers = 0;
-		availableElementsMarkers = 0;
-		actualElementsMarkers = 0;
-		if (trig_count < triggers)
+		first_element_markers = 0;
+		available_elements_markers = 0;
+		actual_elements_markers = 0;
+		if (trig_count < triggers_per_read)
 		{
-			markersBuffer->reset();
+			markers_buffer->reset();
 			do
 			{
 				AqMD3_StreamFetchDataInt32(
 					session,
-					markersChannel.c_str(),
+					markers_channel.c_str(),
 					min_target_records,
-					markersBuffer->get_size(),
-					(ViInt32 *)markersBuffer->get_raw_unaquired(),
-					&availableElementsMarkers, &actualElementsMarkers, &firstElementMarkers);
-			} while (actualElementsMarkers < min_target_records);
+					markers_buffer->get_size(),
+					(ViInt32 *)markers_buffer->get_raw_unaquired(),
+					&available_elements_markers, &actual_elements_markers, &first_element_markers);
+			} while (available_elements_markers < min_target_records);
 
-			cout << "\tacquired maker elements: " << actualElementsMarkers << endl;
+			cout << "\tacquired marker elements: " << actual_elements_markers << endl;
 
-			markersBuffer->advance_offset(firstElementMarkers);
-			markersBuffer->advance_acquired(actualElementsMarkers);
+			markers_buffer->advance_offset(first_element_markers);
+			markers_buffer->advance_acquired(actual_elements_markers);
 		}
 	}
 
 process:
-	if (markersBuffer->get_unprocessed() > 0)
+	if (markers_buffer->get_unprocessed() > 0)
 	{
-		unprocessed_buf = markersBuffer;
+		unprocessed_buffer = markers_buffer;
 	}
 	else
 	{
-		unprocessed_buf = nullptr;
-		markers->return_in_use(markersBuffer);
+		unprocessed_buffer = nullptr;
+		markers_buffer_pool.return_in_use(markers_buffer);
 	}
 
-	ViInt64 firstElementSamples;
-	ViInt64 actualElementsSamples = 0;
-	ViInt64 availableElementsSamples = 0;
+	ViInt64 first_element_samples;
+	ViInt64 actual_elements_samples = 0;
+	ViInt64 available_elements_samples = 0;
 	AqMD3_StreamFetchDataInt32(
 		session,
-		samplesChannel.c_str(),
+		samples_channel.c_str(),
 		to_acquire,
-		samplesBuffer->get_size(),
-		(ViInt32 *)samplesBuffer->get_raw_unaquired(),
-		&availableElementsSamples, &actualElementsSamples, &firstElementSamples);
+		samples_buffer->get_size(),
+		(ViInt32 *)samples_buffer->get_raw_unaquired(),
+		&available_elements_samples, &actual_elements_samples, &first_element_samples);
 
-	samplesBuffer->advance_offset(firstElementSamples);
-	samplesBuffer->advance_acquired(actualElementsSamples);
+	samples_buffer->advance_offset(first_element_samples);
+	samples_buffer->advance_acquired(actual_elements_samples);
 
-	return AcquiredData(stamps, samples, samplesBuffer);
+	return AcquiredData(stamps, samples_buffer_pool, samples_buffer, samples_per_trigger);
 }

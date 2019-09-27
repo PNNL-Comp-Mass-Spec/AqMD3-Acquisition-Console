@@ -53,20 +53,16 @@ int main() {
 	auto server = new Server("tcp://*:5555");
 	SA220 digitizer("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
 
-	// print configuration of I/O B
-	//digitizer.enable_io_port();
-	//digitizer.disable_io_port();
-
 	digitizer.set_record_size(94016);
 	digitizer.set_sampling_rate(1000000000.0);
 	digitizer.set_trigger_parameters(digitizer.trigger_external, 0.5, true);
+	digitizer.set_channel_parameters(digitizer.channel_1, digitizer.full_scale_range_2500mv, 0.0);
 
 	condition_variable signal;
 	queue<AcquiredData> dataQueue;
 	mutex lock;
 
-	// std::string channel, int16_t threshold, uint16_t hysteresis, uint8_t pre_samples, uint8_t post_samples
-	auto dig = digitizer.configure_cst_zs1("Channel1", 1400, 100, 0, 0);
+	auto dig = digitizer.configure_cst_zs1(digitizer.channel_1, 100, 1400, 100, 0, 0);
 
 	zmq::context_t context(1);
 	zmq::socket_t publisher(context, ZMQ_PUB);
@@ -248,7 +244,7 @@ static void digitizer_worker(std::condition_variable &sig, queue<AcquiredData>& 
 	for (int i = 0; i < 4; i++)
 	{
 		auto t1 = chrono::high_resolution_clock::now();
-		auto data = context->acquire(25, std::chrono::milliseconds(100));
+		auto data = context->acquire(std::chrono::milliseconds(100));
 		resultsQueue.push(data);
 		auto t2 = chrono::high_resolution_clock::now();
 		sig.notify_one();
@@ -284,95 +280,164 @@ static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, 
 
 			try
 			{
-				auto result = ae.process();
-				readable_file << "total scans: " << result.size() << endl;
-				for (int i = 0; i < result.size(); i++)
+				std::vector<uint64_t> timestamps;
+				std::vector<uint32_t> tics;
+				std::vector<int32_t> mz_sum;
+
+				std::tie(timestamps, mz_sum, tics) = ae.process();
+
+				readable_file << "Timestamps\n";
+				readable_file << "[";
+				for (auto ts : timestamps)
 				{
-					auto trigger = result[i];
-					//auto lam = [](int& tot, DataSegment& seg) {return tot + seg.peak_data.size(); };
-					//auto actual = accumulate(trigger.segments.begin(),
-					//	trigger.segments.end(), 0, lam);
-
-					readable_file << "\nScan: " << i
-						<< " | Timestamp (samples): " << trigger.timestamp
-						<< " | Timestamp (s): " << std::setprecision(12) << (trigger.timestamp / 2000000000.0)
-						<< " | Gate Count: " << trigger.gate_cage.size();
-						//<< " | Acquired Samples: " << acqd
-					
-					auto td = (i > 0) ? (result[i].timestamp - result[i - 1].timestamp) / (2000000000.0) : -1.0;
-					readable_file << " | time diff (trigger(i) - trigger(i-1) (s)): " << std::setprecision(12) << td;
-
-					readable_file << "\n";
-					for (auto& data : trigger.segments)
-					{
-						size_t size = data.peak_data.size();
-						readable_file << "Sample Start Index: " << data.first_index
-							<< " | Sample data length: " << size << "\n";
-
-						readable_file << "\[";
-						//for (int i = 0; i < data.peak_data.size() / 8; i++)
-						//{
-						//	//std::cout << "writing to nul\n";
-						//	auto v = data.peak_data;
-						//	//datasink << " "
-						//	if (i == 0)
-						//		readable_file << "";
-						//	else
-						//		readable_file << " ";
-
-						//	readable_file << v[i * 8 + 0] << " "
-						//		<< v[i * 8 + 1] << " "
-						//		<< v[i * 8 + 2] << " "
-						//		<< v[i * 8 + 3] << " "
-						//		<< v[i * 8 + 4] << " "
-						//		<< v[i * 8 + 5] << " "
-						//		<< v[i * 8 + 6] << " "
-						//		<< v[i * 8 + 7];
-
-						//	if (i != data.peak_data.size() - 1)
-						//		readable_file << "\n";
-						//	else
-						//		readable_file << " ]";
-						//}
-						for (int i = 0; i < data.peak_data.size() / 8; i++)
-						{
-							//std::cout << "writing to nul\n";
-							auto v = data.peak_data;
-							//datasink << " "
-							if (i == 0)
-								readable_file << "";
-							else
-								readable_file << " ";
-
-							readable_file << v[i * 8 + 0] << " "
-								<< v[i * 8 + 1] << " "
-								<< v[i * 8 + 2] << " "
-								<< v[i * 8 + 3] << " "
-								<< v[i * 8 + 4] << " "
-								<< v[i * 8 + 5] << " "
-								<< v[i * 8 + 6] << " "
-								<< v[i * 8 + 7];
-
-							if (i != data.peak_data.size() - 1)
-								readable_file << "\n";
-							else
-								readable_file << " ]";
-						}
-						//readable_file << " ]";
-
-						readable_file << "\n";
-					}
+					readable_file << " " << ts << " ";
 				}
+				readable_file << "]\n";
+
+				readable_file << "tic\n";
+				readable_file << "[";
+				for (auto tic : tics)
+				{
+					readable_file << " " << tic << " ";
+				}
+				readable_file << "]\n";
+
+				readable_file << "Samples\n";
+				readable_file << "[";
+				for (auto samp : mz_sum)
+				{
+					readable_file << " " << samp << " ";
+				}
+				readable_file << "]\n";
 			}
 			catch (const std::exception& e) {
 				std::cout << e.what();
 			}
-			
-			ae.process(pusher, msg);
 			auto t2 = chrono::high_resolution_clock::now();
-			//cout << "\tsend time: " << (t2 - t1).count() << endl;
+			cout << "\tprocess: " << (t2 - t1).count() << endl;
 		}
 	}
 	datasink.close();
 	context->stop();
 }
+
+//static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, shared_ptr<StreamingContext> context,
+//	ofstream& readable_file)
+//{
+//
+//	int i = 1;
+//	vector<TriggerData> vec;
+//	ofstream datasink;
+//	//datasink.open("nul");
+//
+//	while (!should_exit)
+//	{
+//		{
+//			std::unique_lock<std::mutex> lock(lockable);
+//			sig.wait(lock);
+//		}
+//
+//		while (!workQueue.empty())
+//		{
+//			Message msg;
+//			msg.mutable_tic()->Reserve(256);
+//			msg.mutable_time_stamps()->Reserve(256);
+//
+//			auto t1 = chrono::high_resolution_clock::now();
+//			AcquiredData ae = workQueue.front();
+//			workQueue.pop();
+//
+//			try
+//			{
+//				auto result = ae.process();
+//				readable_file << "total scans: " << result.size() << endl;
+//				for (int i = 0; i < result.size(); i++)
+//				{
+//					auto trigger = result[i];
+//					//auto lam = [](int& tot, DataSegment& seg) {return tot + seg.peak_data.size(); };
+//					//auto actual = accumulate(trigger.segments.begin(),
+//					//	trigger.segments.end(), 0, lam);
+//
+//					readable_file << "\nScan: " << i
+//						<< " | Timestamp (samples): " << trigger.timestamp
+//						<< " | Timestamp (s): " << std::setprecision(12) << (trigger.timestamp / 2000000000.0)
+//						<< " | Gate Count: " << trigger.gate_data.size();
+//						//<< " | Acquired Samples: " << acqd
+//					
+//					auto td = (i > 0) ? (result[i].timestamp - result[i - 1].timestamp) / (2000000000.0) : -1.0;
+//					readable_file << " | time diff (trigger(i) - trigger(i-1) (s)): " << std::setprecision(12) << td;
+//
+//					readable_file << "\n";
+//					for (auto& data : trigger.segments)
+//					{
+//						size_t size = data.peak_data.size();
+//						readable_file << "Sample Start Index: " << data.first_index
+//							<< " | Sample data length: " << size << "\n";
+//
+//						readable_file << "\[";
+//						//for (int i = 0; i < data.peak_data.size() / 8; i++)
+//						//{
+//						//	//std::cout << "writing to nul\n";
+//						//	auto v = data.peak_data;
+//						//	//datasink << " "
+//						//	if (i == 0)
+//						//		readable_file << "";
+//						//	else
+//						//		readable_file << " ";
+//
+//						//	readable_file << v[i * 8 + 0] << " "
+//						//		<< v[i * 8 + 1] << " "
+//						//		<< v[i * 8 + 2] << " "
+//						//		<< v[i * 8 + 3] << " "
+//						//		<< v[i * 8 + 4] << " "
+//						//		<< v[i * 8 + 5] << " "
+//						//		<< v[i * 8 + 6] << " "
+//						//		<< v[i * 8 + 7];
+//
+//						//	if (i != data.peak_data.size() - 1)
+//						//		readable_file << "\n";
+//						//	else
+//						//		readable_file << " ]";
+//						//}
+//						for (int i = 0; i < data.peak_data.size() / 8; i++)
+//						{
+//							//std::cout << "writing to nul\n";
+//							auto v = data.peak_data;
+//							//datasink << " "
+//							if (i == 0)
+//								readable_file << "";
+//							else
+//								readable_file << " ";
+//
+//							readable_file << v[i * 8 + 0] << " "
+//								<< v[i * 8 + 1] << " "
+//								<< v[i * 8 + 2] << " "
+//								<< v[i * 8 + 3] << " "
+//								<< v[i * 8 + 4] << " "
+//								<< v[i * 8 + 5] << " "
+//								<< v[i * 8 + 6] << " "
+//								<< v[i * 8 + 7];
+//
+//							if (i != data.peak_data.size() - 1)
+//								readable_file << "\n";
+//							else
+//								readable_file << " ]";
+//						}
+//						//readable_file << " ]";
+//
+//						readable_file << "\n";
+//					}
+//				}
+//			}
+//			catch (const std::exception& e) {
+//				std::cout << e.what();
+//			}
+//
+//			ae.process(pusher, msg);
+//			auto t2 = chrono::high_resolution_clock::now();
+//			//cout << "\tsend time: " << (t2 - t1).count() << endl;
+//		}
+//	}
+//	datasink.close();
+//	context->stop();
+//}

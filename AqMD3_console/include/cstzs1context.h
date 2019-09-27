@@ -12,34 +12,27 @@ class CstZm1Context : public StreamingContext {
 private:
 	int residual;
 	bool add_residual;
+	AcquisitionBufferPool markers_buffer_pool;
 
-	AcquisitionBuffer* unprocessed_buf;
-
-	int markers_overhead;
-	int samples_overhead;
+	AcquisitionBuffer* unprocessed_buffer;
 public:
-	CstZm1Context(ViSession session, AcquisitionBufferPool* data, AcquisitionBufferPool* markers,
-		std::string markersChannel, std::string samplesChannel, int markers_overhead_grain, int samples_overhead_grain)
-		: StreamingContext(session, data, markers, markersChannel, samplesChannel)
-		, unprocessed_buf(nullptr)
-		, markers_overhead(markers_overhead_grain / sizeof(int32_t) - 1)
-		, samples_overhead(samples_overhead_grain / sizeof(int32_t) - 1)
+	CstZm1Context(ViSession session,
+		std::string samples_channel,
+		uint64_t samples_buffer_size,
+		uint32_t samples_buffer_count,
+		std::string markers_channel,
+		uint64_t markers_size,
+		uint32_t markers_count,
+		uint64_t samples_per_trigger,
+		uint32_t triggers_per_read)
+		: StreamingContext(session, samples_channel, samples_buffer_size, samples_buffer_count, markers_channel, samples_per_trigger, triggers_per_read)
+		, markers_buffer_pool(markers_size, markers_count)
 		, residual(0)
 		, add_residual(false)
-	{
-		//std::cout << "markers overhead: " << markers_overhead << std::endl;
-		//std::cout << "samples overhead: " << samples_overhead << std::endl;
-	}
+		, unprocessed_buffer(nullptr)
+	{}
 
-	//CstZm1Context(ViSession session, int64_t data_buffer_size, int32_t data_buffer_count,
-	//	int64_t markers_buffer_size,
-	//	int32_t markers_buffer_count,
-	//  std::string markers_channel, std::string samples_channel)
-	//  : StreamingContext(session, data_buffer_size, data_buffer_count, 
-	//  markers_buffer_size, markers_buffer_count, markers_channel, samples_channel)
-	//{}
-
-	AcquiredData acquire(int32_t triggers, std::chrono::milliseconds timeoutMs) override;
+	AcquiredData acquire(std::chrono::milliseconds timeoutMs) override;
 };
 
 #endif // !CST_ZS1_CONTEXT_H

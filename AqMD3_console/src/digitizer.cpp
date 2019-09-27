@@ -48,17 +48,17 @@ std::pair<std::string, Digitizer::ErrorType> Digitizer::self_calibrate()
 	return check_error(status);
 }
 
-//std::pair<std::string, Digitizer::ErrorType> Digitizer::start_acquisition()
-//{
-//	ViStatus status = AqMD3_InitiateAcquisition(session);
-//	return check_error(status);
-//}
-//
-//std::pair<std::string, Digitizer::ErrorType> Digitizer::abort_acquisition()
-//{
-//	ViStatus status = AqMD3_Abort(session);
-//	return check_error(status);
-//}
+std::pair<std::string, Digitizer::ErrorType> Digitizer::begin_acquisition()
+{
+	ViStatus status = AqMD3_InitiateAcquisition(session);
+	return check_error(status);
+}
+
+std::pair < std::string, Digitizer:: ErrorType> Digitizer::abort_acquisition()
+{
+	ViStatus status = AqMD3_Abort(session);
+	return check_error(status);
+}
 
 std::pair<std::string, Digitizer::ErrorType> Digitizer::configure_sample_rate(ViReal64 rate)
 {

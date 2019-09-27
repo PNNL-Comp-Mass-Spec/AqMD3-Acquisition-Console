@@ -1,9 +1,9 @@
 #ifndef STREAMING_CONTEXT_H
 #define STREAMING_CONTEXT_H
 
+//#include "digitizer.h"
 #include "acquireddata.h"
 #include "AqMD3.h"
-
 #include <memory>
 #include <chrono>
 #include <string>
@@ -11,31 +11,30 @@
 class StreamingContext {
 protected:
 	ViSession session;
-	AcquisitionBufferPool *samples;
-	AcquisitionBufferPool *markers;
-	std::string markersChannel;
-	std::string samplesChannel;
+	AcquisitionBufferPool *samples_buffer_pool;
 
+	std::string markers_channel;
+	std::string samples_channel;
+
+	uint64_t samples_per_trigger;
+	uint32_t triggers_per_read;
 public:
-	StreamingContext(ViSession session, AcquisitionBufferPool *samples, AcquisitionBufferPool *markers,
-		std::string markersChannel, std::string samplesChannel) :
-			session(session),
-			samples(samples),
-			markers(markers),
-			markersChannel(markersChannel),
-			samplesChannel(samplesChannel)
+	StreamingContext(ViSession session,
+		std::string samples_channel,
+		int64_t samples_buffer_size,
+		int32_t samples_buffer_count,
+		std::string markers_channel,
+		uint64_t samples_per_trigger,
+		int32_t triggers_per_read)
+		: session(session)
+		, samples_buffer_pool(new AcquisitionBufferPool(samples_buffer_size, samples_buffer_count))
+		, samples_channel(samples_channel)
+		, markers_channel(markers_channel)
+		, samples_per_trigger(samples_per_trigger)
+		, triggers_per_read(triggers_per_read)
 	{}
-	~StreamingContext() {
-		delete samples, markers;
-	}
 
-	//StreamingContext(ViSession session, int64_t data_buffer_size, int32_t data_buffer_count,
-	//	int64_t markers_buffer_size,
-	//	int32_t markers_buffer_count,
-	//  std::string markers_channel, std::string samples_channel)
-	//{}
-
-	virtual AcquiredData acquire(int32_t triggers, std::chrono::milliseconds timeoutMs) = 0;
+	virtual AcquiredData acquire(std::chrono::milliseconds timeoutMs) = 0;
 
 	void start();
 	void stop();

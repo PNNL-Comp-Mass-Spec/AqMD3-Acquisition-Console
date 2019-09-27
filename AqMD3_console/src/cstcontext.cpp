@@ -3,74 +3,72 @@
 
 #include <iostream>
 
-AcquiredData CstContext::acquire(int32_t triggers, std::chrono::milliseconds timeoutMs)
+AcquiredData CstContext::acquire(std::chrono::milliseconds timeoutMs)
 {
-	AcquisitionBuffer* markersBuffer = markers->next_available();
-	AcquisitionBuffer* samplesBuffer = samples->next_available();
+	int markers_to_gather = triggers_per_read * 16;
+	vector<int32_t> markers(markers_to_gather * 16);
+	AcquisitionBuffer* samples_buffer = samples_buffer_pool->next_available();
 
-	ViInt64 firstElementMarkers;
-	ViInt64 availableElementsMarkers = 0;
-	ViInt64 actualElementsMarkers = 0;
+	ViInt64 first_element_offset;
+	ViInt64 available_elements_markers = 0;
+	ViInt64 actual_elements_markers = 0;
 
-	int markersToGather = triggers * 16;
 	do
 	{
 		AqMD3_StreamFetchDataInt32(
 			session,
-			markersChannel.c_str(),
-			markersToGather,
-			markersBuffer->get_size(),
-			(ViInt32 *)markersBuffer->get_raw_data(),
-			&availableElementsMarkers, &actualElementsMarkers, &firstElementMarkers);
-	} while (actualElementsMarkers < markersToGather);
+			markers_channel.c_str(),
+			markers_to_gather,
+			markers.size(),
+			(ViInt32 *)markers.data(),
+			&available_elements_markers, &actual_elements_markers, &first_element_offset);
+	} while (actual_elements_markers < markers_to_gather);
 
-	//std::cout << "availableElementsMarkers: " << availableElementsMarkers << std::endl
-	//	<< "actualElementsMarkers: " << actualElementsMarkers << std::endsl
-	//	<< "firstElementMarkers: " << firstElementMarkers << std::endl;
+	vector<TriggerData> stamps;
 
-	markersBuffer->advance_offset(firstElementMarkers);
-	markersBuffer->advance_acquired(actualElementsMarkers);
-
-	vector<uint64_t> stamps;
-
-	for (int i = 0; i < triggers; i++)
+	int32_t *ptr = markers.data() + first_element_offset;
+	int32_t offset = 0;
+	for (int i = 0; i < triggers_per_read; i++)
 	{
-		int32_t *seg = markersBuffer->get_raw_unprocessed();
+		int32_t *seg = ptr + offset;
 		uint32_t header = seg[0];
+
+		if ((header & 0x000000FF) != 0x01)
+			cerr << "wrong header -- cst acq (not zero sp)\n";
 
 		uint64_t low = seg[1];
 		uint64_t high = seg[2];
-		uint64_t const timestampLow = (low >> 8) & 0x0000000000ffffffL;
-		uint64_t const timestampHigh = uint64_t(high) << 24;
+		uint64_t timestampLow = (low >> 8) & 0x0000000000ffffffL;
+		uint64_t timestampHigh = uint64_t(high) << 24;
+		std::cout << "\tindex: " << (header >> 8) << endl;
+		stamps.emplace_back(timestampHigh | timestampLow, header >> 8, (-1 * (seg[1] & 0x000000ff)) / 256);
 
-		stamps.push_back(timestampHigh | timestampLow);
-		markersBuffer->advance_processed(16);
+		offset += 16;
 	}
 
 	ViInt64 firstElementSamples;
 	ViInt64 actualElementsSamples = 0;
 	ViInt64 availableElementsSamples = 0;
 
-	int samplesToGather = (triggers * samples_per_trigger) / 2;
+	int elements_to_gather = (triggers_per_read * samples_per_trigger) / 2;
 	
 	do
 	{
 		AqMD3_StreamFetchDataInt32(
 			session,
-			samplesChannel.c_str(),
-			samplesToGather,
-			samplesBuffer->get_size(),
-			(ViInt32 *)samplesBuffer->get_raw_data(),
+			samples_channel.c_str(),
+			elements_to_gather,
+			samples_buffer->get_size(),
+			(ViInt32 *)samples_buffer->get_raw_data(),
 			&availableElementsSamples, &actualElementsSamples, &firstElementSamples);
-	} while (actualElementsSamples < samplesToGather);
+	} while (actualElementsSamples < elements_to_gather);
 	//std::cout << "availableElementsSamples " << availableElementsSamples << std::endl
 	//	<< "actualElementsSamples: " << actualElementsSamples << std::endl
 	//	<< "firstElementSamples: " << firstElementSamples << std::endl;
 
 
-	samplesBuffer->advance_offset(firstElementSamples);
-	samplesBuffer->advance_acquired(actualElementsSamples);
+	samples_buffer->advance_offset(firstElementSamples);
+	samples_buffer->advance_acquired(actualElementsSamples);
 
-	//return AcquiredData(stamps, samples, samplesBuffer);
-	return AcquiredData();
+	return AcquiredData(stamps, samples_buffer_pool, samples_buffer, samples_per_trigger);
 }

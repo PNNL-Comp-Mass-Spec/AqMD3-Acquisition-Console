@@ -26,6 +26,9 @@ public:
 	std::string const visa_device_id;
 	std::string const options;
 
+	double const full_scale_range_500mv;
+	double const full_scale_range_2500mv;
+
 private:
 	uint64_t record_size;
 
@@ -45,18 +48,20 @@ public:
 		, control_io_1("ControlIO1")
 		, control_io_2("ControlIO2")
 		, control_io_3("ControlIO3")
+		, full_scale_range_500mv(0.5)
+		, full_scale_range_2500mv(2.5)
 	{}
 
 	void set_sampling_rate(double rate);
 	void set_record_size(uint64_t elements);
 	void set_trigger_parameters(std::string trigger, double level, bool isRisingEdgeTriggered);
+	void set_channel_parameters(std::string channel, double range, double offset);
 
 	void enable_io_port();
 	void disable_io_port();
 
-	std::shared_ptr<StreamingContext> configure_cst(std::string samples_channel, std::string markers_channel);
-	//std::shared_ptr<StreamingContext> configure_cst_zs1(std::string samples_channel, std::string markers_channel, int16_t threshold, uint16_t hysteresis, uint8_t pre_samples, uint8_t post_samples);
-	std::shared_ptr<StreamingContext> configure_cst_zs1(std::string channel, int16_t threshold, uint16_t hysteresis, uint8_t pre_samples, uint8_t post_samples);
+	std::shared_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers) override;
+	std::shared_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, int16_t threshold, uint16_t hysteresis, uint8_t pre_samples, uint8_t post_samples) override;
 };
 
 #endif // !SA220P

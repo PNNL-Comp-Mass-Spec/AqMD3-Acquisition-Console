@@ -66,14 +66,3 @@ void AcquisitionBuffer::reset()
 	acquired_index = 0;
 	offset = 0;
 }
-
-void AcquisitionBuffer::reset_processed() 
-{
-	processed_index = 0;
-	acquired_index = 0;
-}
-
-std::vector<int32_t>::const_iterator AcquisitionBuffer::begin()
-{
-	return data.begin() + offset;
-}
