@@ -7,7 +7,12 @@ project (UIMFWriter)
 
 find_package(sqlite3 CONFIG REQUIRED)
 
-add_library (UIMFWriter "src/UIMFWriter.cpp")
+add_library (UIMFWriter 
+src/uimfwriter.cpp
+src/rlzencoder.cpp
+include/UIMFWriter/uimfwriter.h
+include/UIMFWriter/rlzencoder.h
+)
 add_library(i::uimf ALIAS UIMFWriter)
 
 target_link_libraries(UIMFWriter PRIVATE sqlite3)
