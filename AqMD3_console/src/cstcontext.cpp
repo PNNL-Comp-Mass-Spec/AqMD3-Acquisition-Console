@@ -24,7 +24,7 @@ AcquiredData CstContext::acquire(std::chrono::milliseconds timeoutMs)
 			&available_elements_markers, &actual_elements_markers, &first_element_offset);
 	} while (actual_elements_markers < markers_to_gather);
 
-	vector<TriggerData> stamps;
+	vector<AcquiredData::TriggerData> stamps;
 
 	int32_t *ptr = markers.data() + first_element_offset;
 	int32_t offset = 0;

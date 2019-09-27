@@ -257,7 +257,7 @@ static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, 
 {
 
 	int i = 1;
-	vector<TriggerData> vec;
+	vector<AcquiredData::TriggerData> vec;
 	ofstream datasink;
 	//datasink.open("nul");
 

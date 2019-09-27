@@ -10,7 +10,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 	int trig_count = 0;
 	int gate_count = 0;
 	uint64_t to_acquire = 0;
-	vector<TriggerData> stamps;
+	vector<AcquiredData::TriggerData> stamps;
 
 	bool preprocess = false;
 	int min_target_records = triggers_per_read * 16;
