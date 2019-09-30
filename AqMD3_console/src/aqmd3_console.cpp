@@ -63,7 +63,7 @@ int main() {
 	queue<AcquiredData> dataQueue;
 	mutex lock;
 
-	auto dig = digitizer.configure_cst_zs1(digitizer.channel_1, 100, 600, 100, 0, 0);
+	auto dig = digitizer.configure_cst_zs1(digitizer.channel_1, 100, Digitizer::ZeroSuppressParameters(600, 100, 0, 0));
 
 	zmq::context_t context(1);
 	zmq::socket_t publisher(context, ZMQ_PUB);

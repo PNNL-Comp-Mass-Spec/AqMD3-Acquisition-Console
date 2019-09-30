@@ -61,7 +61,7 @@ public:
 	void disable_io_port();
 
 	std::shared_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers) override;
-	std::shared_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, int16_t threshold, uint16_t hysteresis, uint8_t pre_samples, uint8_t post_samples) override;
+	std::shared_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, ZeroSuppressParameters parameters) override;
 };
 
 #endif // !SA220P

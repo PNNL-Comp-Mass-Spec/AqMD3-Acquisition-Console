@@ -19,6 +19,20 @@ public:
 		Error,
 	};
 
+	struct ZeroSuppressParameters {
+		int16_t const threshold;
+		uint16_t const hysteresis;
+		uint8_t const pre_samples;
+		uint8_t const post_samples;
+
+		ZeroSuppressParameters(int16_t threshold, uint16_t hysteresis, uint8_t pre_samples, uint8_t post_samples)
+			: threshold(threshold)
+			, hysteresis(hysteresis)
+			, pre_samples(pre_samples)
+			, post_samples(post_samples)
+		{}
+	};
+
 protected:
 	ViSession session;
 
@@ -34,7 +48,7 @@ public:
 	}
 
 	virtual std::shared_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers) = 0;
-	virtual std::shared_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, int16_t threshold, uint16_t hysteresis, uint8_t pre_samples, uint8_t post_samples) = 0;
+	virtual std::shared_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, ZeroSuppressParameters parameters) = 0;
 
 private:
 	std::pair<std::string, ErrorType> check_error(ViStatus status) {

@@ -127,7 +127,7 @@ std::shared_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint
 	return std::shared_ptr<CstContext>(nullptr);
 }
 
-std::shared_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, uint32_t triggers, int16_t threshold, uint16_t hysteresis, uint8_t pre_samples, uint8_t post_samples)
+std::shared_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, uint32_t triggers, ZeroSuppressParameters parameters)
 {
 	auto rc = configure_streaming_mode(AQMD3_VAL_STREAMING_MODE_TRIGGERED);
 
@@ -140,12 +140,12 @@ std::shared_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, 
 	if (rc.second != Digitizer::None)
 		throw rc.first;
 
-	rc = configure_zs_hysteresis(channel.c_str(), hysteresis);
+	rc = configure_zs_hysteresis(channel.c_str(), parameters.hysteresis);
 	cout << rc.first << " " << rc.second << endl;
 	if (rc.second != Digitizer::None)
 		throw rc.first;
 
-	rc = configure_zs_threshold(channel.c_str(), threshold);
+	rc = configure_zs_threshold(channel.c_str(), parameters.threshold);
 	cout << rc.first << " " << rc.second << endl;
 	if (rc.second != Digitizer::None)
 		throw rc.first;
