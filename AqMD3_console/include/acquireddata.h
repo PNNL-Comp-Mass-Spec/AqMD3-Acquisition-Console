@@ -71,7 +71,7 @@ public:
 	{}
 
 	std::tuple<vector<uint64_t> const, vector<int32_t> const, vector<uint32_t> const> process() const;
-	std::vector<EncodedResult const> AcquiredData::process(int frame, int processing_scan_start_number) const;
+	std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_start_number) const;
 };
 
 #endif // !ACQUIRED_DATA_H

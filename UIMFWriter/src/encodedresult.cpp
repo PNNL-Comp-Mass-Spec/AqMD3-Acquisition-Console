@@ -1,6 +1,6 @@
 #include "../include/UIMFWriter/encodedresult.h"
 
-ScanData EncodedResult::get_characteristics() const
+EncodedResult::ScanData EncodedResult::get_characteristics() const
 {
 	int64_t tic = 0;
 	int64_t bpi = 0;
@@ -30,5 +30,5 @@ ScanData EncodedResult::get_characteristics() const
 		offset += 1;
 	}
 
-	return ScanData(tic, bpi, bpi_mz, index_max_intensity);
+	return EncodedResult::ScanData(tic, bpi, bpi_mz, index_max_intensity);
 }

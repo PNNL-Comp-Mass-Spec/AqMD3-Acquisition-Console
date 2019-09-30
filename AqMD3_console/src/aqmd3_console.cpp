@@ -50,6 +50,7 @@ static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, 
 bool should_exit = false;
 
 int main() {
+	/* main application console */
 	auto server = new Server("tcp://*:5555");
 	SA220 digitizer("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
 
@@ -62,7 +63,7 @@ int main() {
 	queue<AcquiredData> dataQueue;
 	mutex lock;
 
-	auto dig = digitizer.configure_cst_zs1(digitizer.channel_1, 100, 1400, 100, 0, 0);
+	auto dig = digitizer.configure_cst_zs1(digitizer.channel_1, 100, 600, 100, 0, 0);
 
 	zmq::context_t context(1);
 	zmq::socket_t publisher(context, ZMQ_PUB);
@@ -87,6 +88,7 @@ int main() {
 	readable_file.close();
 
 
+	/* server stuff */
 	//auto server = new Server("tcp://*:6545");
 	//server->register_handler([&](Server::ReceivedRequest req) 
 	//{
@@ -240,14 +242,17 @@ int main() {
 
 static void digitizer_worker(std::condition_variable &sig, queue<AcquiredData>& resultsQueue, shared_ptr<StreamingContext> context)
 {
+	std::cout << "STARTING ACQUISITION" << endl;
+
 	context->start();
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 200; i++)
 	{
 		auto t1 = chrono::high_resolution_clock::now();
 		auto data = context->acquire(std::chrono::milliseconds(100));
 		resultsQueue.push(data);
 		auto t2 = chrono::high_resolution_clock::now();
 		sig.notify_one();
+		cout << "ACQUIRING TIME:" << (t2 - t1).count() << endl;
 	}
 	should_exit = true;
 }
@@ -278,48 +283,95 @@ static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, 
 			AcquiredData ae = workQueue.front();
 			workQueue.pop();
 
-			try
-			{
-				std::vector<uint64_t> timestamps;
-				std::vector<uint32_t> tics;
-				std::vector<int32_t> mz_sum;
-
-				std::tie(timestamps, mz_sum, tics) = ae.process();
-
-				readable_file << "Timestamps\n";
-				readable_file << "[";
-				for (auto ts : timestamps)
-				{
-					readable_file << " " << ts << " ";
-				}
-				readable_file << "]\n";
-
-				readable_file << "tic\n";
-				readable_file << "[";
-				for (auto tic : tics)
-				{
-					readable_file << " " << tic << " ";
-				}
-				readable_file << "]\n";
-
-				readable_file << "Samples\n";
-				readable_file << "[";
-				for (auto samp : mz_sum)
-				{
-					readable_file << " " << samp << " ";
-				}
-				readable_file << "]\n";
-			}
-			catch (const std::exception& e) {
-				std::cout << e.what();
-			}
+			auto result = ae.process(1, 0);
 			auto t2 = chrono::high_resolution_clock::now();
-			cout << "\tprocess: " << (t2 - t1).count() << endl;
+			cout << "PROCESSING TIME:" << (t2 - t1).count() << endl;;
+			//for (auto a : result)
+			//{
+			//	cout << "SCAN: " << a.scan << "\n";
+			//	cout << "BPI: " << a.bpi << endl;
+			//	cout << "TIC: " << a.tic << endl;
+			//	cout << "DATA ELEMENTS: " << a.encoded_spectra.size() << endl;
+
+			//	for (auto v : a.encoded_spectra)
+			//	{
+			//		cout << v << endl;
+			//	}
+			//}
 		}
 	}
 	datasink.close();
 	context->stop();
 }
+
+//static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, shared_ptr<StreamingContext> context,
+//	ofstream& readable_file)
+//{
+//
+//	int i = 1;
+//	vector<AcquiredData::TriggerData> vec;
+//	ofstream datasink;
+//	//datasink.open("nul");
+//
+//	while (!should_exit)
+//	{
+//		{
+//			std::unique_lock<std::mutex> lock(lockable);
+//			sig.wait(lock);
+//		}
+//
+//		while (!workQueue.empty())
+//		{
+//			Message msg;
+//			msg.mutable_tic()->Reserve(256);
+//			msg.mutable_time_stamps()->Reserve(256);
+//
+//			auto t1 = chrono::high_resolution_clock::now();
+//			AcquiredData ae = workQueue.front();
+//			workQueue.pop();
+//
+//			try
+//			{
+//				std::vector<uint64_t> timestamps;
+//				std::vector<uint32_t> tics;
+//				std::vector<int32_t> mz_sum;
+//
+//				std::tie(timestamps, mz_sum, tics) = ae.process();
+//
+//				readable_file << "Timestamps\n";
+//				readable_file << "[";
+//				for (auto ts : timestamps)
+//				{
+//					readable_file << " " << ts << " ";
+//				}
+//				readable_file << "]\n";
+//
+//				readable_file << "tic\n";
+//				readable_file << "[";
+//				for (auto tic : tics)
+//				{
+//					readable_file << " " << tic << " ";
+//				}
+//				readable_file << "]\n";
+//
+//				readable_file << "Samples\n";
+//				readable_file << "[";
+//				for (auto samp : mz_sum)
+//				{
+//					readable_file << " " << samp << " ";
+//				}
+//				readable_file << "]\n";
+//			}
+//			catch (const std::exception& e) {
+//				std::cout << e.what();
+//			}
+//			auto t2 = chrono::high_resolution_clock::now();
+//			cout << "\tprocess: " << (t2 - t1).count() << endl;
+//		}
+//	}
+//	datasink.close();
+//	context->stop();
+//}
 
 //static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, shared_ptr<StreamingContext> context,
 //	ofstream& readable_file)

@@ -14,7 +14,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 
 	bool preprocess = false;
 	int min_target_records = triggers_per_read * 16;
-	cout << "ACQUIRING " << triggers_per_read << " TRIGGERS\n";
+	//cout << "\tACQUIRING " << triggers_per_read << " TRIGGERS\n";
 
 
 	AcquisitionBuffer* markers_buffer = nullptr;
@@ -52,7 +52,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 				uint64_t high = seg[2];
 				uint64_t timestampLow = (low >> 8) & 0x0000000000ffffffL;
 				uint64_t timestampHigh = uint64_t(high) << 24;
-				std::cout << "\tindex: " << (header >> 8) << endl;
+				//std::cout << "\tindex: " << (header >> 8) << endl;
 				stamps.emplace_back(timestampHigh | timestampLow, header >> 8, (-1 * (seg[1] & 0x000000ff))/256);
 				markers_buffer->advance_processed(16);
 
@@ -82,7 +82,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 
 						if (stamps.size() == 0)
 						{
-							cout << "\tNo elements in stamps - discarding acquired elements." << endl;
+							//cout << "\tNo elements in stamps - discarding acquired elements." << endl;
 							markers_buffer->advance_processed(16);
 							break;
 						}
@@ -129,9 +129,10 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 					markers_buffer->get_size(),
 					(ViInt32 *)markers_buffer->get_raw_unaquired(),
 					&available_elements_markers, &actual_elements_markers, &first_element_markers);
-			} while (available_elements_markers < min_target_records);
 
-			cout << "\tacquired marker elements: " << actual_elements_markers << endl;
+			} while (actual_elements_markers < min_target_records);
+
+			//cout << "\tacquired marker elements: " << actual_elements_markers << endl;
 
 			markers_buffer->advance_offset(first_element_markers);
 			markers_buffer->advance_acquired(actual_elements_markers);
@@ -162,6 +163,8 @@ process:
 
 	samples_buffer->advance_offset(first_element_samples);
 	samples_buffer->advance_acquired(actual_elements_samples);
+
+	//cout << "\tacquired sample elements: " << actual_elements_samples << endl;
 
 	return AcquiredData(stamps, samples_buffer_pool, samples_buffer, samples_per_trigger);
 }
