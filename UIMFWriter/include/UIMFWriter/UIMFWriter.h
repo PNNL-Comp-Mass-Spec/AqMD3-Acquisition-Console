@@ -1,21 +1,32 @@
 #ifndef UIMFWRITER_H
 #define UIMFWRITER_H
 
-#include <sqlite3.h>
+#include "encodedresult.h"
+#include <SQLiteCpp/SQLiteCpp.h>
 #include <memory>
 #include <string>
+#include <vector>
 
-class UimfWriter
-{
-	private:
-		sqlite3 *db;
+class UimfWriter {
+private:
+	std::string const insert_scan_statement;
+	size_t const insert_scan_statement_size_bytes;
 
-	public:
-		UimfWriter() {};
-		~UimfWriter() {};
+	SQLite::Database db;
 
-		static std::shared_ptr<UimfWriter> Instance(std::string filepath);
+	std::string encoded_result_to_insert_statement(const EncodedResult& er) const;
+
+public:
+	UimfWriter(std::string database) 
+		: db(database, SQLite::OPEN_READWRITE)
+		, insert_scan_statement("INSERT INTO Frame_Scans (FrameNum, ScanNum, NonZeroCount, BPI, BPI_MZ, TIC, Intensities) VALUES(%d, %d, %d, %d, %lf, %d, %s);")
+		, insert_scan_statement_size_bytes(111)
+	{}
+	~UimfWriter() 
+	{
+	}
+	
+	void write_encoded_results(std::vector<EncodedResult> results);
 };
-
 
 #endif // !UIMFWRITER_H
