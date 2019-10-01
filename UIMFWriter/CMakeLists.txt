@@ -10,8 +10,14 @@ find_package(sqlite3 CONFIG REQUIRED)
 add_library (UIMFWriter 
 src/uimfwriter.cpp
 src/rlzencoder.cpp
+src/encodedresult.cpp
+src/lzf_c.c
+src/lzf_d.c
+include/UIMFWriter/encodedresult.h
 include/UIMFWriter/uimfwriter.h
 include/UIMFWriter/rlzencoder.h
+include/lzf/lzf.h
+include/lzf/lzfP.h
 )
 add_library(i::uimf ALIAS UIMFWriter)
 
