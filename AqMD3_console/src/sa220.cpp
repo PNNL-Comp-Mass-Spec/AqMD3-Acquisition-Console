@@ -166,8 +166,8 @@ std::shared_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, 
 			record_size * 256,
 			8,
 			"MarkersCh1",
-			256 * 256,
-			2,
+			256 * 256 * 4,
+			3,
 			record_size,
 			triggers
 		));

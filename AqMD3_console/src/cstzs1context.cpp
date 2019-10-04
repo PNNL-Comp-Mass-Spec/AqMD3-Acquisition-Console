@@ -5,17 +5,22 @@
 #include <tuple>
 #include <exception>
 
+using namespace std;
+
 AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 {
+	const int gate_acquisition_multiplier = 2;
+	const int marker_hunk_size = 16;
+	const int max_targer_records = triggers_per_read * marker_hunk_size * gate_acquisition_multiplier;
+	const int min_target_records = triggers_per_read * marker_hunk_size;
+
+	int markers_to_acquire = min_target_records;
 	int trig_count = 0;
 	int gate_count = 0;
 	uint64_t to_acquire = 0;
 	vector<AcquiredData::TriggerData> stamps;
 
 	bool preprocess = false;
-	int min_target_records = triggers_per_read * 16;
-	//cout << "\tACQUIRING " << triggers_per_read << " TRIGGERS\n";
-
 
 	AcquisitionBuffer* markers_buffer = nullptr;
 	if (unprocessed_buffer == nullptr)
@@ -45,7 +50,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 			case 0x01:
 			{
 				++trig_count;
-				if (trig_count > triggers_per_read)
+				if (trig_count >= triggers_per_read)
 					goto process;
 
 				uint64_t low = seg[1];
@@ -82,7 +87,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 
 						if (stamps.size() == 0)
 						{
-							//cout << "\tNo elements in stamps - discarding acquired elements." << endl;
+							cout << "\tNo elements in stamps - discarding acquired elements." << endl;
 							markers_buffer->advance_processed(16);
 							break;
 						}
@@ -111,6 +116,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 		{
 			markers_buffer_pool.return_in_use(markers_buffer);
 			markers_buffer = markers_buffer_pool.next_available();
+			unprocessed_buffer = nullptr;
 			preprocess = false;
 		}
 
@@ -125,14 +131,19 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 				AqMD3_StreamFetchDataInt32(
 					session,
 					markers_channel.c_str(),
-					min_target_records,
+					markers_to_acquire,
 					markers_buffer->get_size(),
 					(ViInt32 *)markers_buffer->get_raw_unaquired(),
 					&available_elements_markers, &actual_elements_markers, &first_element_markers);
 
-			} while (actual_elements_markers < min_target_records);
+			} while (actual_elements_markers < markers_to_acquire);
 
-			//cout << "\tacquired marker elements: " << actual_elements_markers << endl;
+			if (available_elements_markers > markers_to_acquire)
+				markers_to_acquire *= gate_acquisition_multiplier;
+
+			//cout << "\tacquired marker elements: " << actual_elements_markers 
+			//	<< " -- available marker elements: " << available_elements_markers
+			//	<<  " -- first element index: " << first_element_markers << endl;
 
 			markers_buffer->advance_offset(first_element_markers);
 			markers_buffer->advance_acquired(actual_elements_markers);

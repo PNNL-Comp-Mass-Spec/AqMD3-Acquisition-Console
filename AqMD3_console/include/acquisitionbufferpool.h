@@ -13,11 +13,10 @@ private:
 	map<int, AcquisitionBuffer*> in_use;
 
 public:
-	AcquisitionBufferPool(size_t buf_size, int count) :
-		available(count)
+	AcquisitionBufferPool(size_t buf_size, int count)
 	{
 		for (int i = 0; i < count; i++)
-			available.push_front(new AcquisitionBuffer(i, buf_size));		
+			available.push_back(new AcquisitionBuffer(i, buf_size));		
 	}
 
 	~AcquisitionBufferPool()

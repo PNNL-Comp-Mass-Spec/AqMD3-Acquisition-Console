@@ -26,7 +26,7 @@ AcquisitionBuffer* AcquisitionBufferPool::next_available()
 void AcquisitionBufferPool::return_in_use(AcquisitionBuffer* buffer)
 {
 	in_use.erase(buffer->get_id());
-	available.push_front(buffer);
+	available.push_back(buffer);
 }
 
 int AcquisitionBufferPool::get_available()
