@@ -150,6 +150,14 @@ std::shared_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, 
 	if (rc.second != Digitizer::None)
 		throw rc.first;
 
+	rc = configure_zs_pre_gate_samples(channel.c_str(), parameters.pre_samples);
+	if (rc.second != Digitizer::None)
+		throw rc.first;
+
+	rc = configure_zs_post_gate_samples(channel.c_str(), parameters.post_samples);
+	if (rc.second != Digitizer::None)
+		throw rc.first;
+
 	rc = apply_setup();
 	if (rc.second != Digitizer::None)
 		throw rc.first;
