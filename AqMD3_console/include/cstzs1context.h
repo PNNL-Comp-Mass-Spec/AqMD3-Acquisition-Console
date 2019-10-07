@@ -14,7 +14,13 @@ private:
 	bool add_residual;
 	AcquisitionBufferPool markers_buffer_pool;
 
+	int const gate_acquisition_multiplier = 2;
+	int const marker_hunk_size = 16;
+	int const max_target_records;
+	int const min_target_records;
+
 	AcquisitionBuffer* unprocessed_buffer;
+	//std::vector<int32_t> markers_buffer;
 public:
 	CstZm1Context(ViSession session,
 		std::string samples_channel,
@@ -30,6 +36,8 @@ public:
 		, residual(0)
 		, add_residual(false)
 		, unprocessed_buffer(nullptr)
+		, min_target_records(triggers_per_read * marker_hunk_size)
+		, max_target_records(triggers_per_read * marker_hunk_size * pow(gate_acquisition_multiplier, 3))
 	{}
 
 	AcquiredData acquire(std::chrono::milliseconds timeoutMs) override;

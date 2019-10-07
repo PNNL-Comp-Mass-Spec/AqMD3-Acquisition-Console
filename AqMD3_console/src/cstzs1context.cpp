@@ -9,11 +9,6 @@ using namespace std;
 
 AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 {
-	const int gate_acquisition_multiplier = 2;
-	const int marker_hunk_size = 16;
-	const int max_targer_records = triggers_per_read * marker_hunk_size * gate_acquisition_multiplier;
-	const int min_target_records = triggers_per_read * marker_hunk_size;
-
 	int markers_to_acquire = min_target_records;
 	int trig_count = 0;
 	int gate_count = 0;
@@ -22,6 +17,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 
 	bool preprocess = false;
 
+	// switch to using a single vector<int32_t> of size (trigs * 16 * mult^3) + 15
 	AcquisitionBuffer* markers_buffer = nullptr;
 	if (unprocessed_buffer == nullptr)
 	{
