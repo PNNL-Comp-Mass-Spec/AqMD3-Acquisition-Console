@@ -13,6 +13,8 @@
 #undef max
 #include "../include/message.pb.h"
 
+#include <UIMFWriter/uimfwriter.h>
+
 #include "AqMD3.h"
 
 #include <zmq.hpp>
@@ -26,7 +28,6 @@
 #include <random>
 #include <algorithm>
 #include <iterator>
-#include <iostream>
 #include <functional>
 #include <mutex>
 #include <tuple>
@@ -45,47 +46,70 @@ using namespace std;
 
 static void digitizer_worker(std::condition_variable &sig, queue<AcquiredData>& resultsQueue, shared_ptr<StreamingContext> context);
 static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, shared_ptr<StreamingContext> context,
-	ofstream& readable_file);
+	ofstream& readable_file, UimfWriter& uimfwriter);
 
 bool should_exit = false;
 
-int main() {
-	/* main application console */
+int record_size = 94016;
+
+int main(int argc, char *argv[]) {
+	if (argc != 3)
+		return 0;
+
+	int triggers = atoi(argv[1]);
+	std::string uimf_file = argv[2];
+	 
+	UimfWriter writer(uimf_file);
+
 	auto server = new Server("tcp://*:5555");
 	SA220 digitizer("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
 
-	digitizer.set_record_size(94016);
+	digitizer.set_record_size(record_size);
 	digitizer.set_sampling_rate(1000000000.0);
 	digitizer.set_trigger_parameters(digitizer.trigger_external, 0.5, true);
-	digitizer.set_channel_parameters(digitizer.channel_1, digitizer.full_scale_range_2500mv, 0.0);
-
-	condition_variable signal;
-	queue<AcquiredData> dataQueue;
-	mutex lock;
-
-	auto dig = digitizer.configure_cst_zs1(digitizer.channel_1, 100, Digitizer::ZeroSuppressParameters(600, 100, 0, 0));
+	digitizer.set_channel_parameters(digitizer.channel_1, digitizer.full_scale_range_500mv, 0.0);
 
 	zmq::context_t context(1);
 	zmq::socket_t publisher(context, ZMQ_PUB);
 	publisher.bind("tcp://*:6546");
 
-	vector<thread> threads;
+	//auto t = std::chrono::system_clock::now();
+	//auto tp = std::chrono::system_clock::to_time_t(t);
+	//string tps = std::ctime(&tp);
 
-	ofstream readable_file;
-	auto t = std::chrono::system_clock::now();
-	auto tp = std::chrono::system_clock::to_time_t(t);
-	string tps = std::ctime(&tp);
+	char buffer[512];
+	std::string output_template = "output_%d_threshold_200_hysteresis_%d_presamples.csv";
 
-	readable_file.open("output.txt");
-
-	threads.push_back(thread(publish_worker, ref(publisher), ref(signal), ref(lock), ref(dataQueue), dig, ref(readable_file)));
-	threads.push_back(thread(digitizer_worker, ref(signal), ref(dataQueue), dig));
-
-	for (auto& thread : threads)
+	//for (int presamples = 0; presamples <= 16; presamples += 8)
+	//{
+	//	for (int threshold = 0; threshold <= 4500; threshold += 500)	
+	for (int presamples = 0; presamples <= 0; presamples += 8)
 	{
-		thread.join();
+		for (int threshold = 0; threshold <= 0; threshold += 500)
+		{
+			should_exit = false;
+			condition_variable signal;
+			queue<AcquiredData> dataQueue;
+			mutex lock;
+
+			vector<thread> threads;
+			ofstream readable_file;
+			sprintf(buffer, output_template.c_str(), threshold, presamples);
+			std::string out_file = buffer;
+			readable_file.open(out_file);
+
+			auto dig = digitizer.configure_cst_zs1(digitizer.channel_1, triggers, Digitizer::ZeroSuppressParameters(threshold, 200, presamples, 0));
+
+			threads.push_back(thread(publish_worker, ref(publisher), ref(signal), ref(lock), ref(dataQueue), dig, ref(readable_file), ref(writer)));
+			threads.push_back(thread(digitizer_worker, ref(signal), ref(dataQueue), dig));
+
+			for (auto& thread : threads)
+			{
+				thread.join();
+			}
+			readable_file.close();
+		}
 	}
-	readable_file.close();
 
 
 	/* server stuff */
@@ -245,7 +269,7 @@ static void digitizer_worker(std::condition_variable &sig, queue<AcquiredData>& 
 	std::cout << "STARTING ACQUISITION" << endl;
 
 	context->start();
-	for (int i = 0; i < 200; i++)
+	for (int i = 0; i < 1; i++)
 	{
 		auto t1 = chrono::high_resolution_clock::now();
 		auto data = context->acquire(std::chrono::milliseconds(100));
@@ -258,21 +282,28 @@ static void digitizer_worker(std::condition_variable &sig, queue<AcquiredData>& 
 }
 
 static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, shared_ptr<StreamingContext> context,
-	ofstream& readable_file)
+	ofstream& readable_file, UimfWriter& uimfwriters)
 {
 
 	int i = 1;
 	vector<AcquiredData::TriggerData> vec;
-	ofstream datasink;
+	//ofstream datasink;
 	//datasink.open("nul");
 
+	vector<vector<int32_t>> vecs;
+	for (int i = 0; i < 10; i++)
+	{
+		vecs.emplace_back(record_size);
+	}
+
+	//uimfwriter.start_trans();
 	while (!should_exit)
 	{
 		{
 			std::unique_lock<std::mutex> lock(lockable);
 			sig.wait(lock);
 		}
-
+		int i = 0;
 		while (!workQueue.empty())
 		{
 			Message msg;
@@ -283,25 +314,45 @@ static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, 
 			AcquiredData ae = workQueue.front();
 			workQueue.pop();
 
-			auto result = ae.process(1, 0);
+			auto result = ae.process(1, 25 * i++);
 			auto t2 = chrono::high_resolution_clock::now();
-			cout << "PROCESSING TIME:" << (t2 - t1).count() << endl;;
-			//for (auto a : result)
-			//{
-			//	cout << "SCAN: " << a.scan << "\n";
-			//	cout << "BPI: " << a.bpi << endl;
-			//	cout << "TIC: " << a.tic << endl;
-			//	cout << "DATA ELEMENTS: " << a.encoded_spectra.size() << endl;
+			
+			for (int i = 0; i < 10; i++)
+			{
+				auto obj = result[i];
+				int seg_index = 0;
+				cout << "\t---------LARGEST ITEM INDEX: " << obj.index_max_intensity << endl;
+				cout << "\t---------LARGEST ITEM: " << obj.bpi << endl;
+				for (auto val : obj.encoded_spectra)
+				{
+					if (val < 0)
+					{
+						cout << "Zero Val: " << val << endl;
+						seg_index += (-1 * val);
+						continue;
+					}
 
-			//	for (auto v : a.encoded_spectra)
-			//	{
-			//		cout << v << endl;
-			//	}
-			//}
+					vecs[i][seg_index++] = val;
+				}
+				cout << std::endl;
+			}
+			cout << "PROCESSING TIME:" << (t2 - t1).count() << endl;;
 		}
 	}
-	datasink.close();
 	context->stop();
+
+	readable_file << "index,trig_1,trig_2,trig_3,trig_4,trig_5,trig_6,trig_7,trig_8,trig_9,trig_10\n";
+	for (int i = 0; i < record_size; i++)
+	{
+		readable_file << i << ",";
+		for (int j = 0; j < vecs.size(); j++)
+		{
+			readable_file << vecs[j][i] << ",";
+		}
+		readable_file << std::endl;
+	}
+
+	//uimfwriter.end_trans();
 }
 
 //static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, shared_ptr<StreamingContext> context,
