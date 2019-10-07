@@ -6,64 +6,6 @@
 #include <tuple>
 #include <algorithm>
 
-std::tuple<vector<uint64_t> const, vector<int32_t> const, vector<uint32_t> const> AcquiredData::process() const
-{
-	////print out
-
-	//cout << "[ ";
-	//int32_t *ptr_t = sample_buffer->get_raw_unprocessed();
-	//for (int i = 0; i < sample_buffer->get_acquired(); i++)
-	//{
-	//	cout << ptr_t[i] << " ,";
-	//}
-	//cout << " ]";
-
-	int segments = stamps.size();
-
-	vector<uint64_t> timestamps(segments);
-
-	vector<uint32_t> summed_vectors(segments);
-	vector<int32_t> summed_samples(samples);
-
-	int32_t *ptr = sample_buffer->get_raw_unprocessed();
-
-	int offset = 0;
-
-	std::cout << "TOTAL SEGMENTS TO PROCESS: " << stamps.size() << "\n";
-
-	for (int k = 0; k < stamps.size(); k++)
-	{
-		auto trig = stamps[k];
-		timestamps[k] = trig.timestamp;
-
-		for (auto& gate : trig.gate_data)
-		{
-			auto samples_offset_index = get<0>(gate);
-			auto size = get<2>(gate) / 2;
-			auto size_to_process = get<3>(gate);
-
-			int32_t *ptr = sample_buffer->get_raw_unprocessed() + offset;
-			for (int i = 0; i < size; i++)
-			{			
-				int32_t first = (ptr[i] << 16) >> 16;
-				int32_t second = ptr[i] >> 16;
-
-				summed_samples[samples_offset_index + (2 * i)] += first;
-				summed_samples[samples_offset_index + (2 * i) + 1] += second;
-
-				summed_vectors[k] += first + second;
-			}
-			offset += size_to_process;
-		}
-		offset = 0;
-	}
-
-	sample_buffer_pool->return_in_use(sample_buffer);
-
-	return std::make_tuple(timestamps, summed_samples, summed_vectors);
-}
-
-
 std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_start_number) const
 {
 	std::vector<EncodedResult> results;
@@ -71,6 +13,7 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 	
 	int32_t *ptr = sample_buffer->get_raw_unprocessed();
 	int offset = 0;
+
 	for (int trig_index = 0; trig_index < stamps.size(); trig_index++)
 	{
 		auto trig = stamps[trig_index];
@@ -91,16 +34,15 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 		for (int j = 0 ; j < gate_count; j++)
 		{
 			auto gate = trig.gate_data[j];
-
-			auto size = get<2>(gate) / 2;
+			auto samples = get<2>(gate);
+			auto elements = samples / 2;
 			auto size_to_process = get<3>(gate);
 
-			// BEGIN determine first zp negative value -- really going to need to refactor this
 			int32_t gate_zero_count = 0;
 			if (gate_count > 1)
 			{
 				if (j == 0) {
-					gate_zero_count = get<0>(gate);
+					gate_zero_count = get<0>(gate) - 1;
 				}
 				else {
 					// get difference from start of current gate to end of previous gate in samples
@@ -109,20 +51,19 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 				}
 			}
 			else {
-				gate_zero_count = get<0>(gate);
+				gate_zero_count = get<0>(gate) - 1;
 			}
 
 			if (gate_zero_count != 0)
 			{
-				gate_zero_count -= 1;
 				encoded_samples.push_back(-1 * gate_zero_count);
 			}
-			// END determine first zp negative value
 
 			zero_count += gate_zero_count;
 
+			int processed = 0;
 			int32_t *ptr = sample_buffer->get_raw_unprocessed() + offset;
-			for (int i = 0; i < size; i++)
+			for (int i = 0; i < elements; i++)
 			{
 				int32_t first = (ptr[i] << 16) >> 16;
 				int32_t second = ptr[i] >> 16;
@@ -131,11 +72,12 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 				if (first < 0)
 					first = 0;
 
+
 				if (first > bpi)
 				{
 					bpi = first;
-
-					index_max_intensity = non_zero_count + zero_count + i + 1;
+					index_max_intensity = non_zero_count + zero_count + (2 * i);
+					bpi_mz = index_max_intensity;
 				}
 
 				encoded_samples.push_back(first);
@@ -146,17 +88,18 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 
 				if (second > bpi)
 				{
-					bpi = first;
-
-					index_max_intensity = non_zero_count + zero_count + i + 2;
+					bpi = second;
+					index_max_intensity = non_zero_count + zero_count + (2 * i) + 1;
+					bpi_mz = index_max_intensity;
 				}
 
 				encoded_samples.push_back(second);
 				tic += first + second;
+				processed += 2;
 			}
-
+			//cout << "processed == samples: " << (processed == samples ? "true" : "false") << " processed: " << processed << " samples: " << samples << endl;
 			offset += size_to_process;
-			non_zero_count += size;
+			non_zero_count += samples;
 		}
 
 		results.emplace_back(
@@ -168,8 +111,6 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 			bpi,
 			bpi_mz,
 			index_max_intensity);
-
-		offset = 0;
 	}
 
 	sample_buffer_pool->return_in_use(sample_buffer);
@@ -189,6 +130,51 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 
 //std::vector<int32_t> encoded_samples;
 //encoded_samples.reserve(alloc);
+
+//std::tuple<vector<uint64_t> const, vector<int32_t> const, vector<uint32_t> const> AcquiredData::process() const
+//{
+//	int segments = stamps.size();
+//
+//	vector<uint64_t> timestamps(segments);
+//
+//	vector<uint32_t> summed_vectors(segments);
+//	vector<int32_t> summed_samples(samples);
+//
+//	int32_t *ptr = sample_buffer->get_raw_unprocessed();
+//
+//	int offset = 0;
+//
+//	for (int k = 0; k < stamps.size(); k++)
+//	{
+//		auto trig = stamps[k];
+//		timestamps[k] = trig.timestamp;
+//
+//		for (auto& gate : trig.gate_data)
+//		{
+//			auto samples_offset_index = get<0>(gate);
+//			auto size = get<2>(gate) / 2;
+//			auto size_to_process = get<3>(gate);
+//
+//			int32_t *ptr = sample_buffer->get_raw_unprocessed() + offset;
+//			for (int i = 0; i < size; i++)
+//			{			
+//				int32_t first = (ptr[i] << 16) >> 16;
+//				int32_t second = ptr[i] >> 16;
+//
+//				summed_samples[samples_offset_index + (2 * i)] += first;
+//				summed_samples[samples_offset_index + (2 * i) + 1] += second;
+//
+//				summed_vectors[k] += first + second;
+//			}
+//			offset += size_to_process;
+//		}
+//		offset = 0;
+//	}
+//
+//	sample_buffer_pool->return_in_use(sample_buffer);
+//
+//	return std::make_tuple(timestamps, summed_samples, summed_vectors);
+//}
 
 //void AcquiredData::process(vector<uint64_t>& timestamps, vector<int32_t>& mz, vector<uint32_t>& tic)
 //{
