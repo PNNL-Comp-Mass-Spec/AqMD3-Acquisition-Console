@@ -1,34 +1,35 @@
 #include "../include/UIMFWriter/encodedresult.h"
 
-EncodedResult::ScanData EncodedResult::get_characteristics() const
+extern "C" {
+#include "../include/lzf/lzf.h"
+}
+
+EncodedResult::CompressedSpectra EncodedResult::get_compressed_spectra()
 {
-	int64_t tic = 0;
-	int64_t bpi = 0;
-	double bpi_mz = 0.0;
-	int32_t index_max_intensity = 0;
+	int encoded_size = encoded_spectra.size() * sizeof(int32_t);
+	int processing_buffer_size = encoded_size * 2;
+	char *lzf_buffer = new char[processing_buffer_size];
 
-	int32_t offset = 0;
-	for (int i = 0; i < encoded_spectra.size(); i++)
+	unsigned int bytes = lzf_compress(encoded_spectra.data(), encoded_size, lzf_buffer, processing_buffer_size);
+	lzf_buffer[bytes] = '\0';
+
+#ifdef check_compress
+	char *out_buf = new char[4096];
+	unsigned int o_bytes = lzf_decompress(lzf_buffer, processing_buffer_size, out_buf, 4096);
+
+	int32_t *rt = const_cast<int32_t *>(encoded_spectra.data());
+	char *data_ptr = (char *)rt;
+
+	assert(o_bytes == encoded_size);
+
+	for (int i = 0; i < bytes; i++)
 	{
-		int32_t data = encoded_spectra[i];
-
-		if (data < 0)
+		if (data_ptr[i] != out_buf[i])
 		{
-			offset += data * -1;
-			continue;
+			throw "decompress fail";
 		}
-
-		tic += data;
-		if (data > bpi)
-		{
-			bpi = data;
-			index_max_intensity = offset;
-
-			bpi_mz = offset; // ?
-		}
-
-		offset += 1;
 	}
+#endif
 
-	return EncodedResult::ScanData(tic, bpi, bpi_mz, index_max_intensity);
+	return CompressedSpectra(lzf_buffer, bytes);
 }

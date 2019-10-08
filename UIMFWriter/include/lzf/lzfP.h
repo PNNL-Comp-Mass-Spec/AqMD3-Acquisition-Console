@@ -84,6 +84,8 @@
  * modern cpus and large (>>64k) blocks, and also makes compression
  * deterministic/repeatable when the configuration otherwise is the same).
  */
+#define INIT_HTAB 1
+
 #ifndef INIT_HTAB
 # define INIT_HTAB 0
 #endif

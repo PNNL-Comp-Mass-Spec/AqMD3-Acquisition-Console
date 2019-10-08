@@ -17,7 +17,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 
 	bool preprocess = false;
 
-	// switch to using a single vector<int32_t> of size (trigs * 16 * mult^3) + 15
+	// switch to using a single vector<int32_t> of size( (trigs * 16 * mult^3) + 15 )
 	AcquisitionBuffer* markers_buffer = nullptr;
 	if (unprocessed_buffer == nullptr)
 	{
@@ -46,7 +46,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 			case 0x01:
 			{
 				++trig_count;
-				if (trig_count >= triggers_per_read)
+				if (trig_count > triggers_per_read + 1)
 					goto process;
 
 				uint64_t low = seg[1];

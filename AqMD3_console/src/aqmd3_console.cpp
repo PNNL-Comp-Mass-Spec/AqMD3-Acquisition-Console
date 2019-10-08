@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 	//for (int presamples = 0; presamples <= 16; presamples += 8)
 	//{
 	//	for (int threshold = 0; threshold <= 4500; threshold += 500)	
-	for (int presamples = 0; presamples <= 0; presamples += 8)
+	for (int presamples = 8; presamples <= 8; presamples += 8)
 	{
 		for (int threshold = 0; threshold <= 0; threshold += 500)
 		{
@@ -269,41 +269,40 @@ static void digitizer_worker(std::condition_variable &sig, queue<AcquiredData>& 
 	std::cout << "STARTING ACQUISITION" << endl;
 
 	context->start();
-	for (int i = 0; i < 1; i++)
+	for (int i = 0; i < 100; i++)
 	{
 		auto t1 = chrono::high_resolution_clock::now();
 		auto data = context->acquire(std::chrono::milliseconds(100));
 		resultsQueue.push(data);
 		auto t2 = chrono::high_resolution_clock::now();
 		sig.notify_one();
-		cout << "ACQUIRING TIME:" << (t2 - t1).count() << endl;
+		//std::cout << "ACQUIRING TIME:" << (t2 - t1).count() << endl;
 	}
 	should_exit = true;
 }
 
 static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, shared_ptr<StreamingContext> context,
-	ofstream& readable_file, UimfWriter& uimfwriters)
+	ofstream& readable_file, UimfWriter& uimfwriter)
 {
 
-	int i = 1;
+	int process_index = 0;
 	vector<AcquiredData::TriggerData> vec;
 	//ofstream datasink;
 	//datasink.open("nul");
 
-	vector<vector<int32_t>> vecs;
-	for (int i = 0; i < 10; i++)
-	{
-		vecs.emplace_back(record_size);
-	}
+	//vector<vector<int32_t>> vecs;
+	//for (int i = 0; i < 10; i++)
+	//{
+	//	vecs.emplace_back(record_size);
+	//}
 
-	//uimfwriter.start_trans();
+	UimfFrame frame(0, 94016, 1, 10000, 1, 0, "");
 	while (!should_exit)
 	{
 		{
 			std::unique_lock<std::mutex> lock(lockable);
 			sig.wait(lock);
 		}
-		int i = 0;
 		while (!workQueue.empty())
 		{
 			Message msg;
@@ -314,45 +313,48 @@ static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, 
 			AcquiredData ae = workQueue.front();
 			workQueue.pop();
 
-			auto result = ae.process(1, 25 * i++);
+			auto result = ae.process(1, 100 * process_index++);
+			std::cout << "RESULTS COUNT: " << result.size() << endl;
+			frame.append_encoded_results(result);
 			auto t2 = chrono::high_resolution_clock::now();
 			
-			for (int i = 0; i < 10; i++)
-			{
-				auto obj = result[i];
-				int seg_index = 0;
-				cout << "\t---------LARGEST ITEM INDEX: " << obj.index_max_intensity << endl;
-				cout << "\t---------LARGEST ITEM: " << obj.bpi << endl;
-				for (auto val : obj.encoded_spectra)
-				{
-					if (val < 0)
-					{
-						cout << "Zero Val: " << val << endl;
-						seg_index += (-1 * val);
-						continue;
-					}
+			//for (int i = 0; i < 100; i++)
+			//{
+			//	auto obj = result[i];
+			//	int seg_index = 0;
+			//	std::cout << "\t---------LARGEST ITEM INDEX: " << obj.index_max_intensity << endl;
+			//	std::cout << "\t---------LARGEST ITEM: " << obj.bpi << endl;
+			//	for (auto val : obj.encoded_spectra)
+			//	{
+			//		if (val < 0)
+			//		{
+			//			std::cout << "Zero Val: " << val << endl;
+			//			seg_index += (-1 * val);
+			//			continue;
+			//		}
 
-					vecs[i][seg_index++] = val;
-				}
-				cout << std::endl;
-			}
-			cout << "PROCESSING TIME:" << (t2 - t1).count() << endl;;
+			//		vecs[i][seg_index++] = val;
+			//	}
+			//	std::cout << std::endl;
+			//}
+			std::cout << "ACQUISITION: " << process_index << endl;
+				//<<" PROCESSING TIME:" << (t2 - t1).count() << endl;;
 		}
 	}
 	context->stop();
 
-	readable_file << "index,trig_1,trig_2,trig_3,trig_4,trig_5,trig_6,trig_7,trig_8,trig_9,trig_10\n";
-	for (int i = 0; i < record_size; i++)
-	{
-		readable_file << i << ",";
-		for (int j = 0; j < vecs.size(); j++)
-		{
-			readable_file << vecs[j][i] << ",";
-		}
-		readable_file << std::endl;
-	}
+	//readable_file << "index,trig_1,trig_2,trig_3,trig_4,trig_5,trig_6,trig_7,trig_8,trig_9,trig_10\n";
+	//for (int i = 0; i < record_size; i++)
+	//{
+	//	readable_file << i << ",";
+	//	for (int j = 0; j < vecs.size(); j++)
+	//	{
+	//		readable_file << vecs[j][i] << ",";
+	//	}
+	//	readable_file << std::endl;
+	//}
 
-	//uimfwriter.end_trans();
+	uimfwriter.write_frame(frame);
 }
 
 //static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, shared_ptr<StreamingContext> context,
