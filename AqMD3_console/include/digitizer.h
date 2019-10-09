@@ -47,8 +47,8 @@ public:
 		AqMD3_close(session);
 	}
 
-	virtual std::shared_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers) = 0;
-	virtual std::shared_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, ZeroSuppressParameters parameters) = 0;
+	virtual std::unique_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers) = 0;
+	virtual std::unique_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, ZeroSuppressParameters parameters) = 0;
 
 private:
 	std::pair<std::string, ErrorType> check_error(ViStatus status) {
@@ -81,6 +81,7 @@ protected:
 
 	std::pair<std::string, ErrorType> configure_record_size(ViInt64 record_size);
 	std::pair<std::string, ErrorType> configure_data_reduction(ViInt32 mode);
+	std::pair<std::string, ErrorType> configure_acquisition_mode(ViInt32 mode);
 
 	std::pair<std::string, ErrorType> configure_zs_hysteresis(ViConstString channel, ViInt32 hysteresis);
 	std::pair<std::string, ErrorType> configure_zs_threshold(ViConstString channel, ViInt32 threshold);

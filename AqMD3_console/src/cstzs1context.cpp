@@ -34,7 +34,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 	ViInt64 first_element_markers;
 	ViInt64 available_elements_markers = 0;
 	ViInt64 actual_elements_markers = markers_buffer->get_unprocessed();
-	while (trig_count < triggers_per_read)
+	while (trig_count <= triggers_per_read)
 	{
 		for (int i = 0; i < actual_elements_markers / 16; i++)
 		{
@@ -46,7 +46,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 			case 0x01:
 			{
 				++trig_count;
-				if (trig_count > triggers_per_read + 1)
+				if (trig_count >= triggers_per_read + 1)
 					goto process;
 
 				uint64_t low = seg[1];
@@ -119,7 +119,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 		first_element_markers = 0;
 		available_elements_markers = 0;
 		actual_elements_markers = 0;
-		if (trig_count < triggers_per_read)
+		if (trig_count <= triggers_per_read)
 		{
 			markers_buffer->reset();
 			do

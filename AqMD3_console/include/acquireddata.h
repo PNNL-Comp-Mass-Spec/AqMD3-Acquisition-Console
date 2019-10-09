@@ -55,12 +55,14 @@ public:
 			//, gates()
 		{}
 	};
+
 private:
 	AcquisitionBufferPool *sample_buffer_pool;
 	AcquisitionBuffer *sample_buffer;
 
-	vector<TriggerData> stamps;
-	uint64_t samples;
+public:
+	vector<TriggerData> const stamps;
+	uint64_t const samples;
 
 public:
 	AcquiredData(vector<TriggerData> stamps, AcquisitionBufferPool *sample_pool, AcquisitionBuffer *sample_buffer, uint64_t samples)

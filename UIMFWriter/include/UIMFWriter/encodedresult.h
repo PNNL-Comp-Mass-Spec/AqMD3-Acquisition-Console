@@ -6,6 +6,8 @@
 
 class EncodedResult {
 public:
+	uint64_t const timestamp;
+
 	std::vector<int32_t> const encoded_spectra;
 	int32_t const non_zero_count;
 	int32_t const scan;
@@ -31,7 +33,7 @@ public:
 
 public:
 	EncodedResult(int32_t frame, int32_t scan, int32_t non_zero_count, std::vector<int32_t> encoded_spectra,
-		int64_t tic, int64_t bpi, double bpi_mz, int32_t index_max_intensity)
+		int64_t tic, int64_t bpi, double bpi_mz, int32_t index_max_intensity, uint64_t timestamp)
 	: encoded_spectra(encoded_spectra)
 		, frame(frame)
 		, scan(scan)
@@ -40,6 +42,7 @@ public:
 		, bpi(bpi)
 		, bpi_mz(bpi_mz)
 		, index_max_intensity(index_max_intensity)
+		, timestamp(timestamp)
 	{}
 
 	CompressedSpectra get_compressed_spectra();

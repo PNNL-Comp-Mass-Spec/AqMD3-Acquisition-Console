@@ -13,6 +13,7 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 	
 	int32_t *ptr = sample_buffer->get_raw_unprocessed();
 	int offset = 0;
+
 	for (int trig_index = 0; trig_index < stamps.size(); trig_index++)
 	{
 		auto trig = stamps[trig_index];
@@ -29,7 +30,6 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 		int32_t zero_count = 0;
 
 		size_t gate_count = trig.gate_data.size();
-
 		for (int j = 0 ; j < gate_count; j++)
 		{
 			auto gate = trig.gate_data[j];
@@ -109,7 +109,8 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 			tic,
 			bpi,
 			bpi_mz,
-			index_max_intensity);
+			index_max_intensity,
+			timestamp);
 	}
 
 	sample_buffer_pool->return_in_use(sample_buffer);

@@ -96,6 +96,12 @@ std::pair<std::string, Digitizer::ErrorType> Digitizer::configure_data_reduction
 	return check_error(status);
 }
 
+std::pair<std::string, Digitizer::ErrorType> Digitizer::configure_acquisition_mode(ViInt32 mode)
+{
+	ViStatus status = AqMD3_SetAttributeViInt32(session, "", AQMD3_ATTR_ACQUISITION_MODE, mode);
+	return check_error(status);
+}
+
 std::pair<std::string, Digitizer::ErrorType> Digitizer::configure_io_port(ViConstString port, ViConstString value)
 {
 	ViStatus status = AqMD3_SetAttributeViString(session, port, AQMD3_ATTR_CONTROL_IO_SIGNAL, value);
