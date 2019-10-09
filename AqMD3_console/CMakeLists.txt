@@ -31,6 +31,7 @@ add_executable (AqMD3_console
 	src/dgtcontext.cpp
 	src/acquireddata.cpp
 	src/sa220.cpp
+	src/datapublisher.cpp
 	include/digitizer.h
 	include/server.h
 	include/acquisitionbufferpool.h
@@ -44,6 +45,8 @@ add_executable (AqMD3_console
 	include/dgtcontext.h
 	include/acquireddata.h
 	include/sa220.h
+	include/acquireddatasink.h
+	include/datapublisher.h
 )
 
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)

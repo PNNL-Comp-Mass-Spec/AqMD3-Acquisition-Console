@@ -86,6 +86,7 @@ void Server::run()
 
 	while (should_run)
 	{
+		//std::cout << "Polling ..." << std::endl;
 		zmq::poll(&items[0], 1, 1);
 
 		if (!(items[0].revents & ZMQ_POLLIN))
@@ -110,4 +111,12 @@ void Server::stop() {
 void Server::register_handler(std::function<void(const ReceivedRequest)> handler)
 {
 	message_handler = handler;
+}
+
+zmq::socket_t Server::get_publisher(std::string address)
+{
+	zmq::socket_t socket(context, ZMQ_PUB);
+	socket.bind(address);
+
+	return std::move(socket);
 }

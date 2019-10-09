@@ -55,5 +55,7 @@ public:
 	void stop();
 
 	void register_handler(std::function<void(const ReceivedRequest)> handler);
+	zmq::socket_t get_publisher(std::string address);
+
 };
 #endif // !SERVER_H

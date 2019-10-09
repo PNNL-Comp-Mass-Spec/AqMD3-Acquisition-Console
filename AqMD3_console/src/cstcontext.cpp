@@ -40,7 +40,7 @@ AcquiredData CstContext::acquire(std::chrono::milliseconds timeoutMs)
 		uint64_t high = seg[2];
 		uint64_t timestampLow = (low >> 8) & 0x0000000000ffffffL;
 		uint64_t timestampHigh = uint64_t(high) << 24;
-		std::cout << "\tindex: " << (header >> 8) << endl;
+		//std::cout << "\tindex: " << (header >> 8) << endl;
 		stamps.emplace_back(timestampHigh | timestampLow, header >> 8, (-1 * (seg[1] & 0x000000ff)) / 256);
 
 		offset += 16;
