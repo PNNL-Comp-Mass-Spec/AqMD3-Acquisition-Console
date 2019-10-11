@@ -13,6 +13,8 @@ protected:
 	ViSession session;
 	AcquisitionBufferPool *samples_buffer_pool;
 
+	vector<shared_ptr<AcquisitionBuffer>> buffer_pool;
+
 	std::string markers_channel;
 	std::string samples_channel;
 

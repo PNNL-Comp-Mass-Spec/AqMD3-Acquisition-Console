@@ -19,8 +19,8 @@ private:
 	size_t const insert_scan_statement_size_bytes;
 
 public:
-	UimfWriter(std::string database) 
-		: db(database, SQLite::OPEN_READWRITE)
+	UimfWriter(std::string file) 
+		: db(file, SQLite::OPEN_READWRITE)
 		, insert_scan_statement("INSERT INTO Frame_Scans (FrameNum, ScanNum, NonZeroCount, BPI, BPI_MZ, TIC, Intensities) VALUES(%d, %d, %d, %d, %lf, %d, ?)")
 		, insert_scan_statement_size_bytes(110)
 	{}

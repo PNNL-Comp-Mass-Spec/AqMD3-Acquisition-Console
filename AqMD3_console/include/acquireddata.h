@@ -7,6 +7,7 @@
 
 #include <tuple>
 #include <vector>
+#include <list>
 
 class AcquiredData {
 public:

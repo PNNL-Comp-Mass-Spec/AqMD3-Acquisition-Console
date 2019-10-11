@@ -14,6 +14,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 	int gate_count = 0;
 	uint64_t to_acquire = 0;
 	vector<AcquiredData::TriggerData> stamps;
+	//vector<int32_t> markers_buffer;
 
 	bool preprocess = false;
 

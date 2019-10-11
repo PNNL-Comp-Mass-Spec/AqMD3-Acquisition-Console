@@ -56,6 +56,7 @@ public:
 	void set_record_size(uint64_t elements);
 	void set_trigger_parameters(std::string trigger, double level, bool isRisingEdgeTriggered);
 	void set_channel_parameters(std::string channel, double range, double offset);
+	void set_channel_data_inversion(std::string channel, bool enable);
 
 	void enable_io_port();
 	void disable_io_port();

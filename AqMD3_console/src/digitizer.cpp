@@ -36,6 +36,12 @@ std::pair<std::string, Digitizer::ErrorType> Digitizer::configure_channel(ViCons
 	return check_error(status);
 }
 
+std::pair<std::string, Digitizer::ErrorType> Digitizer::configure_channel_data_inversion(ViConstString channel, ViBoolean invert)
+{
+	ViStatus status = AqMD3_SetAttributeViBoolean(session, channel, AQMD3_ATTR_CHANNEL_DATA_INVERSION_ENABLED, invert);
+	return check_error(status);
+}
+
 std::pair<std::string, Digitizer::ErrorType> Digitizer::apply_setup()
 {
 	ViStatus status = AqMD3_ApplySetup(session);

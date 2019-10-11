@@ -13,7 +13,7 @@ include_directories("C:/Program Files/IVI Foundation/IVI/Include")
 link_directories("C:/Program Files/IVI Foundation/IVI/Lib_x64/msc")
 
 include_directories("C:/Program Files/IVI Foundation/VISA/Win64/Include")
-#link_directories("C:/Program Files/IVI Foundation/VISA/Win64L/lib_x64/msc")
+link_directories("C:/Program Files/IVI Foundation/VISA/Win64L/lib_x64/msc")
 
 # Add source to this project's executable.
 add_executable (AqMD3_console 
@@ -56,7 +56,7 @@ target_link_libraries(AqMD3_console PRIVATE Snappy::snappy)
 target_link_libraries(AqMD3_console PRIVATE AqMD3)
 target_link_libraries(AqMD3_console PRIVATE AqLio)
 
-target_link_libraries ( AqMD3_console PUBLIC i::uimf)
+target_link_libraries (AqMD3_console PUBLIC i::uimf)
 
 find_path(PICOSHA_INCLUDE_DIR picosha2.h)
 include_directories(${PICOSHA_INCLUDE_DIR})

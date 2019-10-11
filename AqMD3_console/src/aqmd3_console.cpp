@@ -18,6 +18,7 @@
 
 #include "AqMD3.h"
 
+#include <snappy.h>
 #include <zmq.hpp>
 #include <picosha2.h>
 
@@ -45,26 +46,24 @@
 
 using namespace std;
 
-//static void digitizer_worker(std::condition_variable &sig, queue<AcquiredData>& resultsQueue, unique_ptr<StreamingContext> context);
-//static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, ofstream& readable_file,
-//	UimfWriter& uimfwriter);
-
 static void digitizer_worker(std::condition_variable &sig, queue<AcquiredData>& resultsQueue, unique_ptr<StreamingContext> context);
 static void publish_worker(std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, DataPublisher publisher);
+static void digitizer_worker_frame(std::condition_variable &sig, queue<AcquiredData>& resultsQueue, unique_ptr<StreamingContext> context, UimfFrame uimf);
+static void publish_worker_frame(std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, UimfFrame uimf);
 
 static std::pair<uint64_t, double> get_tof_width(SA220& digitizer);
 
 bool should_exit = false;
+char ack[] = "ack";
 
 int main(int argc, char *argv[]) {
-	if (argc != 3)
-		return 0;
+	//if (argc != 3)
+	//	return 0;
 
-	int triggers = atoi(argv[1]);
-	std::cout << "triggers: " << triggers << endl;
-	std::string uimf_file = argv[2];
+	//int triggers = atoi(argv[1]);
+	//std::string uimf_file = argv[2];
 	 
-	UimfWriter writer(uimf_file);
+	//UimfWriter writer(uimf_file);
 
 	auto server = new Server("tcp://*:5555");
 	SA220 digitizer("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
@@ -79,188 +78,239 @@ int main(int argc, char *argv[]) {
 	queue<AcquiredData> dataQueue;
 	mutex lock;
 
-	//auto t = std::chrono::system_clock::now();
-	//auto tp = std::chrono::system_clock::to_time_t(t);
-	//string tps = std::ctime(&tp);
-
-	//char buffer[512];
-	//std::string output_template = "output_%d_threshold_200_hysteresis_%d_presamples.csv";
-
-	//for (int presamples = 8; presamples <= 8; presamples += 8)
-	//{
-	//	for (int threshold = 0; threshold <= 0; threshold += 500)
-	//	{
-	//		should_exit = false;
-	//		condition_variable signal;
-	//		queue<AcquiredData> dataQueue;
-	//		mutex lock;
-
-	//		vector<thread> threads;
-	//		ofstream readable_file;
-	//		sprintf(buffer, output_template.c_str(), threshold, presamples);
-	//		std::string out_file = buffer;
-	//		readable_file.open(out_file);
-
-	//		auto dig = digitizer.configure_cst_zs1(digitizer.channel_1, triggers, Digitizer::ZeroSuppressParameters(threshold, 200, presamples, 0));
-
-	//		threads.push_back(thread(publish_worker, ref(publisher), ref(signal), ref(lock), ref(dataQueue), ref(readable_file), ref(writer)));
-	//		threads.push_back(thread(digitizer_worker, ref(signal), ref(dataQueue), std::move(dig)));
-
-	//		for (auto& thread : threads)
-	//		{
-	//			thread.join();
-	//		}
-	//		readable_file.close();
-	//	}
-	//}
-
 	///* server stuff */
 	server->register_handler([&](Server::ReceivedRequest req) 
 	{
-		for (auto& payload = req.payload.begin(); payload != req.payload.end(); payload++)
+		std::string command = req.payload[0];
+
+		if (command == "num instruments")
 		{
-			if (*payload == "num instruments")
+			ViSession rm = VI_NULL;
+			viOpenDefaultRM(&rm);
+			ViChar search[] = "PXI?*::INSTR";
+			ViFindList find = VI_NULL;
+			ViUInt32 count = 0;
+			ViChar rsrc[256];
+
+			ViStatus status = viFindRsrc(rm, search, &find, &count, rsrc);
+			viClose(rm);
+
+			req.send_response(std::to_string(count));
+			return;
+		}
+
+		if (command == "info")
+		{
+			// TODO info
+			req.send_response("");
+			return;
+		}
+
+		if (command == "init")
+		{
+			// TODO init
+			req.send_response(ack);
+			return;
+		}
+
+		if (command == "horizontal")
+		{
+			if (req.payload.size() == 2)
 			{
-				req.send_response("1");
-				return;
+				auto horizontal_resolution = std::stod(req.payload[1]);
+				digitizer.set_sampling_rate(horizontal_resolution);
+			}
+			
+			req.send_response(ack);
+			return;
+		}
+
+		if (command == "vertical")
+		{
+			if (req.payload.size() == 2)
+			{
+				auto offset_v = std::stod(req.payload[1]);
+				digitizer.set_channel_parameters(digitizer.channel_1, digitizer.full_scale_range_500mv, offset_v);
 			}
 
-			if (*payload == "info")
-			{
-				continue;
-			}
+			req.send_response(ack);
+			return;
+		}
 
-			if (*payload == "init")
-			{
-				continue;
-			}
+		if (command == "trig class")
+		{
+			// TODO trig class
+			return;
+		}
 
-			if (*payload == "horizontal")
-			{
-				continue;
-			}
+		if (command == "trig source")
+		{
+			// TODO trig source
+			return;
+		}
 
-			if (*payload == "vertical")
-			{
-				continue;
-			}
+		if (command == "mode")
+		{
+			// TODO mode
+			return;
+		}
 
-			if (*payload == "trig class")
-			{
-				continue;
-			}
+		if (command == "config digitizer")
+		{
+			// TODO config digitizer
+			return;
+		}
 
-			if (*payload == "trig source")
-			{
-				continue;
-			}
+		if (command == "post samples")
+		{
+			// TODO post samples
+			return;
+		}
 
-			if (*payload == "mode")
-			{
-				continue;
-			}
+		if (command == "pre samples")
+		{
+			// TODO pre samples
+			return;
+		}
 
-			if (*payload == "config digitizer")
-			{
-				continue;
-			}
+		if (command == "setup array")
+		{
+			// TODO setup array
+			req.send_response(ack);
+			return;
+		}
 
-			if (*payload == "post samples")
+		if (command == "acquire frame")
+		{
+			if (req.payload.size() == 2)
 			{
-				continue;
-			}
+				std::string uimf_req_msg; 
+				snappy::Uncompress(req.payload[1].data(), req.payload[1].size(), &uimf_req_msg);
+				auto uimf = UimfRequestMessage();
+				uimf.MergeFromString(uimf_req_msg);
 
-			if (*payload == "pre samples")
-			{
-				continue;
-			}
-
-			if (*payload == "setup array")
-			{
-				continue;
-			}
-
-			if (*payload == "acquire frame")
-			{
-				continue;
-			}
-
-			if (*payload == "acquire")
-			{
-				std::cout << "rec'd \'acquire\'" << endl;
 				std::pair<uint64_t, double> tof_params = get_tof_width(digitizer);
 				std::cout << "samples per trigger: " << get<0>(tof_params) << std::endl;
 				digitizer.set_record_size(get<0>(tof_params));
 
-				auto context = digitizer.configure_cst_zs1(digitizer.channel_1, triggers, Digitizer::ZeroSuppressParameters(0, 200, 8, 0));
+				UimfFrame frame(
+					uimf.start_trigger(),
+					get<0>(tof_params),
+					uimf.nbr_accumulations(),
+					uimf.frame_length(),
+					uimf.frame_number(),
+					uimf.offset_bins(),
+					uimf.file_name()
+				);
 
+				auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, Digitizer::ZeroSuppressParameters(0, 200, 8, 0));
 
-				threads.push_back(thread(publish_worker, ref(signal), ref(lock), ref(dataQueue), DataPublisher(server->get_publisher("tcp://*:6546"), get<0>(tof_params))));
-				threads.push_back(thread(digitizer_worker, ref(signal), ref(dataQueue), std::move(context)));
+				threads.push_back(thread(publish_worker_frame, ref(signal), ref(lock), ref(dataQueue), frame));
+				threads.push_back(thread(digitizer_worker_frame, ref(signal), ref(dataQueue), std::move(context), frame));
+			}
+
+			req.send_response(ack);
+			return;
+		}
+
+		if (command == "acquire")
+		{
+			std::pair<uint64_t, double> tof_params = get_tof_width(digitizer);
+			std::cout << "samples per trigger: " << get<0>(tof_params) << std::endl;
+			digitizer.set_record_size(get<0>(tof_params));
+
+			auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, Digitizer::ZeroSuppressParameters(0, 200, 8, 0));
+			cout << "record size " << get<0>(tof_params) << endl;
+
+			threads.push_back(thread(publish_worker, ref(signal), ref(lock), ref(dataQueue), DataPublisher(server->get_publisher("tcp://*:6546"), get<0>(tof_params))));
+			threads.push_back(thread(digitizer_worker, ref(signal), ref(dataQueue), std::move(context)));
 			
-				vector<string> to_send(2);
+			vector<string> to_send(2);
 
-				TofWidthMessage tofMsg;
-				tofMsg.set_num_samples(std::get<0>(tof_params));
-				tofMsg.set_pusher_pulse_width(std::get<1>(tof_params));
+			TofWidthMessage tofMsg;
+			tofMsg.set_num_samples(std::get<0>(tof_params));
+			tofMsg.set_pusher_pulse_width(std::get<1>(tof_params));
 
-				to_send[0] = (tofMsg.SerializeAsString());
+			to_send[0] = (tofMsg.SerializeAsString());
 
-				vector<uint8_t> hash(picosha2::k_digest_size);
-				picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
+			vector<uint8_t> hash(picosha2::k_digest_size);
+			picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
 
-				to_send[1] = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
-				req.send_responses(to_send);
+			to_send[1] = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
+			req.send_responses(to_send);
 
-				return;
-			}
+			return;
+		}
 
-			if (*payload == "tof width")
-			{
+		if (command == "tof width")
+		{
 
-				std::pair<uint64_t, double> tof_params = get_tof_width(digitizer);
+			std::pair<uint64_t, double> tof_params = get_tof_width(digitizer);
 
-				vector<string> to_send(2);
+			vector<string> to_send(2);
 
-				TofWidthMessage tofMsg;
-				tofMsg.set_num_samples(std::get<0>(tof_params));
-				tofMsg.set_pusher_pulse_width(std::get<1>(tof_params));
+			TofWidthMessage tofMsg;
+			tofMsg.set_num_samples(std::get<0>(tof_params));
+			tofMsg.set_pusher_pulse_width(std::get<1>(tof_params));
 
-				to_send[0] = (tofMsg.SerializeAsString());
+			to_send[0] = (tofMsg.SerializeAsString());
 
-				vector<uint8_t> hash(picosha2::k_digest_size);
-				picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
+			vector<uint8_t> hash(picosha2::k_digest_size);
+			picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
 
-				to_send[1] = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
-				req.send_responses(to_send);
+			to_send[1] = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
+			req.send_responses(to_send);
 				
-				return;
-			}
+			return;
+		}
 
-			if (*payload == "stop")
-			{
-				continue;
-			}
+		if (command == "stop")
+		{
+			// TODO stop
+			return;
+		}
 
-			if (*payload == "invert")
+		if (command == "invert")
+		{
+			if (req.payload.size() == 2)
 			{
-				continue;
+				bool invert = req.payload[1] == "true";
+				digitizer.set_channel_data_inversion(digitizer.channel_1, invert);
 			}
+			req.send_response(ack);
+			return;
+		}
 
-			if (*payload == "reset timestamps")
-			{
-				continue;
-			}
+		if (command == "reset timestamps")
+		{
+			return;
+		}
 
-			if (*payload == "enable io port")
+		if (command == "enable io port")
+		{
+			if (req.payload.size() == 2)
 			{
-				continue;
-			}
+				auto val = std::stoi(req.payload[1]);
+				if (val != 2)
+					std::cerr << "wrong" << endl;
 
-			if (*payload == "disable io port")
-			{
-				continue;
+				digitizer.enable_io_port();
 			}
+			req.send_response(ack);
+			return;
+		}
+
+		if (command == "disable io port")
+		{
+			if (req.payload.size() == 2)
+			{
+				auto val = std::stoi(req.payload[1]);
+				if (val != 2)
+					std::cerr << "wrong" << endl;
+
+				digitizer.disable_io_port();
+			}
+			return;
 		}
 	});
 
@@ -268,7 +318,7 @@ int main(int argc, char *argv[]) {
 
 	getchar();
 	should_exit = true;
-	cout << "stopping -- press again to stop" << endl;
+	std::cout << "stopping -- press again to stop" << endl;
 
 	server->stop();
 	t.join();
@@ -279,39 +329,54 @@ int main(int argc, char *argv[]) {
 
 static void digitizer_worker(std::condition_variable &sig, queue<AcquiredData>& resultsQueue, unique_ptr<StreamingContext> context)
 {
-	std::cout << "STARTING ACQUISITION" << endl;
-	uint64_t total_acquire_time = 0;
-	context->start();
-	while(!should_exit)
-	{
-		auto data = context->acquire(std::chrono::milliseconds(100));
-		resultsQueue.push(data);
-		sig.notify_one();
-	}
-	context->stop();
+	//std::cout << "STARTING ACQUISITION" << endl;
+	//context->start();
+	//while(!should_exit)
+	//{
+	//	auto data = context->acquire(std::chrono::milliseconds(100));
+	//	resultsQueue.push(data);
+	//	sig.notify_one();
+	//}
+	//context->stop();
+}
+
+static void digitizer_worker_frame(std::condition_variable &sig, queue<AcquiredData>& resultsQueue, unique_ptr<StreamingContext> context, UimfFrame frame)
+{
+	//std::cout << "STARTING ACQUISITION" << endl;
+	//uint64_t total_acquire_time = 0;
+	//context->start();
+	//for(int i = 0; i < frame.frame_length; i += 100)
+	//{
+	//	auto data = context->acquire(std::chrono::milliseconds(100));
+	//	resultsQueue.push(data);
+	//	cout << "push " << i << endl;
+	//	sig.notify_one();
+	//}
+	//context->stop();
+	//should_exit = true;
 }
 
 static void publish_worker(std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, DataPublisher publisher)
 {
-	int process_index = 0;
-	vector<AcquiredData::TriggerData> vec;
-	uint64_t average_processing_time = 0;
+	//int process_index = 0;
+	//vector<AcquiredData::TriggerData> vec;
+	//uint64_t average_processing_time = 0;
 
-	while (!should_exit)
-	{
-		{
-			std::unique_lock<std::mutex> lock(lockable);
-			sig.wait(lock);
-		}
+	//while (!should_exit)
+	//{
+	//	{
+	//		std::unique_lock<std::mutex> lock(lockable);
+	//		sig.wait(lock);
+	//	}
 
-		while (!workQueue.empty())
-		{
-			AcquiredData ae = workQueue.front();
-			workQueue.pop();
-			auto result = ae.process(1, 100 * process_index++);
-			publisher.process(result);
-		}
-	}
+	//	while (!workQueue.empty())
+	//	{
+	//		AcquiredData ae = workQueue.front();
+	//		workQueue.pop();
+	//		auto result = ae.process(1, 100 * process_index++);
+	//		//publisher.process(std::move(result));
+	//	}
+	//}
 }
 
 std::pair<uint64_t, double> get_tof_width(SA220& digitizer)
@@ -338,82 +403,27 @@ std::pair<uint64_t, double> get_tof_width(SA220& digitizer)
 	return std::make_pair(total, time);
 }
 
-//static void publish_worker(zmq::socket_t &pusher, std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, ofstream& readable_file, UimfWriter& uimfwriter)
-//{
-//	int process_index = 0;
-//	vector<AcquiredData::TriggerData> vec;
-//	//ofstream datasink;
-//	//datasink.open("nul");
-//
-//	//vector<vector<int32_t>> vecs;
-//	//for (int i = 0; i < 10; i++)
-//	//{
-//	//	vecs.emplace_back(record_size);
-//	//}
-//	uint64_t total_processing_time = 0;
-//	UimfFrame frame(0, 94016, 1, 10000, 1, 0, "");
-//	while (!should_exit)
-//	{
-//		{
-//			std::unique_lock<std::mutex> lock(lockable);
-//			sig.wait(lock);
-//		}
-//
-//		while (!workQueue.empty())
-//		{
-//			Message msg;
-//			msg.mutable_tic()->Reserve(256);
-//			msg.mutable_time_stamps()->Reserve(256);
-//
-//			auto t1 = chrono::high_resolution_clock::now();
-//			AcquiredData ae = workQueue.front();
-//			workQueue.pop();
-//
-//			auto result = ae.process(1, 100 * process_index++);
-//			//std::cout << "RESULTS COUNT: " << result.size() << endl;
-//			//frame.append_encoded_results(result);
-//			auto t2 = chrono::high_resolution_clock::now();
-//			
-//			//for (int i = 0; i < 100; i++)
-//			//{
-//			//	auto obj = result[i];
-//			//	int seg_index = 0;
-//			//	std::cout << "\t---------LARGEST ITEM INDEX: " << obj.index_max_intensity << endl;
-//			//	std::cout << "\t---------LARGEST ITEM: " << obj.bpi << endl;
-//			//	for (auto val : obj.encoded_spectra)
-//			//	{
-//			//		if (val < 0)
-//			//		{
-//			//			std::cout << "Zero Val: " << val << endl;
-//			//			seg_index += (-1 * val);
-//			//			continue;
-//			//		}
-//
-//			//		vecs[i][seg_index++] = val;
-//			//	}
-//			//	std::cout << std::endl;
-//			//}
-//			total_processing_time += (t2 - t1).count();
-//			if ((process_index % 100) == 0)
-//				cout << "processing -- " << process_index << endl;
-//			//std::cout << "ACQUISITION: " << process_index// << endl;
-//			//	<<" PROCESSING TIME:" << (t2 - t1).count() << endl;
-//		}
-//	}
-//
-//	//readable_file << "index,trig_1,trig_2,trig_3,trig_4,trig_5,trig_6,trig_7,trig_8,trig_9,trig_10\n";
-//	//for (int i = 0; i < record_size; i++)
-//	//{
-//	//	readable_file << i << ",";
-//	//	for (int j = 0; j < vecs.size(); j++)
-//	//	{
-//	//		readable_file << vecs[j][i] << ",";
-//	//	}
-//	//	readable_file << std::endl;
-//	//}
-//	auto t1 = chrono::high_resolution_clock::now();
-//	//uimfwriter.write_frame(frame);
-//	auto t2 = chrono::high_resolution_clock::now();
-//	//std::cout << "TOTAL WRITING TO UIMF TIME: " << (t2 - t1).count() << endl;
-//	//std::cout << "TOTAL PROCESSING TIME: " << total_processing_time << endl;
-//}
+static void publish_worker_frame(std::condition_variable &sig, std::mutex &lockable, queue<AcquiredData>& workQueue, UimfFrame uimf)
+{
+	//UimfWriter writer(uimf.file_name);
+	//int process_index = 0;
+
+	//while (!should_exit)
+	//{
+	//	{
+	//		std::unique_lock<std::mutex> lock(lockable);
+	//		sig.wait(lock);
+	//	}
+
+	//	while (!workQueue.empty())
+	//	{
+	//		AcquiredData ae = workQueue.front();
+	//		workQueue.pop();
+	//		cout << "pop " << process_index << endl;
+	//		auto result = ae.process(1, 100 * process_index++);
+	//		uimf.append_encoded_results(std::move(result));
+	//	}
+	//}
+
+	//writer.write_frame(uimf);
+}

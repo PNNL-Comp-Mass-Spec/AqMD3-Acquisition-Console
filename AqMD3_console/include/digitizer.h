@@ -89,6 +89,7 @@ protected:
 	std::pair<std::string, ErrorType> configure_zs_post_gate_samples(ViConstString channel, ViInt32 samples);
 
 	std::pair<std::string, ErrorType> configure_channel(ViConstString channel, ViReal64 range, ViReal64 offset, ViInt32 coupling);
+	std::pair<std::string, ErrorType> configure_channel_data_inversion(ViConstString channel, ViBoolean invert);
 
 	std::pair<std::string, ErrorType> configure_io_port(ViConstString port, ViConstString value);
 

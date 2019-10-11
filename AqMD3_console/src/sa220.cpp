@@ -34,19 +34,43 @@ void SA220::set_trigger_parameters(std::string trigger, double level, bool isRis
 void SA220::set_channel_parameters(std::string channel, double range, double offset)
 {
 	auto result = configure_channel(channel.c_str(), range, offset, AQMD3_VAL_VERTICAL_COUPLING_DC);
-	cout << result.first << " " << result.second << endl;
+	if (result.second != Digitizer::None)
+	{
+		cerr << result.first << endl;
+		return;
+	}
+}
+
+void SA220::set_channel_data_inversion(std::string channel, bool enable)
+{
+	auto result = configure_channel_data_inversion(channel.c_str(), enable);
+	if (result.second != Digitizer::None)
+	{
+		cerr << result.first << endl;
+		return;
+	}
 }
 
 void SA220::enable_io_port()
 {
 	std::string enable_string("In-TriggerEnable");
 	auto result = configure_io_port(control_io_2.c_str(), enable_string.c_str());
+	if (result.second != Digitizer::None)
+	{
+		cerr << result.first << endl;
+		return;
+	}
 }
 
 void SA220::disable_io_port()
 {
 	std::string disable_string("Disabled");
 	auto result = configure_io_port(control_io_2.c_str(), disable_string.c_str());
+	if (result.second != Digitizer::None)
+	{
+		cerr << result.first << endl;
+		return;
+	}
 }
 
 std::unique_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint32_t triggers)

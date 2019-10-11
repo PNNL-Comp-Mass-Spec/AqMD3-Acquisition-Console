@@ -4,6 +4,7 @@
 #include "encodedresult.h"
 #include <string>
 #include <vector>
+#include <list>
 
 class UimfFrame {
 public:
