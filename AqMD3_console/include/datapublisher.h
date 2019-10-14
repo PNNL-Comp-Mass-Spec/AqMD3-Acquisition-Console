@@ -2,11 +2,10 @@
 #define DATA_PUBLISHER_H
 
 #include "acquireddata.h"
-#include "acquireddatasink.h"
 #include <string>
 #include <zmq.hpp>
 
-class DataPublisher : public AcquiredDataSink {
+class DataPublisher {
 private:
 	zmq::socket_t socket;
 	uint32_t samples;
@@ -17,7 +16,7 @@ public:
 		, samples(samples)
 	{}
 
-	void process(std::vector<EncodedResult> elements) override;
+	void process(std::vector<EncodedResult> elements);
 };
 
 #endif // !DATA_PUBLISHER_H

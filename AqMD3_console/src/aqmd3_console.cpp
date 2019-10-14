@@ -3,7 +3,6 @@
 #include "../include/server.h"
 #include "../include/digitizer.h"
 #include "../include/acquisitioncontext.h"
-#include "../include/dgtcontext.h"
 #include "../include/acquireddata.h"
 #include "../include/datapublisher.h"
 #include "../include/sa220.h"
