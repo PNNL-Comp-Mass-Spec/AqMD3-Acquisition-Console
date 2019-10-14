@@ -73,7 +73,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 							break;
 						}
 
-						stamps.back().gate_data.emplace_back((s - 1) * 8, (e - 1) * 8, to_acquire_samples, to_acquire_memory_blocks);
+						stamps.back().gate_data.emplace_back((s - 1) * 8, (e - 1) * 8, to_acquire_memory_blocks);
 						++gate_count;
 
 						to_acquire += to_acquire_memory_blocks;

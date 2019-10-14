@@ -16,23 +16,23 @@ public:
 		uint64_t const gate_stop_index;
 		uint32_t const processing_block_size;
 
-		GateData(uint64_t start_index, uint64_t stop_index, uint32_t memory_elements_int)
+		GateData(uint64_t start_index, uint64_t stop_index, uint32_t processing_block_size)
 			: gate_start_index(start_index)
 			, gate_stop_index(stop_index)
-			, processing_block_size(memory_elements_int)
+			, processing_block_size(processing_block_size)
 		{}
 
-		inline uint64_t absolute_offset_from_start_index(uint64_t index) {
+		inline uint64_t get_absolute_offset_from_start_index(uint64_t index) {
 			if (index > gate_start_index)
 				return index - gate_start_index;
 			return gate_start_index - index;
 		}
 
-		inline uint64_t sample_difference_next_gate(const GateData& next) {
+		inline uint64_t get_sample_difference_next_gate(const GateData& next) {
 			return next.gate_start_index - gate_stop_index;
 		}
 
-		inline uint64_t gate_sample_length() {
+		inline uint64_t get_gate_sample_length() {
 			return gate_stop_index - gate_start_index;
 		}
 	};
@@ -43,8 +43,7 @@ public:
 		double subsample_pos;
 		uint32_t index;
 
-		// start, end, samples, processing elements
-		std::vector<std::tuple<uint64_t, uint64_t, uint64_t, uint64_t>> gate_data;
+		std::vector<GateData> gate_data;
 
 		TriggerData(uint64_t timestamp, uint32_t index, double subsample_pos)
 			: timestamp(timestamp)

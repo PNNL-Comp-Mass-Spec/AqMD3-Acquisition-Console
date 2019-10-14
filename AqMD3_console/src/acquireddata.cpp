@@ -33,23 +33,26 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 		for (int j = 0 ; j < gate_count; j++)
 		{
 			auto gate = trig.gate_data[j];
-			auto samples = std::get<2>(gate);
+			auto samples = gate.get_gate_sample_length();
 			auto elements = samples / 2;
-			auto size_to_process = std::get<3>(gate);
+			auto size_to_process = gate.processing_block_size;
 
 			int32_t gate_zero_count = 0;
 			if (gate_count > 1)
 			{
-				if (j == 0) {
-					gate_zero_count = std::get<0>(gate) - 1;
+				if (j == 0) 
+				{
+					gate_zero_count = gate.gate_start_index - 1;
 				}
-				else {
+				else 
+				{
 					auto prev_gate = trig.gate_data[j - 1];
-					gate_zero_count = std::get<0>(gate) - std::get<1>(prev_gate);
+					gate_zero_count = prev_gate.get_sample_difference_next_gate(gate);
 				}
 			}
-			else {
-				gate_zero_count = std::get<0>(gate) - 1;
+			else 
+			{
+				gate_zero_count =gate.gate_start_index - 1;
 			}
 
 			if (gate_zero_count != 0)
