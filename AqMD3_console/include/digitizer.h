@@ -2,7 +2,6 @@
 #define DIGITIZER_H
 
 #include "streamingcontext.h"
-#include "acquisitionbufferpool.h"
 #include "acquireddata.h"
 #include "acquisitioncontext.h"
 #include "AqMD3.h"
@@ -47,8 +46,8 @@ public:
 		AqMD3_close(session);
 	}
 
-	virtual std::unique_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers) = 0;
-	virtual std::unique_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, ZeroSuppressParameters parameters) = 0;
+	virtual std::unique_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers, uint64_t record_size) = 0;
+	virtual std::unique_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters) = 0;
 
 private:
 	std::pair<std::string, ErrorType> check_error(ViStatus status) {
@@ -98,6 +97,8 @@ protected:
 
 	std::pair<std::string, ErrorType> begin_acquisition();
 	std::pair<std::string, ErrorType> abort_acquisition();
+
+	std::tuple<std::string, ErrorType, ViBoolean> get_calibration_required();
 };
 
 #endif // ! DIGITIZER_H

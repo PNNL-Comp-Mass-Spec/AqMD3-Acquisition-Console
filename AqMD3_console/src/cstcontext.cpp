@@ -6,8 +6,8 @@
 AcquiredData CstContext::acquire(std::chrono::milliseconds timeoutMs)
 {
 	int markers_to_gather = triggers_per_read * 16;
-	vector<int32_t> markers(markers_to_gather * 16);
-	AcquisitionBuffer* samples_buffer = samples_buffer_pool->next_available();
+	std::vector<int32_t> markers(markers_to_gather * 16);
+	std::shared_ptr<AcquisitionBuffer> samples_buffer = get_buffer();
 
 	ViInt64 first_element_offset;
 	ViInt64 available_elements_markers = 0;
@@ -24,7 +24,7 @@ AcquiredData CstContext::acquire(std::chrono::milliseconds timeoutMs)
 			&available_elements_markers, &actual_elements_markers, &first_element_offset);
 	} while (actual_elements_markers < markers_to_gather);
 
-	vector<AcquiredData::TriggerData> stamps;
+	std::vector<AcquiredData::TriggerData> stamps;
 
 	int32_t *ptr = markers.data() + first_element_offset;
 	int32_t offset = 0;
@@ -34,7 +34,7 @@ AcquiredData CstContext::acquire(std::chrono::milliseconds timeoutMs)
 		uint32_t header = seg[0];
 
 		if ((header & 0x000000FF) != 0x01)
-			cerr << "wrong header -- cst acq (not zero sp)\n";
+			std::cerr << "wrong header -- cst acq (not zero sp)\n";
 
 		uint64_t low = seg[1];
 		uint64_t high = seg[2];
@@ -70,5 +70,5 @@ AcquiredData CstContext::acquire(std::chrono::milliseconds timeoutMs)
 	samples_buffer->advance_offset(firstElementSamples);
 	samples_buffer->advance_acquired(actualElementsSamples);
 
-	return AcquiredData(stamps, samples_buffer_pool, samples_buffer, samples_per_trigger);
+	return AcquiredData(stamps, samples_buffer, samples_per_trigger);
 }

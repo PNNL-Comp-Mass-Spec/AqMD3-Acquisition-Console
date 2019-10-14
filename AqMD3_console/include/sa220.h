@@ -29,9 +29,6 @@ public:
 	double const full_scale_range_500mv;
 	double const full_scale_range_2500mv;
 
-private:
-	uint64_t record_size;
-
 public:
 	SA220(std::string device, std::string options) : Digitizer(device, options)
 		, channel_1("Channel1")
@@ -61,8 +58,8 @@ public:
 	void enable_io_port();
 	void disable_io_port();
 
-	std::unique_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers) override;
-	std::unique_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, ZeroSuppressParameters parameters) override;
+	std::unique_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers, uint64_t record_size) override;
+	std::unique_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters) override;
 };
 
 #endif // !SA220P

@@ -5,8 +5,6 @@
 #undef max
 #include "../include/message.pb.h"
 
-#include <numeric>
-
 void DataPublisher::process(std::vector<EncodedResult> elements)
 {
 	std::cout << "Processing " << elements.size() << " elements" << std::endl;
@@ -31,7 +29,8 @@ void DataPublisher::process(std::vector<EncodedResult> elements)
 				continue;
 			}
 
-			mz[index++] = val;
+			mz[index++] += val;
+			//(*msg.mutable_mz())[index++] += val;
 		}
 	}
 
@@ -43,10 +42,10 @@ void DataPublisher::process(std::vector<EncodedResult> elements)
 	zmq::message_t to_send(msg_s.size());
 	memcpy((void *)to_send.data(), msg_s.c_str(), msg_s.size());
 
-	zmq::message_t data2(4);
+	zmq::message_t sub_data(4);
 	std::string d_msg2 = "data";
-	memcpy(data2.data(), d_msg2.c_str(), 4);
-	socket.send(data2, ZMQ_SNDMORE);
+	memcpy(sub_data.data(), d_msg2.c_str(), 4);
 
+	socket.send(sub_data, ZMQ_SNDMORE);
 	socket.send(to_send, 0);
 }

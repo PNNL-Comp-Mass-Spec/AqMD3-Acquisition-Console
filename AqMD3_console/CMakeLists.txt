@@ -20,7 +20,6 @@ add_executable (AqMD3_console
 	src/aqmd3_console.cpp
 	src/digitizer.cpp
 	src/server.cpp
-	src/acquisitionbufferpool.cpp
 	src/acquisitionbuffer.cpp
 	src/streamingcontext.cpp
 	src/server.cpp
@@ -34,7 +33,6 @@ add_executable (AqMD3_console
 	src/datapublisher.cpp
 	include/digitizer.h
 	include/server.h
-	include/acquisitionbufferpool.h
 	include/acquisitionbuffer.h
 	include/streamingcontext.h
 	include/server.h

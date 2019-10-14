@@ -1,7 +1,6 @@
 #ifndef ACQUIRED_DATA_H
 #define ACQUIRED_DATA_H
 
-#include "acquisitionbufferpool.h"
 #include "acquisitionbuffer.h"
 #include <UIMFWriter/encodedresult.h>
 
@@ -46,31 +45,27 @@ public:
 
 		// start, end, samples, processing elements
 		std::vector<std::tuple<uint64_t, uint64_t, uint64_t, uint64_t>> gate_data;
-		//std::vector<GateData> gates;
 
 		TriggerData(uint64_t timestamp, uint32_t index, double subsample_pos)
 			: timestamp(timestamp)
 			, index(index)
 			, subsample_pos(subsample_pos)
 			, gate_data()
-			//, gates()
 		{}
 	};
 
 private:
-	AcquisitionBufferPool *sample_buffer_pool;
-	AcquisitionBuffer *sample_buffer;
+	std::shared_ptr<AcquisitionBuffer> samples_buffer;
 
 public:
-	vector<TriggerData> const stamps;
-	uint64_t const samples;
+	std::vector<TriggerData> const stamps;
+	uint64_t const samples_count;
 
 public:
-	AcquiredData(vector<TriggerData> stamps, AcquisitionBufferPool *sample_pool, AcquisitionBuffer *sample_buffer, uint64_t samples)
-		: sample_buffer_pool(sample_pool)
-		, sample_buffer(sample_buffer)
+	AcquiredData(std::vector<TriggerData> stamps, std::shared_ptr<AcquisitionBuffer> samples_buffer, uint64_t samples_count)
+		: samples_buffer(samples_buffer)
 		, stamps(stamps)
-		, samples(samples)
+		, samples_count(samples_count)
 	{}
 
 	std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_start_number) const;

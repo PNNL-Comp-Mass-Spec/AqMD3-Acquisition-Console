@@ -7,7 +7,7 @@
 void SA220::set_sampling_rate(double rate)
 {
 	auto result = configure_sample_rate(rate);
-	cout << result.first << " " << result.second << endl;
+	std::cout << result.first << " " << result.second << std::endl;
 }
 
 void SA220::set_record_size(uint64_t elements)
@@ -15,11 +15,9 @@ void SA220::set_record_size(uint64_t elements)
 	auto result = configure_record_size(elements);
 	if (result.second != Digitizer::None)
 	{
-		cerr << result.first << endl;
+		std::cerr << result.first << std::endl;
 		return;
 	}
-
-	record_size = elements;
 }
 
 void SA220::set_trigger_parameters(std::string trigger, double level, bool isRising)
@@ -27,8 +25,23 @@ void SA220::set_trigger_parameters(std::string trigger, double level, bool isRis
 	ViInt32 slope = isRising ? AQMD3_VAL_TRIGGER_SLOPE_POSITIVE : AQMD3_VAL_TRIGGER_SLOPE_NEGATIVE;
 
 	auto tso_result = configure_trigger_source(trigger.c_str());
+	if (tso_result.second != Digitizer::None)
+	{
+		std::cerr << tso_result.first << std::endl;
+		return;
+	}
 	auto tl_result = configure_trigger_level(trigger.c_str(), level);
+	if (tl_result.second != Digitizer::None)
+	{
+		std::cerr << tl_result.first << std::endl;
+		return;
+	}
 	auto tsl_result = configure_trigger_slope(trigger.c_str(), slope);
+	if (tsl_result.second != Digitizer::None)
+	{
+		std::cerr << tsl_result.first << std::endl;
+		return;
+	}
 }
 
 void SA220::set_channel_parameters(std::string channel, double range, double offset)
@@ -36,7 +49,7 @@ void SA220::set_channel_parameters(std::string channel, double range, double off
 	auto result = configure_channel(channel.c_str(), range, offset, AQMD3_VAL_VERTICAL_COUPLING_DC);
 	if (result.second != Digitizer::None)
 	{
-		cerr << result.first << endl;
+		std::cerr << result.first << std::endl;
 		return;
 	}
 }
@@ -46,7 +59,7 @@ void SA220::set_channel_data_inversion(std::string channel, bool enable)
 	auto result = configure_channel_data_inversion(channel.c_str(), enable);
 	if (result.second != Digitizer::None)
 	{
-		cerr << result.first << endl;
+		std::cerr << result.first << std::endl;
 		return;
 	}
 }
@@ -57,7 +70,7 @@ void SA220::enable_io_port()
 	auto result = configure_io_port(control_io_2.c_str(), enable_string.c_str());
 	if (result.second != Digitizer::None)
 	{
-		cerr << result.first << endl;
+		std::cerr << result.first << std::endl;
 		return;
 	}
 }
@@ -68,25 +81,22 @@ void SA220::disable_io_port()
 	auto result = configure_io_port(control_io_2.c_str(), disable_string.c_str());
 	if (result.second != Digitizer::None)
 	{
-		cerr << result.first << endl;
+		std::cerr << result.first << std::endl;
 		return;
 	}
 }
 
-std::unique_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint32_t triggers)
+std::unique_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint32_t triggers, uint64_t record_size)
 {
 	auto rc = configure_streaming_mode(AQMD3_VAL_STREAMING_MODE_TRIGGERED);
-	cout << rc.first << " " << rc.second << endl;
 	if (rc.second != Digitizer::None)
 		throw rc.first;
 
 	rc = configure_acquisition_mode(AQMD3_VAL_ACQUISITION_MODE_NORMAL);
-	cout << rc.first << " " << rc.second << endl;
 	if (rc.second != Digitizer::None)
 		throw rc.first;
 
 	rc = configure_data_reduction(AQMD3_VAL_ACQUISITION_DATA_REDUCTION_MODE_DISABLED);
-	cout << rc.first << " " << rc.second << endl;
 	if (rc.second != Digitizer::None)
 		throw rc.first;
 
@@ -94,18 +104,24 @@ std::unique_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint
 	if (rc.second != Digitizer::None)
 		throw rc.first;
 
-	rc = self_calibrate();
+	auto rct = get_calibration_required();
 	if (rc.second != Digitizer::None)
 		throw rc.first;
+	if (std::get<2>(rct));
+	{
+		std::cout << "calibrating" << std::endl;
+		rc = self_calibrate();
+		if (rc.second != Digitizer::None)
+			throw rc.first;
+	}
 
 	std::unique_ptr<CstContext> context(
 		new CstContext
 		(
 			session,
-			"StreamCh1",
+			channel,
 			record_size * 64,
 			8,
-			"MarkersCh1",
 			record_size,
 			triggers
 		));
@@ -113,26 +129,22 @@ std::unique_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint
 	return std::move(context);
 }
 
-std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, uint32_t triggers, ZeroSuppressParameters parameters)
+std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters)
 {
 	auto rc = configure_streaming_mode(AQMD3_VAL_STREAMING_MODE_TRIGGERED);
 
-	cout << rc.first << " " << rc.second << endl;
 	if (rc.second != Digitizer::None)
 		throw rc.first;
 
 	rc = configure_data_reduction(AQMD3_VAL_ACQUISITION_DATA_REDUCTION_MODE_ZERO_SUPPRESS);
-	cout << rc.first << " " << rc.second << endl;
 	if (rc.second != Digitizer::None)
 		throw rc.first;
 
 	rc = configure_zs_hysteresis(channel.c_str(), parameters.hysteresis);
-	cout << rc.first << " " << rc.second << endl;
 	if (rc.second != Digitizer::None)
 		throw rc.first;
 
 	rc = configure_zs_threshold(channel.c_str(), parameters.threshold);
-	cout << rc.first << " " << rc.second << endl;
 	if (rc.second != Digitizer::None)
 		throw rc.first;
 
@@ -148,20 +160,24 @@ std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, 
 	if (rc.second != Digitizer::None)
 		throw rc.first;
 
-	rc = self_calibrate();
+	auto rct = get_calibration_required();
 	if (rc.second != Digitizer::None)
 		throw rc.first;
+	if(std::get<2>(rct));
+	{
+		std::cout << "calibrating" << std::endl;
+		rc = self_calibrate();
+		if (rc.second != Digitizer::None)
+			throw rc.first;
+	}
 
 	std::unique_ptr<CstZm1Context> context(
 		new CstZm1Context
 		(
 			session,
-			"StreamCh1",
+			channel,
 			record_size * 256,
 			8,
-			"MarkersCh1",
-			256 * 256 * 4,
-			3,
 			record_size,
 			triggers
 		));
