@@ -26,7 +26,6 @@ add_executable (AqMD3_console
 	src/cstzs1context.cpp
 	src/cstcontext.cpp
 	src/message.pb.cpp
-	src/acquisitioncontext.cpp
 	src/acquireddata.cpp
 	src/sa220.cpp
 	src/datapublisher.cpp
@@ -39,7 +38,6 @@ add_executable (AqMD3_console
 	include/cstzs1context.h
 	include/cstcontext.h
 	include/message.pb.h
-	include/acquisitioncontext.h
 	include/acquireddata.h
 	include/sa220.h
 	include/datapublisher.h
