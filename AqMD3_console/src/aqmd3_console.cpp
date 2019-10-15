@@ -2,7 +2,6 @@
 
 #include "../include/server.h"
 #include "../include/digitizer.h"
-#include "../include/acquisitioncontext.h"
 #include "../include/acquireddata.h"
 #include "../include/datapublisher.h"
 #include "../include/sa220.h"
@@ -425,10 +424,10 @@ static void publish_worker_frame(std::condition_variable &sig, std::mutex &locka
 
 	while (!should_exit)
 	{
-		//{
-		//	std::unique_lock<std::mutex> lock(lockable);
-		//	sig.wait(lock);
-		//}
+		{
+			std::unique_lock<std::mutex> lock(lockable);
+			sig.wait(lock);
+		}
 
 		while (!workQueue.empty())
 		{

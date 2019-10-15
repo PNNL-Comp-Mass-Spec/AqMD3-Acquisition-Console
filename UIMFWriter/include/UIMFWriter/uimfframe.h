@@ -32,7 +32,6 @@ public:
 		, file_name(file_name)
 	{}
 
-	//void append_encoded_results(std::vector<EncodedResult>&& results);
 	void append_encoded_results(std::vector<EncodedResult> results);
 	std::vector<EncodedResult>& get_data() { return data; }
 };

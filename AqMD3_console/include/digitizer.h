@@ -3,7 +3,6 @@
 
 #include "streamingcontext.h"
 #include "acquireddata.h"
-#include "acquisitioncontext.h"
 #include "AqMD3.h"
 #include <tuple>
 #include <memory>

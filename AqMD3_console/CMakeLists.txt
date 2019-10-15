@@ -30,6 +30,9 @@ add_executable (AqMD3_console
 	src/sa220.cpp
 	src/datapublisher.cpp
 	src/framepublisher.cpp
+	src/framesubscriber.cpp
+	src/framewritersubscriber.cpp
+	src/framezmqsubscriber.cpp
 	include/digitizer.h
 	include/server.h
 	include/acquisitionbuffer.h
@@ -43,6 +46,8 @@ add_executable (AqMD3_console
 	include/datapublisher.h
 	include/framepublisher.h
 	include/framesubscriber.h
+	include/framewritersubscriber.h
+	include/framezmqsubscriber.h
 )
 
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)
