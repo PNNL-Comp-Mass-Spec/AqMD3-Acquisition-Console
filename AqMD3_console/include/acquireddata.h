@@ -11,37 +11,44 @@
 class AcquiredData {
 public:
 	class GateData {
-	public:
-		uint64_t const gate_start_index;
-		uint64_t const gate_stop_index;
-		uint32_t const processing_block_size;
+	private:
+		int const processing_block_size = 8;
 
-		GateData(uint64_t start_index, uint64_t stop_index, uint32_t processing_block_size)
-			: gate_start_index(start_index)
-			, gate_stop_index(stop_index)
-			, processing_block_size(processing_block_size)
+	public:
+		uint64_t const gate_start_block_index;
+		uint64_t const gate_stop_block_index;
+
+		uint32_t const gate_start_intra_block_index;
+		uint32_t const gate_stop_intra_block_index;
+
+		uint32_t const total_processing_blocks;
+
+		GateData(uint64_t gate_start_block_index, uint32_t gate_start_intra_block_index, uint64_t gate_stop_block_index,
+			uint32_t gate_stop_intra_block_index,
+			uint32_t total_processing_blocks)
+			: gate_start_block_index(gate_start_block_index)
+			, gate_start_intra_block_index(gate_start_intra_block_index)
+			, gate_stop_block_index(gate_stop_block_index)
+			, gate_stop_intra_block_index(gate_stop_intra_block_index)
+			, total_processing_blocks(total_processing_blocks)
 		{}
 
-		inline uint64_t get_absolute_offset_from_start_index(uint64_t index) {
-			if (index > gate_start_index)
-				return index - gate_start_index;
-			return gate_start_index - index;
+		inline uint64_t get_start_sample_index() {
+			return (gate_start_block_index - 1) * processing_block_size + gate_start_intra_block_index;
 		}
 
-		inline uint64_t get_sample_difference_next_gate(const GateData& next) {
-			return next.gate_start_index - gate_stop_index;
+		// returns index of sample one past last valid element allowing for tot_samples = gate_end_idx - gate_start_idx
+		inline uint64_t get_stop_sample_index() {
+			return (gate_stop_block_index - 1) * processing_block_size - processing_block_size + gate_stop_intra_block_index;
 		}
 
-		inline uint64_t get_gate_sample_length() {
-			return gate_stop_index - gate_start_index;
-		}
 	};
 
 	class TriggerData {
 	public:
-		uint64_t timestamp;
-		double subsample_pos;
-		uint32_t index;
+		uint64_t const timestamp;
+		double const subsample_pos;
+		uint32_t const index;
 
 		std::vector<GateData> gate_data;
 

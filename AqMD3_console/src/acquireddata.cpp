@@ -33,26 +33,20 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 		for (int j = 0 ; j < gate_count; j++)
 		{
 			auto gate = trig.gate_data[j];
-			auto samples = gate.get_gate_sample_length();
-			auto elements = samples / 2;
-			auto size_to_process = gate.processing_block_size;
+			auto blocks = gate.total_processing_blocks;
+			auto samples = blocks * 2;
+			auto first_valid_index = gate.gate_start_intra_block_index;
+			auto last_valid_index = gate.get_stop_sample_index() - gate.get_start_sample_index();
 
 			int32_t gate_zero_count = 0;
-			if (gate_count > 1)
+			if (j == 0)
 			{
-				if (j == 0) 
-				{
-					gate_zero_count = gate.gate_start_index - 1;
-				}
-				else 
-				{
-					auto prev_gate = trig.gate_data[j - 1];
-					gate_zero_count = prev_gate.get_sample_difference_next_gate(gate);
-				}
+				gate_zero_count = gate.get_start_sample_index();
 			}
 			else 
 			{
-				gate_zero_count =gate.gate_start_index - 1;
+				auto prev_gate = trig.gate_data[j - 1];
+				gate_zero_count = gate.get_start_sample_index() - prev_gate.get_stop_sample_index();
 			}
 
 			if (gate_zero_count != 0)
@@ -64,42 +58,50 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 
 			int processed = 0;
 			int32_t *ptr = samples_buffer->get_raw_unprocessed() + offset;
-			for (int i = 0; i < elements; i++)
+			
+			int start = first_valid_index / 2;
+			if (first_valid_index % 2 != 0)
 			{
-				int32_t first = (ptr[i] << 16) >> 16;
-				int32_t second = ptr[i] >> 16;
-
+				auto val = (ptr[start] >> 16);
 				// if(first < (zThreshold - zHysteresis))
-				if (first < 0)
-					first = 0;
+				if (val < 0)
+					val = 0;
 
-
-				if (first > bpi)
+				if (val > bpi)
 				{
-					bpi = first;
-					index_max_intensity = non_zero_count + zero_count + (2 * i);
+					bpi = val;
+					index_max_intensity = non_zero_count + zero_count + (2 * start);
 					bpi_mz = index_max_intensity;
 				}
 
-				encoded_samples.push_back(first);
-				tic += first;
+				encoded_samples.push_back(val);
+				tic += val;
 
-				if (second < 0)
-					second = 0;
+				start++;
+			}
 
-				if (second > bpi)
+			for (int i = start; i < blocks; i++)
+			{
+				for (auto val : { ((ptr[i] << 16) >> 16) , (ptr[i] >> 16) })
 				{
-					bpi = second;
-					index_max_intensity = non_zero_count + zero_count + (2 * i) + 1;
-					bpi_mz = index_max_intensity;
-				}
+					// if(first < (zThreshold - zHysteresis))
+					if (val < 0)
+						val = 0;
 
-				encoded_samples.push_back(second);
-				tic += first + second;
+					if (val > bpi)
+					{
+						bpi = val;
+						index_max_intensity = non_zero_count + zero_count + (2 * i);
+						bpi_mz = index_max_intensity;
+					}
+
+					encoded_samples.push_back(val);
+					tic += val;
+				}
 				processed += 2;
 			}
-			offset += size_to_process;
-			non_zero_count += samples;
+			offset += blocks;
+			//non_zero_count += samples;
 		}
 
 		results.emplace_back(

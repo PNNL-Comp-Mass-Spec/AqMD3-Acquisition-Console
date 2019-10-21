@@ -1,6 +1,5 @@
 #include "../include/cstzs1context.h"
 
-#include <iostream>
 #include <vector>
 #include <tuple>
 #include <exception>
@@ -38,13 +37,13 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 				uint64_t high = seg[2];
 				uint64_t timestampLow = (low >> 8) & 0x0000000000ffffffL;
 				uint64_t timestampHigh = uint64_t(high) << 24;
-				//std::cout << "\tindex: " << (header >> 8) << endl;
 				stamps.emplace_back(timestampHigh | timestampLow, header >> 8, (-1 * (seg[1] & 0x000000ff))/256);
 				markers_buffer.advance_processed(16);
 
 				break;
 			}
 			case 0x04:
+			case 0x0a:
 			{
 				int block_total = 0;
 				for (int i = 0; i < 4; i++)
@@ -57,26 +56,47 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 						uint32_t e_lo = l_ptr[2];
 						uint32_t e_hi = l_ptr[3];
 
-						uint64_t s = (uint64_t(s_hi & 0xffffff) << 8) | ((s_lo >> 24) & 0xff);
-						uint64_t e = (uint64_t(e_hi & 0xffffff) << 8) | ((e_lo >> 24) & 0xff);
+						uint64_t start_block_index = (uint64_t(s_hi & 0xffffff) << 8) | ((s_lo >> 24) & 0xff);
+						uint32_t start_block_sample_indx = (s_hi >> 24) & 0xff;
+						uint64_t end_block_index = (uint64_t(e_hi & 0xffffff) << 8) | ((e_lo >> 24) & 0xff);
+						uint32_t end_block_sample_indx = (e_hi >> 24) & 0xff;
 
-						uint64_t to_acquire_samples = (e - s) * 8;
-						uint64_t to_acquire_memory_blocks = to_acquire_samples / 2;
+						uint64_t to_acquire_memory_blocks_f = (end_block_index - start_block_index) * 4;
 
-						while (to_acquire_memory_blocks % 16 != 0)
-							to_acquire_memory_blocks += 4;
+						if (to_acquire_memory_blocks_f == 1)
+						{
+							cerr << "to_acquire_memory_blocks == 1" << endl;
+							continue;
+						}
+
+						while (to_acquire_memory_blocks_f % 16 != 0)
+							to_acquire_memory_blocks_f += 4;
 
 						if (stamps.size() == 0)
 						{
-							cout << "\tNo elements in stamps - discarding acquired elements." << endl;
+							cerr << "\tNo elements in stamps - discarding acquired elements." << endl;
 							markers_buffer.advance_processed(16);
 							break;
 						}
 
-						stamps.back().gate_data.emplace_back((s - 1) * 8, (e - 1) * 8, to_acquire_memory_blocks);
+						stamps.back().gate_data.emplace_back(
+							start_block_index,
+							start_block_sample_indx,
+							end_block_index,
+							end_block_sample_indx,
+							to_acquire_memory_blocks_f);
+
 						++gate_count;
 
-						to_acquire += to_acquire_memory_blocks;
+						to_acquire += to_acquire_memory_blocks_f;
+					}
+					else if ((*l_ptr & 0x000000FF) == 0x0a)
+					{
+						uint32_t r_lo = l_ptr[0];
+						uint32_t r_hi = l_ptr[1];
+
+						uint64_t record_block_index = (uint64_t(r_hi & 0xffffff) << 8) | ((r_lo >> 24) & 0xff);
+						uint32_t record_block_sample_indx = (r_hi >> 24) & 0xff;
 					}
 				}
 
@@ -85,10 +105,12 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 			}
 			case 0x08:	// Should never get here
 			{
-				cout << "\tERROR -- DUMMY GATE\n";
-				exception("dummy gate error");
+				cerr << "\tERROR -- DUMMY GATE\n";
+				throw string("dummy gate error");
 			}
 			default:
+				cerr << "\t(default) header: " << (header & 0x000000FF) << endl;
+				throw string("unexpected header");
 				break;
 			}
 		}
@@ -114,10 +136,6 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 			if (available_elements_markers > markers_to_acquire)
 				markers_to_acquire *= gate_acquisition_multiplier;
 
-			//cout << "\tacquired marker elements: " << actual_elements_markers 
-			//	<< " -- available marker elements: " << available_elements_markers
-			//	<<  " -- first element index: " << first_element_markers << endl;
-
 			markers_buffer.advance_offset(first_element_markers);
 			markers_buffer.advance_acquired(actual_elements_markers);
 		}
@@ -137,8 +155,6 @@ process:
 
 	samples_buffer->advance_offset(first_element_samples);
 	samples_buffer->advance_acquired(actual_elements_samples);
-
-	cout << "\tacquired sample elements: " << actual_elements_samples << endl;
 
 	return AcquiredData(stamps, samples_buffer, samples_per_trigger);
 }

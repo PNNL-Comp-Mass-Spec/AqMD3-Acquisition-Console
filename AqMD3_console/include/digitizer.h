@@ -23,11 +23,11 @@ public:
 		uint8_t const pre_samples;
 		uint8_t const post_samples;
 
-		ZeroSuppressParameters(int16_t threshold, uint16_t hysteresis, uint8_t pre_samples, uint8_t post_samples)
+		ZeroSuppressParameters(int16_t threshold, uint16_t hysteresis)
 			: threshold(threshold)
 			, hysteresis(hysteresis)
-			, pre_samples(pre_samples)
-			, post_samples(post_samples)
+			, pre_samples(0)
+			, post_samples(0)
 		{}
 	};
 
