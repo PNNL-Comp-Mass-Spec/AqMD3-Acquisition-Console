@@ -4,14 +4,17 @@
 #include "framesubscriber.h"
 #include <UIMFWriter/UIMFWriter.h>
 #include <deque>
+#include <zmq.hpp>
 
-class FrameWriterSubscriber : FrameSubscriber {
+class FrameWriterSubscriber : public FrameSubscriber<std::shared_ptr<UimfFrame>> {
+private:
+
 public:
-	FrameWriterSubscriber()
+	FrameWriterSubscriber() : FrameSubscriber()
 	{}
 
 private:
-	int execute() override;
+	void execute() override;
 };
 
 #endif // !FRAME_WRITER_SUBSCRIBER_H

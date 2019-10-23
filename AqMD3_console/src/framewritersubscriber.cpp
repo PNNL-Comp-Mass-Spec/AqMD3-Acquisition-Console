@@ -1,13 +1,25 @@
 #include "..\include\framewritersubscriber.h"
 
-int FrameWriterSubscriber::execute()
+#include <iostream>
+
+void FrameWriterSubscriber::execute()
 {
-	while (!frames.empty())
+	while (!items.empty())
 	{
-		auto frame = frames.front();
-		frames.pop_front();
+		std::cout << "popping frame" << std::endl;
+		auto frame = items.front();
+		items.pop_front();
 
 		UimfWriter writer(frame->file_name);
-		writer.write_frame(*frame);
+		std::cout << "start writing frame" << std::endl;
+		try
+		{
+			writer.write_frame(*frame);
+		}
+		catch (...)
+		{
+			std::cout << "there was an error writing the UIMF frame" << std::endl;
+		}
+		std::cout << "end writing frame" << std::endl;
 	}
 }

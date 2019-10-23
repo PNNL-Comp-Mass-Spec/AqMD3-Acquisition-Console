@@ -28,11 +28,12 @@ add_executable (AqMD3_console
 	src/message.pb.cpp
 	src/acquireddata.cpp
 	src/sa220.cpp
-	src/datapublisher.cpp
-	src/framepublisher.cpp
-	src/framesubscriber.cpp
 	src/framewritersubscriber.cpp
 	src/framezmqsubscriber.cpp
+	src/framesubject.cpp
+	src/zmqdatasubscriber.cpp
+	src/acquirepublisher.cpp
+	src/acquireframepublisher.cpp
 	include/digitizer.h
 	include/server.h
 	include/acquisitionbuffer.h
@@ -43,11 +44,15 @@ add_executable (AqMD3_console
 	include/message.pb.h
 	include/acquireddata.h
 	include/sa220.h
-	include/datapublisher.h
 	include/framepublisher.h
 	include/framesubscriber.h
 	include/framewritersubscriber.h
 	include/framezmqsubscriber.h
+	include/framesubject.h
+	include/zmqdatasubscriber.h
+	include/acquirepublisher.h
+	include/acquireframepublisher.h
+	include/acquisitioncontrol.h
 )
 
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)

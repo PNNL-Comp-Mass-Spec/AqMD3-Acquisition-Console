@@ -1,5 +1,4 @@
 #include "..\include\framezmqsubscriber.h"
-#include "..\include\datapublisher.h"
 #include <vector>
 
 #define NOMINMAX 
@@ -7,12 +6,12 @@
 #undef max
 #include "../include/message.pb.h"
 
-int FrameZmqSubscriber::execute()
+void FrameZmqSubscriber::execute()
 {
-	while (!frames.empty())
+	while (!items.empty())
 	{
-		auto frame = frames.front();
-		frames.pop_front();
+		auto frame = items.front();
+		items.pop_front();
 		
 		Message msg;
 		msg.mutable_tic()->Reserve(frame->frame_length);

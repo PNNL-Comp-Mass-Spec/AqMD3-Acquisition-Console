@@ -163,6 +163,7 @@ std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, 
 	auto rct = get_calibration_required();
 	if (rc.second != Digitizer::None)
 		throw rc.first;
+	std::cout << "should calibrate: " << std::get<2>(rct) << std::endl;
 	if(std::get<2>(rct));
 	{
 		std::cout << "calibrating" << std::endl;
@@ -177,7 +178,7 @@ std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, 
 			session,
 			channel,
 			record_size * 256,
-			8,
+			20,
 			record_size,
 			triggers
 		));
