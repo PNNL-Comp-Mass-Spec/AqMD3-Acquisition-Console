@@ -76,6 +76,7 @@ protected:
 	std::pair<std::string, ErrorType> configure_trigger_source(ViConstString trigger_source);
 	std::pair<std::string, ErrorType> configure_trigger_level(ViConstString trigger_source, ViReal64 trigger_level);
 	std::pair<std::string, ErrorType> configure_trigger_slope(ViConstString trigger_source, ViInt32 trigger_slope);
+	std::pair<std::string, ErrorType> configure_trigger_delay(ViReal64 delay);
 
 	std::pair<std::string, ErrorType> configure_record_size(ViInt64 record_size);
 	std::pair<std::string, ErrorType> configure_data_reduction(ViInt32 mode);

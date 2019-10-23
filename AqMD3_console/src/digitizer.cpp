@@ -99,6 +99,12 @@ std::pair<std::string, Digitizer::ErrorType> Digitizer::configure_trigger_slope(
 	return check_error(status);
 }
 
+std::pair<std::string, Digitizer::ErrorType>  Digitizer::configure_trigger_delay(ViReal64 delay)
+{
+	ViStatus status = AqMD3_SetAttributeViReal64(session, "", AQMD3_ATTR_TRIGGER_DELAY, delay);
+	return check_error(status);
+}
+
 std::pair<std::string, Digitizer::ErrorType> Digitizer::configure_record_size(ViInt64 record_size)
 {
 	ViStatus status = AqMD3_SetAttributeViInt64(session, "", AQMD3_ATTR_RECORD_SIZE, record_size);
