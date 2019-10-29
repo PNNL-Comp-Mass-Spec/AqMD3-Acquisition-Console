@@ -113,10 +113,14 @@ void Server::register_handler(std::function<void(const ReceivedRequest)> handler
 	message_handler = handler;
 }
 
-zmq::socket_t Server::get_publisher(std::string address)
+std::shared_ptr<Server::Publisher> Server::get_publisher(std::string address)
 {
-	zmq::socket_t socket(context, ZMQ_PUB);
-	socket.bind(address);
-
-	return std::move(socket);
+	auto publisher = publishers[address].lock();
+	if (!publisher)
+	{
+		zmq::socket_t sock(context, ZMQ_PUB);
+		sock.bind(address);
+		publishers[address] = publisher = std::make_shared<Server::Publisher>(std::move(sock), address);
+	}
+	return publisher;
 }
