@@ -1,6 +1,8 @@
 #include "../include/zmqdatasubscriber.h"
 #include <snappy.h>
 
+#include <iostream>
+
 #define NOMINMAX 
 #undef min
 #undef max
@@ -10,20 +12,16 @@ void ZmqDataSubscriber::execute()
 {
 	while (!items.empty())
 	{
-		std::cout << "ACQUIRED DATA UNPROCESSED: " << items.size() << std::endl;
+		std::cout << "ZmqDataSubscriber unprocessed elements: " << items.size() << std::endl;
 
-		std::cout << "sig'd" << std::endl;
-		int samples = 0;
 		auto ad = items.front();
 		items.pop_front();
 		auto elements = ad.process(0, 0);
-
-		std::cout << "Processing " << elements.size() << " elements" << std::endl;
 		Message msg;
 
 		std::fill(data_vector.begin(), data_vector.end(), 0);
 
-		for (auto& er : elements)
+		for (auto& er : *elements)
 		{
 			msg.add_tic(er.tic);
 			msg.add_time_stamps(er.timestamp);
@@ -39,7 +37,6 @@ void ZmqDataSubscriber::execute()
 					index += (-1 * val);
 					continue;
 				}
-
 				data_vector[index++] += val;
 			}
 		}
@@ -55,10 +52,6 @@ void ZmqDataSubscriber::execute()
 		zmq::message_t to_send(compressed_msg_s.size());
 		memcpy((void *)to_send.data(), compressed_msg_s.c_str(), compressed_msg_s.size());
 
-		zmq::message_t sub_data(4);
-		memcpy(sub_data.data(), subject.data(), subject.size());
-
-		socket.send(sub_data, ZMQ_SNDMORE);
-		socket.send(to_send, 0);
+		publisher->send(to_send, subject);
 	}
 }

@@ -6,25 +6,26 @@
 #include <UIMFWriter/uimfframe.h>
 #include <list>
 #include <tuple>
+#include <future>
 
 template <typename T>
 class FramePublisher {
 protected:
 	std::list<std::tuple<SubscriberType, std::shared_ptr<FrameSubscriber<T>>>> subscribers;
-	std::condition_variable sig;
-	std::mutex mut;
-
-	bool should_stop;
+	std::promise<void> completed_signal;
+	std::shared_future<void> completed_future;
 
 public:
 	FramePublisher()
-		: should_stop(false)
+		: completed_future(completed_signal.get_future())
 	{}
+
+	virtual ~FramePublisher() = default;
 
 	inline void register_subscriber(std::shared_ptr<FrameSubscriber<T>> subscriber, SubscriberType type)
 	{
 		subscribers.emplace_back(type, subscriber);
-		subscriber->setup(&should_stop);
+		subscriber->setup(completed_future);
 	}
 
 protected:
@@ -37,6 +38,11 @@ protected:
 				std::get<1>(sub)->update(item);
 			}
 		}
+	}
+
+	inline void notify_completed() 
+	{
+		completed_signal.set_value();
 	}
 
 };

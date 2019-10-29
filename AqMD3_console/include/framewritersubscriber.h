@@ -5,6 +5,7 @@
 #include <UIMFWriter/UIMFWriter.h>
 #include <deque>
 #include <zmq.hpp>
+#include <iostream>
 
 class FrameWriterSubscriber : public FrameSubscriber<std::shared_ptr<UimfFrame>> {
 private:

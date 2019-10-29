@@ -28,6 +28,7 @@ public:
 	{}
 
 	void write_frame(UimfFrame& results);
+
 };
 
 #endif // !UIMFWRITER_H

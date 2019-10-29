@@ -17,7 +17,7 @@ public:
 	uint32_t const offset_bins;
 	std::string const file_name;
 
-	std::vector<EncodedResult> data;
+	std::vector<std::shared_ptr<std::vector<EncodedResult>>> data;
 
 	UimfFrame(uint64_t start_trigger, uint64_t nbr_samples, uint64_t nbr_accumulations, uint64_t frame_length,
 		uint32_t frame_number,
@@ -32,8 +32,10 @@ public:
 		, file_name(file_name)
 	{}
 
-	void append_encoded_results(std::vector<EncodedResult> results);
-	std::vector<EncodedResult>& get_data() { return data; }
+	~UimfFrame() {}
+
+	void append_encoded_results(std::shared_ptr<std::vector<EncodedResult>> results);
+	std::vector<std::shared_ptr<std::vector<EncodedResult>>> get_data() { return data; }
 };
 
 #endif // !UIMF_FRAME_H

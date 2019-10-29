@@ -8,27 +8,42 @@
 
 void UimfWriter::write_frame(UimfFrame& frame)
 {
-	int const extra = 128;
-	SQLite::Transaction transaction(db);
-	char *statement = new char[insert_scan_statement_size_bytes + extra];
-
-	for (auto& er : frame.get_data())
+	try
 	{
-		int count = sprintf(statement,
-			insert_scan_statement.c_str(),
-			er.frame,
-			er.scan,
-			er.non_zero_count,
-			er.bpi,
-			er.bpi_mz,
-			er.tic);
+		int const extra = 128;
+		std::cout << "starting transaction" << std::endl;
+		SQLite::Transaction transaction(db);
+		char *statement = new char[insert_scan_statement_size_bytes + extra];
 
-		auto compressed = er.get_compressed_spectra();
+		for (int i = 0; i < frame.get_data().size(); i++)
+		{
+			for (auto& er : *(frame.get_data()[i]))
+			{
+				if (er.encoded_spectra.size() > 1)
+				{
+					int count = sprintf(statement,
+						insert_scan_statement.c_str(),
+						er.frame,
+						er.scan,
+						er.non_zero_count,
+						er.bpi,
+						er.bpi_mz,
+						er.tic);
 
-		SQLite::Statement statement(db, statement);
-		statement.bind(1, compressed.data, compressed.bytes);
-		statement.exec();
+					auto compressed = er.get_compressed_spectra();
+
+					SQLite::Statement statement(db, statement);
+					statement.bind(1, compressed.data, compressed.bytes);
+					statement.exec();
+				}
+			}
+		}
+
+		transaction.commit();
+	}
+	catch (...)
+	{
+		std::cout << "error writing to UIMF file" << std::endl;
 	}
 
-	transaction.commit();
 }

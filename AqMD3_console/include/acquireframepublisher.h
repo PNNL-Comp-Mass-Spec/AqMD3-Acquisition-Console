@@ -11,13 +11,14 @@ class AcquireFramePublisher : public AcquisitionControl, public FramePublisher<A
 private:
 	std::thread worker_handle;
 	std::unique_ptr<StreamingContext> context;
-	
-	std::unique_ptr<UimfFrame> frame;
+
+	std::shared_ptr<UimfFrame> frame;
 
 public:
-	AcquireFramePublisher(std::unique_ptr<StreamingContext> context)
+	AcquireFramePublisher(std::unique_ptr<StreamingContext> context, std::shared_ptr<UimfFrame> frame)
 		: worker_handle()
 		, context(std::move(context))
+		, frame(frame)
 	{}
 
 	void start() override;

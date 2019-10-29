@@ -2,24 +2,29 @@
 
 void AcquirePublisher::start()
 {
-	should_stop = false;
 	worker_handle = std::thread([&]()
 	{
-		std::cout << "starting" << std::endl;
+		std::cout << "AcquirePublisher :: starting acquisition" << std::endl;
 		context->start();
 		while (!should_stop)
 		{
 			auto data = context->acquire(std::chrono::milliseconds(80));
 			notify(data, SubscriberType::BOTH);
 		}
-		std::cout << "stopping" << std::endl;
-		context->stop();
 	});
 }
 
 void AcquirePublisher::stop()
 {
-	std::cout << "stop requested" << std::endl;
-	should_stop = true;
-	worker_handle.join();
+	std::cout << "AcquirePublisher :: stop requested" << std::endl;
+	if (!should_stop)
+	{
+		should_stop = true;
+		std::cout << "AcquirePublisher :: stopping acquisition" << std::endl;
+		context->stop();
+		notify_completed();
+		worker_handle.join();
+	}
+	std::cout << "AcquirePublisher :: stop completed" << std::endl;
 }
+

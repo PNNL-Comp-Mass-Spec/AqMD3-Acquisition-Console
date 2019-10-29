@@ -6,6 +6,8 @@
 
 using namespace std;
 
+//#define bad_gates
+
 AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 {
 	int markers_to_acquire = min_target_records;
@@ -63,11 +65,20 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 
 						uint64_t to_acquire_memory_blocks_f = (end_block_index - start_block_index) * 4;
 
-						if (to_acquire_memory_blocks_f == 1)
-						{
-							cerr << "to_acquire_memory_blocks == 1" << endl;
-							continue;
-						}
+#ifdef bad_gates
+						if (to_acquire_memory_blocks_f == 4)
+						//cerr << "gate block difference == 1, (stop samples indx - start samples indx) < 1" << endl;
+						//continue;
+						//int64_t to_acquire = end_block_index - start_block_index;
+						//std::cout << "end_block_index - start_block_index : " << to_acquire << endl;
+						//stamps.back().gate_data.emplace_back(
+						//	start_block_index,
+						//	start_block_sample_indx,
+						//	end_block_index,
+						//	end_block_sample_indx,
+						//	0);
+						continue;
+#endif
 
 						while (to_acquire_memory_blocks_f % 16 != 0)
 							to_acquire_memory_blocks_f += 4;
@@ -152,6 +163,10 @@ process:
 		samples_buffer->get_size(),
 		(ViInt32 *)samples_buffer->get_raw_unaquired(),
 		&available_elements_samples, &actual_elements_samples, &first_element_samples);
+
+	//cout << "to_acquire: " << to_acquire << endl
+	//	<< "available_elements_samples: " << available_elements_samples << endl
+	//	<< "actual_elements_samples: " << actual_elements_samples << endl;
 
 	samples_buffer->advance_offset(first_element_samples);
 	samples_buffer->advance_acquired(actual_elements_samples);

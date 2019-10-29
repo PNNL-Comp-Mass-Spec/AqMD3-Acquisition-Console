@@ -6,7 +6,6 @@ void FrameWriterSubscriber::execute()
 {
 	while (!items.empty())
 	{
-		std::cout << "popping frame" << std::endl;
 		auto frame = items.front();
 		items.pop_front();
 

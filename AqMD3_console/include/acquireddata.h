@@ -33,12 +33,11 @@ public:
 			, total_processing_blocks(total_processing_blocks)
 		{}
 
-		inline uint64_t get_start_sample_index() {
+		inline uint64_t get_start_sample_index() const {
 			return (gate_start_block_index - 1) * processing_block_size + gate_start_intra_block_index;
 		}
 
-		// returns index of sample one past last valid element allowing for tot_samples = gate_end_idx - gate_start_idx
-		inline uint64_t get_stop_sample_index() {
+		inline uint64_t get_stop_sample_index() const {
 			return (gate_stop_block_index - 1) * processing_block_size - processing_block_size + gate_stop_intra_block_index;
 		}
 
@@ -74,7 +73,7 @@ public:
 		, samples_count(samples_count)
 	{}
 
-	std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_start_number) const;
+	std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int frame, int processing_scan_start_number) const;
 };
 
 #endif // !ACQUIRED_DATA_H

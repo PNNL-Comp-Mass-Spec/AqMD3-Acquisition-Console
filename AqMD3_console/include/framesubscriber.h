@@ -5,6 +5,7 @@
 #include <deque>
 #include <mutex>
 #include <condition_variable>
+#include <future>
 
 #include <iostream>
 
@@ -32,19 +33,24 @@ protected:
 	std::condition_variable sig;
 	std::mutex mut;
 
-	std::thread worker_thread;
+	std::thread worker_handle;
 
 public:
 	FrameSubscriber()
 		: items()
-		, worker_thread()
+		, worker_handle()
 	{}
 
-	void setup(const bool *should_stop)
+	virtual ~FrameSubscriber()
 	{
-		worker_thread = std::thread([&, should_stop]()
+		worker_handle.join();
+	};
+
+	void setup(std::shared_future<void> stop)
+	{
+		worker_handle = std::thread([&, stop]()
 		{
-			while (!(*should_stop))
+			while (stop.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
 			{
 				{
 					std::unique_lock<std::mutex> lock(mut);
@@ -53,22 +59,17 @@ public:
 
 				execute();
 			}
-
-			std::cout << "exiting worker thread" << std::endl;
 		});
-
-		worker_thread.detach();
 	}
 
 	inline void update(T item)
 	{
 		items.push_back(item);
-		sig.notify_all();
+		sig.notify_one();
 	}
 
 private:
 	virtual void execute() = 0;
-
 };
 
 #endif // !FRAME_SUBSCRIBER_H

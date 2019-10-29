@@ -107,9 +107,11 @@ std::unique_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint
 	auto rct = get_calibration_required();
 	if (rc.second != Digitizer::None)
 		throw rc.first;
-	if (std::get<2>(rct));
+	bool should_calibrate = (bool)std::get<2>(rct);
+	//std::cout << "should calibrate: " << (should_calibrate ? "true" : "false") << std::endl;
+	if (should_calibrate)
 	{
-		std::cout << "calibrating" << std::endl;
+		//std::cout << "calibrating" << std::endl;
 		rc = self_calibrate();
 		if (rc.second != Digitizer::None)
 			throw rc.first;
@@ -163,10 +165,11 @@ std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, 
 	auto rct = get_calibration_required();
 	if (rc.second != Digitizer::None)
 		throw rc.first;
-	std::cout << "should calibrate: " << std::get<2>(rct) << std::endl;
-	if(std::get<2>(rct));
+	bool should_calibrate = (bool)std::get<2>(rct);
+	//std::cout << "should calibrate: " << (should_calibrate ? "true" : "false") << std::endl;
+	if (should_calibrate)
 	{
-		std::cout << "calibrating" << std::endl;
+		//std::cout << "calibrating" << std::endl;
 		rc = self_calibrate();
 		if (rc.second != Digitizer::None)
 			throw rc.first;

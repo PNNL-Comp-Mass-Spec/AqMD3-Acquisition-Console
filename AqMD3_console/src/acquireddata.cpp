@@ -6,11 +6,11 @@
 #include <tuple>
 #include <algorithm>
 
-std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_start_number) const
+std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int frame, int processing_scan_start_number) const
 {
-	std::vector<EncodedResult> results;
-	results.reserve(stamps.size());
-	
+	std::shared_ptr<std::vector<EncodedResult>> results = std::make_shared<std::vector<EncodedResult>>();
+	results->reserve(stamps.size());
+
 	int32_t *ptr = samples_buffer->get_raw_unprocessed();
 	int offset = 0;
 
@@ -25,25 +25,31 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 		int64_t bpi = 0;
 		double bpi_mz = 0.0;
 		int32_t index_max_intensity = 0;
-		
+
 		int32_t non_zero_count = 0;
 		int32_t zero_count = 0;
 
 		size_t gate_count = trig.gate_data.size();
-		for (int j = 0 ; j < gate_count; j++)
+		for (int j = 0; j < gate_count; j++)
 		{
 			auto gate = trig.gate_data[j];
 			auto blocks = gate.total_processing_blocks;
 			auto samples = blocks * 2;
 			auto first_valid_index = gate.gate_start_intra_block_index;
-			auto last_valid_index = gate.get_stop_sample_index() - gate.get_start_sample_index();
+			int64_t last_valid_index = int64_t(gate.get_stop_sample_index()) - int64_t(gate.get_start_sample_index());
+
+			if (last_valid_index <= 0)
+			{
+				offset += blocks;
+				continue;
+			}
 
 			int32_t gate_zero_count = 0;
 			if (j == 0)
 			{
 				gate_zero_count = gate.get_start_sample_index();
 			}
-			else 
+			else
 			{
 				auto prev_gate = trig.gate_data[j - 1];
 				gate_zero_count = gate.get_start_sample_index() - prev_gate.get_stop_sample_index();
@@ -58,7 +64,7 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 
 			int processed = 0;
 			int32_t *ptr = samples_buffer->get_raw_unprocessed() + offset;
-			
+
 			int start = first_valid_index / 2;
 			if (first_valid_index % 2 != 0)
 			{
@@ -75,6 +81,7 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 				}
 
 				encoded_samples.push_back(val);
+				non_zero_count++;
 				tic += val;
 
 				start++;
@@ -96,15 +103,15 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 					}
 
 					encoded_samples.push_back(val);
+					non_zero_count++;
 					tic += val;
 				}
 				processed += 2;
 			}
 			offset += blocks;
-			//non_zero_count += samples;
 		}
 
-		results.emplace_back(
+		results->emplace_back(
 			frame,
 			processing_scan_start_number + trig_index,
 			non_zero_count,
@@ -115,6 +122,6 @@ std::vector<EncodedResult> AcquiredData::process(int frame, int processing_scan_
 			index_max_intensity,
 			timestamp);
 	}
-	
+
 	return results;
 }
