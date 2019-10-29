@@ -53,6 +53,8 @@ add_executable (AqMD3_console
 	include/acquirepublisher.h
 	include/acquireframepublisher.h
 	include/acquisitioncontrol.h
+	include/diagnostic/rawprintersubscriber.h
+	include/diagnostic/simplepublisher.h
 )
 
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)
