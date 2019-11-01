@@ -6,7 +6,7 @@
 #include <tuple>
 #include <algorithm>
 
-std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int frame, int processing_scan_start_number) const
+std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing_scan_start_number) const
 {
 	std::shared_ptr<std::vector<EncodedResult>> results = std::make_shared<std::vector<EncodedResult>>();
 	results->reserve(stamps.size());
@@ -112,7 +112,6 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int frame, int
 		}
 
 		results->emplace_back(
-			frame,
 			processing_scan_start_number + trig_index,
 			non_zero_count,
 			encoded_samples,
