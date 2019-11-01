@@ -19,6 +19,9 @@ public:
 
 private:
 	void execute() override;
+	void on_completed() override
+	{
+	}
 };
 
 #endif // !FRAME_WRITER_SUBSCRIBER_H
