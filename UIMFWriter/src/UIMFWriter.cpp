@@ -41,9 +41,9 @@ void UimfWriter::write_frame(UimfFrame& frame)
 
 		transaction.commit();
 	}
-	catch (...)
+	catch (std::exception& e)
 	{
-		std::cout << "error writing to UIMF file" << std::endl;
+		std::cout << "exception: " << e.what() << std::endl;
 	}
 
 }
