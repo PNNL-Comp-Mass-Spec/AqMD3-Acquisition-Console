@@ -29,14 +29,29 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 		int32_t non_zero_count = 0;
 		int32_t zero_count = 0;
 
-		size_t gate_count = trig.gate_data.size();
+		int gate_count = trig.gate_data.size();
+		
+		// try reserve
+		int reserve = 0;
+		for (int k = 0; k < gate_count; k++)
+		{
+			const auto gate = &trig.gate_data[k];
+			int64_t samples = int64_t(gate->get_stop_sample_index()) - int64_t(gate->get_start_sample_index());
+			if (samples > 0)
+			{
+				reserve += samples;
+			}
+		}
+		encoded_samples.reserve(reserve + gate_count);
+		// end try reserve
+
 		for (int j = 0; j < gate_count; j++)
 		{
-			auto gate = trig.gate_data[j];
-			auto blocks = gate.total_processing_blocks;
+			const auto gate = &trig.gate_data[j];
+			auto blocks = gate->total_processing_blocks;
 			auto samples = blocks * 2;
-			auto first_valid_index = gate.gate_start_intra_block_index;
-			int64_t last_valid_index = int64_t(gate.get_stop_sample_index()) - int64_t(gate.get_start_sample_index());
+			auto first_valid_index = gate->gate_start_intra_block_index;
+			int64_t last_valid_index = int64_t(gate->get_stop_sample_index()) - int64_t(gate->get_start_sample_index());
 
 			if (last_valid_index <= 0)
 			{
@@ -47,12 +62,12 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 			int32_t gate_zero_count = 0;
 			if (j == 0)
 			{
-				gate_zero_count = gate.get_start_sample_index();
+				gate_zero_count = gate->get_start_sample_index();
 			}
 			else
 			{
 				auto prev_gate = trig.gate_data[j - 1];
-				gate_zero_count = gate.get_start_sample_index() - prev_gate.get_stop_sample_index();
+				gate_zero_count = gate->get_start_sample_index() - prev_gate.get_stop_sample_index();
 			}
 
 			if (gate_zero_count != 0)

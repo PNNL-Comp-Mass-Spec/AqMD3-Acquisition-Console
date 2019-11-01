@@ -21,7 +21,7 @@ protected:
 	uint32_t triggers_per_read;
 
 	int buffer_takes;
-	int const buffer_max_count = 20;
+	int const buffer_max_count = 100;
 
 public:
 	StreamingContext(ViSession session,
