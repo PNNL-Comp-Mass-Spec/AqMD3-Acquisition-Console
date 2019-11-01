@@ -11,14 +11,17 @@ class AcquireFramePublisher : public AcquisitionControl, public FramePublisher<A
 private:
 	std::thread worker_handle;
 	std::unique_ptr<StreamingContext> context;
-
 	std::shared_ptr<UimfFrame> frame;
+	std::atomic_bool should_stop;
+	int total_triggers;
 
 public:
 	AcquireFramePublisher(std::unique_ptr<StreamingContext> context, std::shared_ptr<UimfFrame> frame)
 		: worker_handle()
 		, context(std::move(context))
 		, frame(frame)
+		, total_triggers(frame->frame_length * frame->nbr_accumulations)
+		, should_stop(false)
 	{}
 
 	void start() override;

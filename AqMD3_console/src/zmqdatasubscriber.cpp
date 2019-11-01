@@ -16,42 +16,47 @@ void ZmqDataSubscriber::execute()
 
 		auto ad = items.front();
 		items.pop_front();
-		auto elements = ad.process(0, 0);
-		Message msg;
-
-		std::fill(data_vector.begin(), data_vector.end(), 0);
-
-		for (auto& er : *elements)
+		if (processed % 2 == 0)
 		{
-			msg.add_tic(er.tic);
-			msg.add_time_stamps(er.timestamp);
+			auto elements = ad.process(0);
+			Message msg;
 
-			auto begin = std::begin(er.encoded_spectra);
-			auto end = std::end(er.encoded_spectra);
+			std::fill(data_vector.begin(), data_vector.end(), 0);
 
-			int index = 0;
-			for (auto val : er.encoded_spectra)
+			for (auto& er : *elements)
 			{
-				if (val < 0)
+				msg.add_tic(er.tic);
+				msg.add_time_stamps(er.timestamp);
+
+				auto begin = std::begin(er.encoded_spectra);
+				auto end = std::end(er.encoded_spectra);
+
+				int index = 0;
+				for (auto val : er.encoded_spectra)
 				{
-					index += (-1 * val);
-					continue;
+					if (val < 0)
+					{
+						index += (-1 * val);
+						continue;
+					}
+					data_vector[index++] += val;
 				}
-				data_vector[index++] += val;
 			}
+
+			*msg.mutable_mz() = { data_vector.begin(), data_vector.end() };
+
+			std::string msg_s;
+			msg.SerializeToString(&msg_s);
+
+			std::string compressed_msg_s;
+			snappy::Compress(msg_s.data(), msg_s.size(), &compressed_msg_s);
+
+			zmq::message_t to_send(compressed_msg_s.size());
+			memcpy((void *)to_send.data(), compressed_msg_s.c_str(), compressed_msg_s.size());
+
+			publisher->send(to_send, subject);
 		}
 
-		*msg.mutable_mz() = { data_vector.begin(), data_vector.end() };
-
-		std::string msg_s;
-		msg.SerializeToString(&msg_s);
-
-		std::string compressed_msg_s;
-		snappy::Compress(msg_s.data(), msg_s.size(), &compressed_msg_s);
-
-		zmq::message_t to_send(compressed_msg_s.size());
-		memcpy((void *)to_send.data(), compressed_msg_s.c_str(), compressed_msg_s.size());
-
-		publisher->send(to_send, subject);
+		processed++;
 	}
 }

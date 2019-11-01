@@ -11,8 +11,14 @@
 #include "../include/framewritersubscriber.h"
 #include "../include/framesubject.h"
 
+#include "../include/uimfframesubscriber.h"
+#include "../include/zmqacquireddatasubscriber.h"
+#include "../include/processsubject.h"
+
+#include "../include/diagnostic/falsedatapublisher.h"
 #include "../include/diagnostic/rawprintersubscriber.h"
 #include "../include/diagnostic/simplepublisher.h"
+#include "../include/diagnostic/encodeddatawriter.h"
 
 #define NOMINMAX 
 #undef min
@@ -68,13 +74,93 @@ int main(int argc, char *argv[]) {
 		digitizer.set_trigger_parameters(digitizer.trigger_external, 0.5, true);
 		cout << "set chan" << endl;
 		digitizer.set_channel_parameters(digitizer.channel_1, digitizer.full_scale_range_500mv, 0.0);
-		vector<thread> threads;
-		bool should_exit = false;
-		condition_variable signal;
-		queue<AcquiredData> dataQueue;
-		mutex lock;
 
 		std::unique_ptr<AcquisitionControl> controller;
+
+		//std::shared_ptr<UimfFrame> frame = std::make_shared<UimfFrame>(
+		//	0,
+		//	94016,
+		//	3,
+		//	10000,
+		//	1,
+		//	0,
+		//	"test.uimf"
+		//	);
+		//auto data_pub = server->get_publisher("tcp://*:5554");
+
+		//{
+		//	std::shared_ptr<VectorZmqWriterSubscriber> vzws = std::make_shared<VectorZmqWriterSubscriber>(data_pub, frame->nbr_samples);
+		//	std::shared_ptr<UimfFrameSubscriber> ufs = std::make_shared<UimfFrameSubscriber>(frame);
+		//	std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame, data_pub);
+		//	ps->register_subscriber(ufs, SubscriberType::ACQUIRE_FRAME);
+		//	ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
+
+		//	std::unique_ptr<FalseDataPublisher> pub = std::make_unique<FalseDataPublisher>(94016, 3000);
+		//	pub->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
+
+		//	controller = std::move(pub);
+		//	controller->start();
+
+		//	getchar();
+		//	std::cout << "done" << std::endl;
+		//	controller->stop();
+		//}
+
+		//std::shared_ptr<UimfFrame> frame2 = std::make_shared<UimfFrame>(
+		//	0,
+		//	94016,
+		//	2,
+		//	10000,
+		//	1,
+		//	0,
+		//	"test.uimf"
+		//	);
+
+		//{
+		//	std::shared_ptr<VectorZmqWriterSubscriber> vzws = std::make_shared<VectorZmqWriterSubscriber>(data_pub, frame2->nbr_samples);
+		//	std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame2, data_pub);
+		//	std::shared_ptr<UimfFrameSubscriber> ufs = std::make_shared<UimfFrameSubscriber>(frame2);
+		//	ps->register_subscriber(ufs, SubscriberType::ACQUIRE_FRAME);
+		//	ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
+
+		//	std::unique_ptr<FalseDataPublisher> pub = std::make_unique<FalseDataPublisher>(94016, 1000);
+		//	pub->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
+
+		//	controller = std::move(pub);
+		//	controller->start();
+
+		//	std::cout << "done" << std::endl;
+
+		//	controller->stop();
+		//	//controller.reset();
+		//}
+
+		//{
+		//	std::shared_ptr<VectorZmqWriterSubscriber> vzws = std::make_shared<VectorZmqWriterSubscriber>(data_pub, frame->nbr_samples);
+		//	std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame, data_pub);
+		//	std::shared_ptr<UimfFrameSubscriber> ufs = std::make_shared<UimfFrameSubscriber>(frame);
+		//	ps->register_subscriber(ufs, SubscriberType::ACQUIRE_FRAME);
+		//	ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
+
+		//	std::unique_ptr<FalseDataPublisher> pub = std::make_unique<FalseDataPublisher>(94016, 100);
+		//	pub->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
+
+		//	controller = std::move(pub);
+		//	controller->start();
+
+		//	std::cout << "done" << std::endl;
+		//	getchar();
+
+		//	controller->stop();
+		//	controller.reset();
+		//}
+
+		//getchar();
+
+		//bool should_exit = false;
+		//condition_variable signal;
+		//queue<AcquiredData> dataQueue;
+		//mutex lock;
 
 		//int record_size = 94016;
 		//digitizer.set_record_size(record_size);
@@ -241,14 +327,23 @@ int main(int argc, char *argv[]) {
 						auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, uimf.nbr_samples(), Digitizer::ZeroSuppressParameters(0, 200));
 						auto data_pub = server->get_publisher("tcp://*:5554");
 						
-						std::unique_ptr<AcquireFramePublisher> p = std::make_unique<AcquireFramePublisher>(std::move(context), frame);			
-						std::shared_ptr<ZmqDataSubscriber> zs = std::make_unique<ZmqDataSubscriber>(data_pub, uimf.nbr_samples());
-						std::shared_ptr<FrameWriterSubscriber> fws = std::make_shared<FrameWriterSubscriber>();
-						std::shared_ptr<FrameSubject> fs = std::make_shared<FrameSubject>(frame, data_pub);
+						std::unique_ptr<AcquireFramePublisher> p = std::make_unique<AcquireFramePublisher>(std::move(context), frame);
 
-						fs->register_subscriber(fws, SubscriberType::ACQUIRE_FRAME);
-						p->register_subscriber(zs, SubscriberType::ACQUIRE);
-						p->register_subscriber(fs, SubscriberType::ACQUIRE_FRAME);
+						// strat 1	
+						//std::shared_ptr<ZmqDataSubscriber> zs = std::make_unique<ZmqDataSubscriber>(data_pub, uimf.nbr_samples());
+						//std::shared_ptr<FrameWriterSubscriber> fws = std::make_shared<FrameWriterSubscriber>();
+						//std::shared_ptr<FrameSubject> fs = std::make_shared<FrameSubject>(frame, data_pub);
+						//fs->register_subscriber(fws, SubscriberType::ACQUIRE_FRAME);
+						//p->register_subscriber(zs, SubscriberType::ACQUIRE);
+						//p->register_subscriber(fs, SubscriberType::ACQUIRE_FRAME);
+
+						// strat 2
+						std::shared_ptr<ZmqAcquiredDataSubscriber> vzws = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, frame->nbr_samples);
+						std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame, data_pub);
+						std::shared_ptr<UimfFrameSubscriber> ufs = std::make_shared<UimfFrameSubscriber>(frame);
+						ps->register_subscriber(ufs, SubscriberType::ACQUIRE_FRAME);
+						ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
+						p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
 
 						if (controller) controller.reset();
 						controller = std::move(p);
@@ -266,11 +361,21 @@ int main(int argc, char *argv[]) {
 					std::cout << "samples per trigger: " << record_size << std::endl;
 					digitizer.set_record_size(record_size);
 
+					
 					auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(0, 200));
 					auto data_pub = server->get_publisher("tcp://*:5554");
 					std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(std::move(context));
-					std::shared_ptr<ZmqDataSubscriber> zs = std::make_unique<ZmqDataSubscriber>(data_pub, record_size);
-					p->register_subscriber(zs, SubscriberType::ACQUIRE);
+					
+					//// strat 1
+					//std::shared_ptr<ZmqDataSubscriber> zs = std::make_unique<ZmqDataSubscriber>(data_pub, record_size);
+					//p->register_subscriber(zs, SubscriberType::ACQUIRE);
+					
+					// strat 2
+					std::shared_ptr<ZmqAcquiredDataSubscriber> vzws = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size);
+					std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>();
+					ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
+					p->register_subscriber(ps, SubscriberType::ACQUIRE);
+
 
 					controller = std::move(p);
 					controller->start();
@@ -318,7 +423,6 @@ int main(int argc, char *argv[]) {
 					if (controller)
 					{
 						controller->stop();
-						controller.reset();
 					}
 
 					req.send_response(ack);
@@ -375,10 +479,10 @@ int main(int argc, char *argv[]) {
 		server->run();
 
 		getchar();
-		should_exit = true;
+		//should_exit = true;
 		std::cout << "stopping -- press again to stop" << endl;
 
-		server->stop();
+		//server->stop();
 		//t.join();
 	}
 	catch (std::string ex)

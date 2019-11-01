@@ -34,6 +34,9 @@ add_executable (AqMD3_console
 	src/zmqdatasubscriber.cpp
 	src/acquirepublisher.cpp
 	src/acquireframepublisher.cpp
+	src/processsubject.cpp
+	src/zmqacquireddatasubscriber.cpp
+	src/uimfframesubscriber.cpp
 	include/digitizer.h
 	include/server.h
 	include/acquisitionbuffer.h
@@ -55,6 +58,9 @@ add_executable (AqMD3_console
 	include/acquisitioncontrol.h
 	include/diagnostic/rawprintersubscriber.h
 	include/diagnostic/simplepublisher.h
+	include/processsubject.h
+	include/zmqacquireddatasubscriber.h
+	include/uimfframesubscriber.h
 	include/diagnostic/falsedatapublisher.h
 	include/diagnostic/encodeddatawriter.h
 )

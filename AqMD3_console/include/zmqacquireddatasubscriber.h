@@ -1,5 +1,5 @@
-#ifndef ZMQ_DATA_SUBSCRIBER_H
-#define ZMQ_DATA_SUBSCRIBER_H
+#ifndef ZMQ_ACQUIRED_DATA_SUBSCRIBER_H
+#define ZMQ_ACQUIRED_DATA_SUBSCRIBER_H
 
 #include "framesubscriber.h"
 #include "acquireddata.h"
@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-class ZmqDataSubscriber : public FrameSubscriber<AcquiredData> {
+class ZmqAcquiredDataSubscriber : public FrameSubscriber<std::shared_ptr<std::vector<EncodedResult>>> {
 private:
 	std::shared_ptr<Server::Publisher> publisher;
 	std::string subject;
@@ -17,7 +17,7 @@ private:
 	uint64_t processed;
 
 public:
-	ZmqDataSubscriber(std::shared_ptr<Server::Publisher> publisher, uint32_t samples)
+	ZmqAcquiredDataSubscriber(std::shared_ptr<Server::Publisher> publisher, uint32_t samples)
 		: FrameSubscriber()
 		, data_vector(samples)
 		, publisher(publisher)
@@ -27,6 +27,9 @@ public:
 
 private:
 	void execute() override;
+	void on_completed() override
+	{
+	}
 };
 
-#endif // !ZMQ_DATA_SUBSCRIBER_H
+#endif // ZMQ_ACQUIRED_DATA_SUBSCRIBER_H

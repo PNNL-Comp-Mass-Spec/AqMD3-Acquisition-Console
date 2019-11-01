@@ -2,6 +2,9 @@
 
 void AcquireFramePublisher::start()
 {
+	if (should_stop)
+		return;
+
 	worker_handle = std::thread([&]()
 	{
 		int triggers_acquired = 0;
@@ -9,7 +12,7 @@ void AcquireFramePublisher::start()
 		std::cout << "AcquireFramePublisher :: starting acquisition" << std::endl;
 		context->start();
 		
-		while (triggers_acquired < frame->frame_length)
+		while (triggers_acquired < total_triggers && !should_stop)
 		{
 			auto data = context->acquire(std::chrono::milliseconds(80));
 			triggers_acquired += data.stamps.size();
@@ -24,8 +27,12 @@ void AcquireFramePublisher::start()
 
 void AcquireFramePublisher::stop()
 {
+	if (should_stop)
+		return;
+
 	std::cout << "AcquireFramePublisher :: stop requested" << std::endl;
-	notify_completed();
+	should_stop = true;
+	notify_completed_and_wait();
 	worker_handle.join();
 	std::cout << "AcquireFramePublisher :: stop completed" << std::endl;
 }
