@@ -11,7 +11,7 @@
 template <typename T>
 class FramePublisher {
 protected:
-	std::list<std::tuple<SubscriberType, std::shared_ptr<FrameSubscriber<T>>>> subscribers;
+	std::list<std::tuple<SubscriberType, std::shared_ptr<FrameSubscriber<T>>, std::shared_future<void>>> subscribers;
 	std::promise<void> completed_signal;
 	std::shared_future<void> completed_future;
 
@@ -24,8 +24,8 @@ public:
 
 	inline void register_subscriber(std::shared_ptr<FrameSubscriber<T>> subscriber, SubscriberType type)
 	{
-		subscribers.emplace_back(type, subscriber);
-		subscriber->setup(completed_future);
+		auto sub_finished = subscriber->setup(completed_future);
+		subscribers.emplace_back(type, subscriber, sub_finished);
 	}
 
 protected:
@@ -41,8 +41,21 @@ protected:
 	}
 
 	inline void notify_completed() 
+	{ 
+		if (completed_future.valid())
+			completed_signal.set_value();
+	}
+
+	inline void notify_completed_and_wait()
 	{
-		completed_signal.set_value();
+		notify_completed();
+		
+		for (const auto& subscriber : subscribers)
+		{
+			auto fut = std::get<2>(subscriber);
+			if (fut.valid())
+				fut.wait();
+		}
 	}
 
 };

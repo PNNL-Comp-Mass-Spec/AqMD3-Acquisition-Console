@@ -34,23 +34,28 @@ protected:
 	std::mutex mut;
 
 	std::thread worker_handle;
+	std::promise<void> has_completed;
+
+	bool run_detached;
 
 public:
-	FrameSubscriber()
+	FrameSubscriber(bool run_detached = false)
 		: items()
 		, worker_handle()
+		, run_detached(run_detached)
 	{}
 
 	virtual ~FrameSubscriber()
 	{
-		worker_handle.join();
+		if(!run_detached)
+			worker_handle.join();
 	};
 
-	void setup(std::shared_future<void> stop)
+	std::shared_future<void> setup(std::shared_future<void> stop)
 	{
 		worker_handle = std::thread([&, stop]()
 		{
-			while (stop.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+			while (stop.wait_for(std::chrono::seconds(0)) != std::future_status::ready || !items.empty())
 			{
 				{
 					std::unique_lock<std::mutex> lock(mut);
@@ -59,7 +64,15 @@ public:
 
 				execute();
 			}
+
+			on_completed();
+			has_completed.set_value();
 		});
+
+		if (run_detached)
+			worker_handle.detach();
+
+		return std::shared_future<void>(has_completed.get_future());
 	}
 
 	inline void update(T item)
@@ -69,7 +82,8 @@ public:
 	}
 
 private:
-	virtual void execute() = 0;
+	virtual inline void execute() = 0;
+	virtual inline void on_completed() = 0;
 };
 
 #endif // !FRAME_SUBSCRIBER_H
