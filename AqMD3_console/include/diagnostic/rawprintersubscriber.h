@@ -36,7 +36,7 @@ void RawPrinterSubscriber::execute()
 	{
 		auto ad = items.front();
 		items.pop_front();
-		auto elements = ad.process(0, 0);
+		auto elements = ad.process(0);
 
 		out_file_stream << "-- GATE INFO--" << std::endl;
 
@@ -54,6 +54,8 @@ void RawPrinterSubscriber::execute()
 				out_file_stream << "\t\tSTOP INDEX - START INDEX: " << int64_t(ad.stamps[i].gate_data[j].get_stop_sample_index()) - int64_t(ad.stamps[i].gate_data[j].get_start_sample_index()) << std::endl;
 				out_file_stream << std::endl;
 			}
+
+			out_file_stream << "-- DATA --" << endl;
 		}
 	}
 }

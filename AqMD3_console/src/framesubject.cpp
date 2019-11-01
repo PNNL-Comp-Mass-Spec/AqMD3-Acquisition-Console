@@ -14,7 +14,7 @@ void FrameSubject::execute()
 		if (total_processed < frame->frame_length)
 		{
 			total_processed += ad.stamps.size();
-			frame->append_encoded_results(ad.process(frame->frame_number, process_index++ * ad.stamps.size()));
+			frame->append_encoded_results(ad.process(process_index++ * ad.stamps.size()));
 
 			if (total_processed >= frame->frame_length)
 			{

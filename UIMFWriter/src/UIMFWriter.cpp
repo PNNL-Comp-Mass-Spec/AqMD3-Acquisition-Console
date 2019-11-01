@@ -23,7 +23,7 @@ void UimfWriter::write_frame(UimfFrame& frame)
 				{
 					int count = sprintf(statement,
 						insert_scan_statement.c_str(),
-						er.frame,
+						frame.frame_number,
 						er.scan,
 						er.non_zero_count,
 						er.bpi,
