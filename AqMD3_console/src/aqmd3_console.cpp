@@ -464,11 +464,10 @@ int main(int argc, char *argv[]) {
 					if (req.payload.size() == 2)
 					{
 						auto val = std::stoi(req.payload[1]);
-						if (val != 2)
-							std::cerr << "wrong" << endl;
-
 						digitizer.disable_io_port();
 					}
+
+					req.send_response(ack);
 					return;
 				}
 			}
