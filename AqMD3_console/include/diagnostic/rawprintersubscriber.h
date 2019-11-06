@@ -25,6 +25,7 @@ public:
 
 private:
 	void execute() override;
+	void on_completed() override {};
 };
 
 void RawPrinterSubscriber::execute()
@@ -38,11 +39,15 @@ void RawPrinterSubscriber::execute()
 		items.pop_front();
 		auto elements = ad.process(0);
 
-		out_file_stream << "-- GATE INFO--" << std::endl;
+		out_file_stream << "-- RECORD INFO --" << std::endl;
 
 		for (int i = 0; i < ad.stamps.size(); i++)
 		{
-			out_file_stream << "\tGATE " << ad.stamps[i].index << std::endl;
+			out_file_stream << "\tTIME STAMP " << ad.stamps[i].index << std::endl;
+			out_file_stream << "\t--INDEX: " << ad.stamps[i].index << std::endl;
+			out_file_stream << "\t--TIMESTAMP: " << ad.stamps[i].timestamp << std::endl;
+			out_file_stream << "\t--SUBSAMPLE POS: " << ad.stamps[i].subsample_pos << std::endl;
+			out_file_stream << std::endl;
 
 			for (int j = 0; j < ad.stamps[i].gate_data.size(); j++)
 			{
@@ -54,8 +59,6 @@ void RawPrinterSubscriber::execute()
 				out_file_stream << "\t\tSTOP INDEX - START INDEX: " << int64_t(ad.stamps[i].gate_data[j].get_stop_sample_index()) - int64_t(ad.stamps[i].gate_data[j].get_start_sample_index()) << std::endl;
 				out_file_stream << std::endl;
 			}
-
-			out_file_stream << "-- DATA --" << endl;
 		}
 	}
 }
