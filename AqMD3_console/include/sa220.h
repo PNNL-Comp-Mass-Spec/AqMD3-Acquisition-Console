@@ -3,7 +3,7 @@
 
 #include "digitizer.h"
 
-class SA220 : public Digitizer {
+class SA220 : protected Digitizer {
 public:
 	std::string const channel_1;
 	std::string const channel_2;
@@ -26,8 +26,10 @@ public:
 	std::string const visa_device_id;
 	std::string const options;
 
-	double const full_scale_range_500mv;
-	double const full_scale_range_2500mv;
+	double const full_scale_range_0_5v;
+	double const full_scale_range_2_5v;
+
+	double const max_sample_rate;
 
 public:
 	SA220(std::string device, std::string options) : Digitizer(device, options)
@@ -45,13 +47,14 @@ public:
 		, control_io_1("ControlIO1")
 		, control_io_2("ControlIO2")
 		, control_io_3("ControlIO3")
-		, full_scale_range_500mv(0.5)
-		, full_scale_range_2500mv(2.5)
+		, full_scale_range_0_5v(0.5)
+		, full_scale_range_2_5v(2.5)
+		, max_sample_rate(2000000000.0)
 	{}
 
 	void set_sampling_rate(double rate);
 	void set_record_size(uint64_t elements);
-	void set_trigger_parameters(std::string trigger, double level, bool isRisingEdgeTriggered);
+	void set_trigger_parameters(std::string trigger, double level, bool isRisingEdgeTriggered, double post_trigger_delay_ms);
 	void set_channel_parameters(std::string channel, double range, double offset);
 	void set_channel_data_inversion(std::string channel, bool enable);
 
