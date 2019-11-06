@@ -19,10 +19,10 @@ void AcquirePublisher::stop()
 	std::cout << "AcquirePublisher :: stop requested" << std::endl;
 	if (!should_stop)
 	{
-		should_stop = true;
 		std::cout << "AcquirePublisher :: stopping acquisition" << std::endl;
 		context->stop();
-		notify_completed();
+		should_stop = true;
+		notify_completed_and_wait();
 		worker_handle.join();
 	}
 	std::cout << "AcquirePublisher :: stop completed" << std::endl;
