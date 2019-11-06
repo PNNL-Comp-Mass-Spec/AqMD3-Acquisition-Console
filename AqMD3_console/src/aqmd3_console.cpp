@@ -57,9 +57,13 @@
 
 using namespace std;
 
-static std::pair<uint64_t, double> get_tof_width(SA220& digitizer);
+static std::tuple<uint64_t, uint64_t> get_tof_width(SA220& digitizer, double sample_rate);
+static std::tuple<uint64_t, uint64_t> get_optimal_record_size(SA220& digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s);
+static uint64_t get_trigger_time_stamp_average(SA220& digitizer, int triggers);
 
-char ack[] = "ack";
+static char ack[] = "ack";
+static double post_trigger_delay = 0.00001;
+static double estimated_trigger_rearm_time = 0.0000001;
 
 int main(int argc, char *argv[]) {
 	try
@@ -67,140 +71,8 @@ int main(int argc, char *argv[]) {
 		auto server = new Server("tcp://*:5555");
 		SA220 digitizer("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
 
-		cout << "set sample" << endl;
-		//digitizer.set_sampling_rate(1000000000.0);
-		digitizer.set_sampling_rate(2000000000.0);
-		cout << "set trig" << endl;
-		digitizer.set_trigger_parameters(digitizer.trigger_external, 0.5, true);
-		cout << "set chan" << endl;
-		digitizer.set_channel_parameters(digitizer.channel_1, digitizer.full_scale_range_500mv, 0.0);
-
+		double sampling_rate = 0.0;
 		std::unique_ptr<AcquisitionControl> controller;
-
-		//std::shared_ptr<UimfFrame> frame = std::make_shared<UimfFrame>(
-		//	0,
-		//	94016,
-		//	3,
-		//	10000,
-		//	1,
-		//	0,
-		//	"test.uimf"
-		//	);
-		//auto data_pub = server->get_publisher("tcp://*:5554");
-
-		//{
-		//	std::shared_ptr<VectorZmqWriterSubscriber> vzws = std::make_shared<VectorZmqWriterSubscriber>(data_pub, frame->nbr_samples);
-		//	std::shared_ptr<UimfFrameSubscriber> ufs = std::make_shared<UimfFrameSubscriber>(frame);
-		//	std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame, data_pub);
-		//	ps->register_subscriber(ufs, SubscriberType::ACQUIRE_FRAME);
-		//	ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
-
-		//	std::unique_ptr<FalseDataPublisher> pub = std::make_unique<FalseDataPublisher>(94016, 3000);
-		//	pub->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
-
-		//	controller = std::move(pub);
-		//	controller->start();
-
-		//	getchar();
-		//	std::cout << "done" << std::endl;
-		//	controller->stop();
-		//}
-
-		//std::shared_ptr<UimfFrame> frame2 = std::make_shared<UimfFrame>(
-		//	0,
-		//	94016,
-		//	2,
-		//	10000,
-		//	1,
-		//	0,
-		//	"test.uimf"
-		//	);
-
-		//{
-		//	std::shared_ptr<VectorZmqWriterSubscriber> vzws = std::make_shared<VectorZmqWriterSubscriber>(data_pub, frame2->nbr_samples);
-		//	std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame2, data_pub);
-		//	std::shared_ptr<UimfFrameSubscriber> ufs = std::make_shared<UimfFrameSubscriber>(frame2);
-		//	ps->register_subscriber(ufs, SubscriberType::ACQUIRE_FRAME);
-		//	ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
-
-		//	std::unique_ptr<FalseDataPublisher> pub = std::make_unique<FalseDataPublisher>(94016, 1000);
-		//	pub->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
-
-		//	controller = std::move(pub);
-		//	controller->start();
-
-		//	std::cout << "done" << std::endl;
-
-		//	controller->stop();
-		//	//controller.reset();
-		//}
-
-		//{
-		//	std::shared_ptr<VectorZmqWriterSubscriber> vzws = std::make_shared<VectorZmqWriterSubscriber>(data_pub, frame->nbr_samples);
-		//	std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame, data_pub);
-		//	std::shared_ptr<UimfFrameSubscriber> ufs = std::make_shared<UimfFrameSubscriber>(frame);
-		//	ps->register_subscriber(ufs, SubscriberType::ACQUIRE_FRAME);
-		//	ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
-
-		//	std::unique_ptr<FalseDataPublisher> pub = std::make_unique<FalseDataPublisher>(94016, 100);
-		//	pub->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
-
-		//	controller = std::move(pub);
-		//	controller->start();
-
-		//	std::cout << "done" << std::endl;
-		//	getchar();
-
-		//	controller->stop();
-		//	controller.reset();
-		//}
-
-		//getchar();
-
-		//bool should_exit = false;
-		//condition_variable signal;
-		//queue<AcquiredData> dataQueue;
-		//mutex lock;
-
-		//int record_size = 94016;
-		//digitizer.set_record_size(record_size);
-		//auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(0, 200));
-
-		//auto rps = std::make_shared<RawPrinterSubscriber>("out.txt");
-		//auto sp = std::make_unique<SimplePublisher>(std::move(context));
-		//sp->register_subscriber(rps, SubscriberType::ACQUIRE);
-
-		//sp->acquire_count(1);
-		//std::this_thread::sleep_for(std::chrono::seconds(10));
-
-		//auto data_pub = server->get_publisher("tcp://*:6546");
-		//std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(std::move(context));
-		//
-		//std::shared_ptr<ZmqDataSubscriber> zs = std::make_unique<ZmqDataSubscriber>(data_pub, record_size);
-		//p->register_subscriber(zs, SubscriberType::ACQUIRE);
-
-		//std::shared_ptr<FrameWriterSubscriber> fws = std::make_shared<FrameWriterSubscriber>();
-
-		//std::shared_ptr<UimfFrame> frame = std::make_shared<UimfFrame>(
-		//	(uint64_t)0,
-		//	(uint64_t)record_size,
-		//	(uint64_t)1,
-		//	(uint64_t)10000,
-		//	(uint32_t)1,
-		//	(uint32_t)0,
-		//	string("test.uimf")
-		//	);
-		//std::shared_ptr<FrameSubject> fs = std::make_shared<FrameSubject>(frame, data_pub);
-		//	
-		//fs->register_subscriber(fws, SubscriberType::ACQUIRE_FRAME);
-		//
-		//p->register_subscriber(fs, SubscriberType::ACQUIRE_FRAME);
-
-		//controller = std::move(p);
-		//controller->start();
-
-		//std::this_thread::sleep_for(30s);
-		//controller->stop();
 
 		///* server stuff */
 		server->register_handler([&](Server::ReceivedRequest req)
@@ -234,7 +106,8 @@ int main(int argc, char *argv[]) {
 
 				if (command == "init")
 				{
-					// TODO init
+					digitizer.set_trigger_parameters(digitizer.trigger_external, 0.5, true, post_trigger_delay);
+
 					req.send_response(ack);
 					continue;
 				}
@@ -244,7 +117,9 @@ int main(int argc, char *argv[]) {
 					if (req.payload.size() == 2)
 					{
 						auto horizontal_resolution = std::stod(req.payload[1]);
-						digitizer.set_sampling_rate(horizontal_resolution);
+						sampling_rate = 1.0 / horizontal_resolution;
+						std::cout << "sampling rate: " << sampling_rate << std::endl;
+						digitizer.set_sampling_rate(sampling_rate);
 					}
 
 					req.send_response(ack);
@@ -256,7 +131,7 @@ int main(int argc, char *argv[]) {
 					if (req.payload.size() == 2)
 					{
 						auto offset_v = std::stod(req.payload[1]);
-						digitizer.set_channel_parameters(digitizer.channel_1, digitizer.full_scale_range_500mv, offset_v);
+						digitizer.set_channel_parameters(digitizer.channel_1, digitizer.full_scale_range_0_5v, offset_v);
 					}
 
 					req.send_response(ack);
@@ -323,21 +198,14 @@ int main(int argc, char *argv[]) {
 							uimf.file_name()
 							);
 						
-						digitizer.set_record_size(uimf.nbr_samples());
-						auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, uimf.nbr_samples(), Digitizer::ZeroSuppressParameters(0, 200));
+						uint64_t record_size = frame->nbr_samples - frame->offset_bins;
+						digitizer.set_record_size(record_size);
+
+						auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(0, 200));
 						auto data_pub = server->get_publisher("tcp://*:5554");
 						
 						std::unique_ptr<AcquireFramePublisher> p = std::make_unique<AcquireFramePublisher>(std::move(context), frame);
 
-						// strat 1	
-						//std::shared_ptr<ZmqDataSubscriber> zs = std::make_unique<ZmqDataSubscriber>(data_pub, uimf.nbr_samples());
-						//std::shared_ptr<FrameWriterSubscriber> fws = std::make_shared<FrameWriterSubscriber>();
-						//std::shared_ptr<FrameSubject> fs = std::make_shared<FrameSubject>(frame, data_pub);
-						//fs->register_subscriber(fws, SubscriberType::ACQUIRE_FRAME);
-						//p->register_subscriber(zs, SubscriberType::ACQUIRE);
-						//p->register_subscriber(fs, SubscriberType::ACQUIRE_FRAME);
-
-						// strat 2
 						std::shared_ptr<ZmqAcquiredDataSubscriber> vzws = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, frame->nbr_samples);
 						std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame, data_pub);
 						std::shared_ptr<UimfFrameSubscriber> ufs = std::make_shared<UimfFrameSubscriber>(frame);
@@ -356,26 +224,22 @@ int main(int argc, char *argv[]) {
 
 				if (command == "acquire")
 				{
-					std::pair<uint64_t, double> tof_params = get_tof_width(digitizer);
-					uint64_t record_size = get<0>(tof_params);
-					std::cout << "samples per trigger: " << record_size << std::endl;
+					uint64_t record_size;
+					uint64_t post_trigger_samples;
+					std::tie(post_trigger_samples, record_size) = get_tof_width(digitizer, sampling_rate);			
+					std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
+					std::cout << "record size: " << record_size << std::endl;
+					std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
 					digitizer.set_record_size(record_size);
 
-					
 					auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(0, 200));
 					auto data_pub = server->get_publisher("tcp://*:5554");
 					std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(std::move(context));
-					
-					//// strat 1
-					//std::shared_ptr<ZmqDataSubscriber> zs = std::make_unique<ZmqDataSubscriber>(data_pub, record_size);
-					//p->register_subscriber(zs, SubscriberType::ACQUIRE);
-					
-					// strat 2
-					std::shared_ptr<ZmqAcquiredDataSubscriber> vzws = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size);
+
+					std::shared_ptr<ZmqAcquiredDataSubscriber> vzws = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
 					std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>();
 					ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
 					p->register_subscriber(ps, SubscriberType::ACQUIRE);
-
 
 					controller = std::move(p);
 					controller->start();
@@ -383,11 +247,9 @@ int main(int argc, char *argv[]) {
 					vector<string> to_send(2);
 
 					TofWidthMessage tofMsg;
-					tofMsg.set_num_samples(std::get<0>(tof_params));
-					tofMsg.set_pusher_pulse_width(std::get<1>(tof_params));
-
+					tofMsg.set_num_samples(record_size + post_trigger_samples);
+					tofMsg.set_pusher_pulse_width(6125);
 					to_send[0] = (tofMsg.SerializeAsString());
-
 					vector<uint8_t> hash(picosha2::k_digest_size);
 					picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
 
@@ -399,16 +261,19 @@ int main(int argc, char *argv[]) {
 
 				if (command == "tof width")
 				{
-					std::pair<uint64_t, double> tof_params = get_tof_width(digitizer);
+					uint64_t record_size;
+					uint64_t post_trigger_samples;
+					std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
+					std::cout << "record size: " << record_size << std::endl;
+					std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
+					digitizer.set_record_size(record_size);
 
 					vector<string> to_send(2);
 
 					TofWidthMessage tofMsg;
-					tofMsg.set_num_samples(std::get<0>(tof_params));
-					tofMsg.set_pusher_pulse_width(std::get<1>(tof_params));
-
+					tofMsg.set_num_samples(record_size + post_trigger_samples);
+					tofMsg.set_pusher_pulse_width(6125);
 					to_send[0] = (tofMsg.SerializeAsString());
-
 					vector<uint8_t> hash(picosha2::k_digest_size);
 					picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
 
@@ -450,11 +315,9 @@ int main(int argc, char *argv[]) {
 					if (req.payload.size() == 2)
 					{
 						auto val = std::stoi(req.payload[1]);
-						if (val != 2)
-							std::cerr << "wrong" << endl;
-
 						digitizer.enable_io_port();
 					}
+
 					req.send_response(ack);
 					return;
 				}
@@ -477,9 +340,7 @@ int main(int argc, char *argv[]) {
 
 		server->run();
 
-		getchar();
 		//should_exit = true;
-		std::cout << "stopping -- press again to stop" << endl;
 
 		//server->stop();
 		//t.join();
@@ -492,10 +353,17 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-std::pair<uint64_t, double> get_tof_width(SA220& digitizer)
+static std::tuple<uint64_t, uint64_t> get_tof_width(SA220& digitizer, double sample_rate)
+{
+	auto samples_per_trigger = get_trigger_time_stamp_average(digitizer, 20);
+
+	return get_optimal_record_size(digitizer, samples_per_trigger, post_trigger_delay, sample_rate, estimated_trigger_rearm_time);
+}
+
+static uint64_t get_trigger_time_stamp_average(SA220& digitizer, int triggers)
 {
 	digitizer.set_record_size(1024);
-	auto dig_context = digitizer.configure_cst(digitizer.channel_1, 100, 1024);
+	auto dig_context = digitizer.configure_cst(digitizer.channel_1, triggers, 1024);
 
 	dig_context->start();
 	AcquiredData result = dig_context->acquire(std::chrono::milliseconds(80));
@@ -509,10 +377,19 @@ std::pair<uint64_t, double> get_tof_width(SA220& digitizer)
 	}
 
 	total = ((total / (result.stamps.size() - 1)));
-	//total /= 2;
-	int r = total % 32;
-	total = total - r - /* 2 * */ 128;
-	double time = total / /*(2 * */ pow(10, 9) /* ) */;
 
-	return std::make_pair(total, time);
+	return total;
+}
+
+static std::tuple<uint64_t, uint64_t> get_optimal_record_size(SA220& digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s)
+{
+	uint64_t actual_trigger_width_samples = uint64_t(double(pusher_pulse_pulse_width_samples) * (sample_rate / digitizer.max_sample_rate));
+	uint64_t est_trig_rearm_samples = uint64_t(trig_rearm_s * sample_rate);
+	uint64_t delay_samples = uint64_t(post_trigger_delay_s * sample_rate);
+
+	auto record_size_samples = actual_trigger_width_samples - delay_samples - est_trig_rearm_samples;
+	if (record_size_samples % 32 != 0)
+		record_size_samples = (record_size_samples / 32) * 32;
+
+	return std::make_tuple(delay_samples, record_size_samples);
 }
