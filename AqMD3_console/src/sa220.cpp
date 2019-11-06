@@ -20,9 +20,9 @@ void SA220::set_record_size(uint64_t elements)
 	}
 }
 
-void SA220::set_trigger_parameters(std::string trigger, double level, bool isRising)
+void SA220::set_trigger_parameters(std::string trigger, double level, bool isRisingEdgeTriggered, double trigger_delay_s)
 {
-	ViInt32 slope = isRising ? AQMD3_VAL_TRIGGER_SLOPE_POSITIVE : AQMD3_VAL_TRIGGER_SLOPE_NEGATIVE;
+	ViInt32 slope = isRisingEdgeTriggered ? AQMD3_VAL_TRIGGER_SLOPE_POSITIVE : AQMD3_VAL_TRIGGER_SLOPE_NEGATIVE;
 
 	auto tso_result = configure_trigger_source(trigger.c_str());
 	if (tso_result.second != Digitizer::None)
@@ -42,6 +42,8 @@ void SA220::set_trigger_parameters(std::string trigger, double level, bool isRis
 		std::cerr << tsl_result.first << std::endl;
 		return;
 	}
+
+	auto td_result = configure_trigger_delay(trigger_delay_s);
 }
 
 void SA220::set_channel_parameters(std::string channel, double range, double offset)
