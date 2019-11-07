@@ -20,6 +20,8 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 	ViInt64 first_element_markers;
 	ViInt64 available_elements_markers = 0;
 	ViInt64 actual_elements_markers = markers_buffer.get_unprocessed();
+
+	auto finish = std::chrono::high_resolution_clock::now() + timeoutMs;
 	while (trig_count <= triggers_per_read)
 	{
 		for (int i = 0; i < actual_elements_markers / 16; i++)
@@ -141,6 +143,9 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 					markers_buffer.get_size(),
 					(ViInt32 *)markers_buffer.get_raw_unaquired(),
 					&available_elements_markers, &actual_elements_markers, &first_element_markers);
+
+				if (std::chrono::high_resolution_clock::now() > finish)
+					goto process;
 
 			} while (actual_elements_markers < markers_to_acquire);
 
