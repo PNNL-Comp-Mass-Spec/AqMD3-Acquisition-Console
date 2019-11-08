@@ -28,10 +28,6 @@ add_executable (AqMD3_console
 	src/message.pb.cpp
 	src/acquireddata.cpp
 	src/sa220.cpp
-	src/framewritersubscriber.cpp
-	src/framezmqsubscriber.cpp
-	src/framesubject.cpp
-	src/zmqdatasubscriber.cpp
 	src/acquirepublisher.cpp
 	src/acquireframepublisher.cpp
 	src/processsubject.cpp
@@ -49,18 +45,14 @@ add_executable (AqMD3_console
 	include/sa220.h
 	include/framepublisher.h
 	include/framesubscriber.h
-	include/framewritersubscriber.h
-	include/framezmqsubscriber.h
-	include/framesubject.h
-	include/zmqdatasubscriber.h
 	include/acquirepublisher.h
 	include/acquireframepublisher.h
 	include/acquisitioncontrol.h
-	include/diagnostic/rawprintersubscriber.h
-	include/diagnostic/simplepublisher.h
 	include/processsubject.h
 	include/zmqacquireddatasubscriber.h
 	include/uimfframesubscriber.h
+	include/diagnostic/rawprintersubscriber.h
+	include/diagnostic/simplepublisher.h
 	include/diagnostic/falsedatapublisher.h
 	include/diagnostic/encodeddatawriter.h
 )

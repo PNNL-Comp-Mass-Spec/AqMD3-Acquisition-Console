@@ -7,9 +7,6 @@
 #include "../include/acquisitioncontrol.h"
 #include "../include/acquirepublisher.h"
 #include "../include/acquireframepublisher.h"
-#include "../include/zmqdatasubscriber.h"
-#include "../include/framewritersubscriber.h"
-#include "../include/framesubject.h"
 
 #include "../include/uimfframesubscriber.h"
 #include "../include/zmqacquireddatasubscriber.h"
