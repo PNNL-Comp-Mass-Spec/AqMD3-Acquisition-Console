@@ -19,22 +19,26 @@ private:
 	std::chrono::milliseconds total_duration;
 	int total_elements_processed;
 
+	uint32_t offset_bins;
+
 public:
 	ProcessSubject(std::shared_ptr<UimfFrame> frame, std::shared_ptr<Server::Publisher> publisher)
-		: frame(std::move(frame))
+		: frame(frame)
 		, process_index(0)
 		, total_triggers_processed(0)
 		, publisher(publisher)
 		, subject("status")
 		, total_duration(0)
 		, total_elements_processed(0)
+		, offset_bins(0)
 	{}
 
-	ProcessSubject()
+	ProcessSubject(uint32_t offset_bins)
 		: process_index(0)
 		, total_triggers_processed(0)
 		, total_elements_processed(0)
 		, total_duration(0)
+		, offset_bins(offset_bins)
 	{}
 
 private:

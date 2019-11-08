@@ -16,16 +16,14 @@ void ProcessSubject::execute()
 		if (frame)
 		{
 			int total_triggers = frame->frame_length * frame->nbr_accumulations;
-			//int frame_num = (total_triggers_processed / frame->frame_length) + 1;
 
 			if (total_triggers_processed < total_triggers)
 			{			
 				auto start_1 = std::chrono::high_resolution_clock::now();
-				auto results = ad.process(total_triggers_processed % frame->frame_length);
+				auto results = ad.process(total_triggers_processed % frame->frame_length, frame->offset_bins);
 				total_triggers_processed += ad.stamps.size();
 				auto stop_1 = std::chrono::high_resolution_clock::now();
 				auto ms_1 = std::chrono::duration_cast<std::chrono::milliseconds>(stop_1 - start_1);
-				//std::cout << "\t\t\tprocess time: " << ms_1.count()  << "ms" << std::endl;
 				
 				total_duration += ms_1;
 				for (int i = 0; i < results->size(); i++)
@@ -49,7 +47,7 @@ void ProcessSubject::execute()
 		else
 		{
 			total_triggers_processed += ad.stamps.size();
-			auto results = ad.process(0);
+			auto results = ad.process(0, offset_bins);
 			notify(results, SubscriberType::BOTH);
 		}
 	}

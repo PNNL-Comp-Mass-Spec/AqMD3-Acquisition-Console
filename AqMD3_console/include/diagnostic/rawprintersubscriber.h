@@ -12,11 +12,13 @@ class RawPrinterSubscriber : public FrameSubscriber<AcquiredData>
 private:
 	std::ofstream out_file_stream;
 	std::string out_file;
+	uint32_t offset_samples;
 
 public:
-	RawPrinterSubscriber(std::string out_file)
+	RawPrinterSubscriber(std::string out_file, uint32_t offset_samples)
 		: out_file_stream(out_file)
 		, out_file(out_file)
+		, offset_samples(offset_samples)
 	{}
 	~RawPrinterSubscriber()
 	{
@@ -37,7 +39,7 @@ void RawPrinterSubscriber::execute()
 	{
 		auto ad = items.front();
 		items.pop_front();
-		auto elements = ad.process(0);
+		auto elements = ad.process(0, offset_samples);
 
 		out_file_stream << "-- RECORD INFO --" << std::endl;
 

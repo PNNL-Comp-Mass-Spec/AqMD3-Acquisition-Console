@@ -6,7 +6,7 @@
 #include <tuple>
 #include <algorithm>
 
-std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing_scan_start_number) const
+std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing_scan_start_number, uint32_t post_trigger_samples) const
 {
 	std::shared_ptr<std::vector<EncodedResult>> results = std::make_shared<std::vector<EncodedResult>>();
 	results->reserve(stamps.size());
@@ -62,7 +62,7 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 			int32_t gate_zero_count = 0;
 			if (j == 0)
 			{
-				gate_zero_count = gate->get_start_sample_index();
+				gate_zero_count = gate->get_start_sample_index() + post_trigger_samples;
 			}
 			else
 			{

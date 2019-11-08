@@ -17,9 +17,9 @@ private:
 	uint64_t processed;
 
 public:
-	ZmqAcquiredDataSubscriber(std::shared_ptr<Server::Publisher> publisher, uint32_t samples)
+	ZmqAcquiredDataSubscriber(std::shared_ptr<Server::Publisher> publisher, uint32_t sample_count)
 		: FrameSubscriber()
-		, data_vector(samples)
+		, data_vector(sample_count)
 		, publisher(publisher)
 		, subject("data")
 		, processed(0)

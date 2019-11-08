@@ -73,7 +73,7 @@ public:
 		, samples_count(samples_count)
 	{}
 
-	std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing_scan_start_number) const;
+	std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing_scan_start_number, uint32_t post_trigger_samples) const;
 
 };
 

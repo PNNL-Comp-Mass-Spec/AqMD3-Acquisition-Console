@@ -197,11 +197,14 @@ int main(int argc, char *argv[]) {
 							uimf.offset_bins(),
 							uimf.file_name()
 							);
-						
+
 						uint64_t record_size = frame->nbr_samples - frame->offset_bins;
+						std::cout << "samples per trigger: " << frame->nbr_samples << std::endl;
+						std::cout << "record size: " << record_size << std::endl;
+						std::cout << "post trigger samples: " << frame->offset_bins << std::endl;
 						digitizer.set_record_size(record_size);
 
-						auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(0, 200));
+						auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(0, 400));
 						auto data_pub = server->get_publisher("tcp://*:5554");
 						
 						std::unique_ptr<AcquireFramePublisher> p = std::make_unique<AcquireFramePublisher>(std::move(context), frame);
@@ -213,7 +216,7 @@ int main(int argc, char *argv[]) {
 						ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
 						p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
 
-						if (controller) controller.reset();
+						//if (controller) controller.reset();
 						controller = std::move(p);
 						controller->start();
 					}
@@ -232,12 +235,12 @@ int main(int argc, char *argv[]) {
 					std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
 					digitizer.set_record_size(record_size);
 
-					auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(0, 200));
+					auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(0, 400));
 					auto data_pub = server->get_publisher("tcp://*:5554");
 					std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(std::move(context));
 
 					std::shared_ptr<ZmqAcquiredDataSubscriber> vzws = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
-					std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>();
+					std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(post_trigger_samples);
 					ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
 					p->register_subscriber(ps, SubscriberType::ACQUIRE);
 
