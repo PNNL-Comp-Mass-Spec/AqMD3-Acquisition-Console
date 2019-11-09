@@ -6,7 +6,7 @@
 
 using namespace std;
 
-//#define bad_gates
+#define bad_gates
 
 AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 {
@@ -69,21 +69,14 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 
 #ifdef bad_gates
 						if (to_acquire_memory_blocks_f == 4)
-						//cerr << "gate block difference == 1, (stop samples indx - start samples indx) < 1" << endl;
-						//continue;
-						//int64_t to_acquire = end_block_index - start_block_index;
-						//std::cout << "end_block_index - start_block_index : " << to_acquire << endl;
-						//stamps.back().gate_data.emplace_back(
-						//	start_block_index,
-						//	start_block_sample_indx,
-						//	end_block_index,
-						//	end_block_sample_indx,
-						//	0);
-						continue;
+						{
+							cerr << "gate block difference == 1, (stop samples indx - start samples indx) < 1" << endl;
+							continue;
+						}
 #endif
 
-						while (to_acquire_memory_blocks_f % 16 != 0)
-							to_acquire_memory_blocks_f += 4;
+						if (to_acquire_memory_blocks_f % 16 != 0)
+							to_acquire_memory_blocks_f = ((to_acquire_memory_blocks_f / 16) + 1) * 16;
 
 						if (stamps.size() == 0)
 						{
