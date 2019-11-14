@@ -51,13 +51,6 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 			auto blocks = gate->total_processing_blocks;
 			auto samples = blocks * 2;
 			auto first_valid_index = gate->gate_start_intra_block_index;
-			int64_t last_valid_index = int64_t(gate->get_stop_sample_index()) - int64_t(gate->get_start_sample_index());
-
-			if (last_valid_index <= 0)
-			{
-				offset += blocks;
-				continue;
-			}
 
 			int32_t gate_zero_count = 0;
 			if (j == 0)
@@ -66,8 +59,8 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 			}
 			else
 			{
-				auto prev_gate = trig.gate_data[j - 1];
-				gate_zero_count = gate->get_start_sample_index() - prev_gate.get_stop_sample_index();
+				auto prev_gate = &trig.gate_data[j - 1];
+				gate_zero_count = gate->get_start_sample_index() - prev_gate->get_stop_sample_index();
 			}
 
 			if (gate_zero_count != 0)
@@ -83,11 +76,8 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 			int start = first_valid_index / 2;
 			if (first_valid_index % 2 != 0)
 			{
-				auto val = (ptr[start] >> 16);
-				// if(first < (zThreshold - zHysteresis))
-				if (val < 0)
-					val = 0;
-
+				auto val = (ptr[start] >> 16) + range_shift_constant;
+				
 				if (val > bpi)
 				{
 					bpi = val;
@@ -104,16 +94,14 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 
 			for (int i = start; i < blocks; i++)
 			{
-				for (auto val : { ((ptr[i] << 16) >> 16) , (ptr[i] >> 16) })
+				for (const auto val_r : { ((ptr[i] << 16) >> 16), (ptr[i] >> 16) })
 				{
-					// if(first < (zThreshold - zHysteresis))
-					if (val < 0)
-						val = 0;
+					auto val = val_r + range_shift_constant;
 
 					if (val > bpi)
 					{
 						bpi = val;
-						index_max_intensity = non_zero_count + zero_count + (2 * i);
+						index_max_intensity = non_zero_count + zero_count + (2 * start);
 						bpi_mz = index_max_intensity;
 					}
 
@@ -121,8 +109,10 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 					non_zero_count++;
 					tic += val;
 				}
+			
 				processed += 2;
 			}
+
 			offset += blocks;
 		}
 

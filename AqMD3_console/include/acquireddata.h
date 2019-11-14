@@ -3,7 +3,6 @@
 
 #include "acquisitionbuffer.h"
 #include <UIMFWriter/encodedresult.h>
-
 #include <tuple>
 #include <vector>
 #include <list>
@@ -61,6 +60,7 @@ public:
 
 private:
 	std::shared_ptr<AcquisitionBuffer> samples_buffer;
+	int32_t const range_shift_constant = 32768; // [-2^15, 2^15 - 1] + 2^15 -> [0, 2^16 - 1]
 
 public:
 	std::vector<TriggerData> const stamps;
