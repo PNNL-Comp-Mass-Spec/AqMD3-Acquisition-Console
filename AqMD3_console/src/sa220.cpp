@@ -7,7 +7,11 @@
 void SA220::set_sampling_rate(double rate)
 {
 	auto result = configure_sample_rate(rate);
-	std::cout << result.first << " " << result.second << std::endl;
+	if (result.second != Digitizer::None)
+	{
+		std::cerr << result.first << std::endl;
+		return;
+	}
 }
 
 void SA220::set_record_size(uint64_t elements)
