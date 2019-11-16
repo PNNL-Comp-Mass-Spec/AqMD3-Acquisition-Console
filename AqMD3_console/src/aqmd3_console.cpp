@@ -52,6 +52,8 @@
 
 #include <visa.h>
 
+//#define print_raw
+
 using namespace std;
 
 static std::tuple<uint64_t, uint64_t> get_tof_width(SA220& digitizer, double sample_rate);
@@ -61,6 +63,7 @@ static uint64_t get_trigger_time_stamp_average(SA220& digitizer, int triggers);
 static char ack[] = "ack";
 static double post_trigger_delay = 0.00001;
 static double estimated_trigger_rearm_time = 0.0000001;
+uint32_t calculated_post_trigger_samples = 0;
 
 int main(int argc, char *argv[]) {
 	try
@@ -195,10 +198,10 @@ int main(int argc, char *argv[]) {
 							uimf.file_name()
 							);
 
-						uint64_t record_size = frame->nbr_samples - frame->offset_bins;
+						uint64_t record_size = frame->nbr_samples - calculated_post_trigger_samples;
 						std::cout << "samples per trigger: " << frame->nbr_samples << std::endl;
 						std::cout << "record size: " << record_size << std::endl;
-						std::cout << "post trigger samples: " << frame->offset_bins << std::endl;
+						std::cout << "post trigger samples: " << calculated_post_trigger_samples << std::endl;
 						digitizer.set_record_size(record_size);
 
 						auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(0, 400));
@@ -212,6 +215,14 @@ int main(int argc, char *argv[]) {
 						ps->register_subscriber(ufs, SubscriberType::ACQUIRE_FRAME);
 						ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
 						p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
+
+#ifdef print_raw
+						std::shared_ptr<EncodedDataWriter> edw = std::make_shared<EncodedDataWriter>("output_data.txt");
+						std::shared_ptr<RawPrinterSubscriber> rps = std::make_shared<RawPrinterSubscriber>("output_ts.txt", 0);
+
+						ps->register_subscriber(edw, SubscriberType::ACQUIRE_FRAME);
+						p->register_subscriber(rps,  SubscriberType::ACQUIRE_FRAME);
+#endif
 
 						//if (controller) controller.reset();
 						controller = std::move(p);
@@ -233,6 +244,7 @@ int main(int argc, char *argv[]) {
 					digitizer.set_record_size(record_size);
 
 					auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(0, 400));
+					calculated_post_trigger_samples = post_trigger_samples;
 					auto data_pub = server->get_publisher("tcp://*:5554");
 					std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(std::move(context));
 
