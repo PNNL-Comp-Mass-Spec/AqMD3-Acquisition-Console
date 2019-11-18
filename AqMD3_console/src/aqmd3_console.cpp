@@ -56,9 +56,9 @@
 
 using namespace std;
 
-static std::tuple<uint64_t, uint64_t> get_tof_width(SA220& digitizer, double sample_rate);
-static std::tuple<uint64_t, uint64_t> get_optimal_record_size(SA220& digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s);
-static uint64_t get_trigger_time_stamp_average(SA220& digitizer, int triggers);
+static std::tuple<uint64_t, uint64_t> get_tof_width(SA220 *digitizer, double sample_rate);
+static std::tuple<uint64_t, uint64_t> get_optimal_record_size(SA220 *digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s);
+static uint64_t get_trigger_time_stamp_average(SA220 *digitizer, int triggers);
 
 static char ack[] = "ack";
 static double post_trigger_delay = 0.00001;
@@ -68,13 +68,11 @@ uint32_t calculated_post_trigger_samples = 0;
 int main(int argc, char *argv[]) {
 	try
 	{
+		SA220 *digitizer = nullptr;
 		auto server = new Server("tcp://*:5555");
-		SA220 digitizer("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
-
 		double sampling_rate = 0.0;
 		std::unique_ptr<AcquisitionControl> controller;
 
-		///* server stuff */
 		server->register_handler([&](Server::ReceivedRequest req)
 		{
 			for (const auto& command : req.payload)
@@ -106,7 +104,8 @@ int main(int argc, char *argv[]) {
 
 				if (command == "init")
 				{
-					digitizer.set_trigger_parameters(digitizer.trigger_external, 0.5, true, post_trigger_delay);
+					digitizer = new SA220("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
+					digitizer->set_trigger_parameters(digitizer->trigger_external, 0.5, true, post_trigger_delay);
 
 					req.send_response(ack);
 					continue;
@@ -119,7 +118,7 @@ int main(int argc, char *argv[]) {
 						auto horizontal_resolution = std::stod(req.payload[1]);
 						sampling_rate = 1.0 / horizontal_resolution;
 						std::cout << "sampling rate: " << sampling_rate << std::endl;
-						digitizer.set_sampling_rate(sampling_rate);
+						digitizer->set_sampling_rate(sampling_rate);
 					}
 
 					req.send_response(ack);
@@ -131,7 +130,7 @@ int main(int argc, char *argv[]) {
 					if (req.payload.size() == 2)
 					{
 						auto offset_v = std::stod(req.payload[1]);
-						digitizer.set_channel_parameters(digitizer.channel_1, digitizer.full_scale_range_0_5v, offset_v);
+						digitizer->set_channel_parameters(digitizer->channel_1, digitizer->full_scale_range_0_5v, offset_v);
 					}
 
 					req.send_response(ack);
@@ -202,9 +201,9 @@ int main(int argc, char *argv[]) {
 						std::cout << "samples per trigger: " << frame->nbr_samples << std::endl;
 						std::cout << "record size: " << record_size << std::endl;
 						std::cout << "post trigger samples: " << calculated_post_trigger_samples << std::endl;
-						digitizer.set_record_size(record_size);
+						digitizer->set_record_size(record_size);
 
-						auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32468, 300));
+						auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32468, 300));
 						auto data_pub = server->get_publisher("tcp://*:5554");
 						
 						std::unique_ptr<AcquireFramePublisher> p = std::make_unique<AcquireFramePublisher>(std::move(context), frame);
@@ -241,9 +240,9 @@ int main(int argc, char *argv[]) {
 					std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
 					std::cout << "record size: " << record_size << std::endl;
 					std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
-					digitizer.set_record_size(record_size);
+					digitizer->set_record_size(record_size);
 
-					auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32468, 300));
+					auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32468, 300));
 					calculated_post_trigger_samples = post_trigger_samples;
 					auto data_pub = server->get_publisher("tcp://*:5554");
 					std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(std::move(context));
@@ -279,7 +278,7 @@ int main(int argc, char *argv[]) {
 					std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
 					std::cout << "record size: " << record_size << std::endl;
 					std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
-					digitizer.set_record_size(record_size);
+					digitizer->set_record_size(record_size);
 
 					vector<string> to_send(2);
 
@@ -312,7 +311,7 @@ int main(int argc, char *argv[]) {
 					if (req.payload.size() == 2)
 					{
 						bool invert = req.payload[1] == "true";
-						digitizer.set_channel_data_inversion(digitizer.channel_1, invert);
+						digitizer->set_channel_data_inversion(digitizer->channel_1, invert);
 					}
 					req.send_response(ack);
 					return;
@@ -328,7 +327,7 @@ int main(int argc, char *argv[]) {
 					if (req.payload.size() == 2)
 					{
 						auto val = std::stoi(req.payload[1]);
-						digitizer.enable_io_port();
+						digitizer->enable_io_port();
 					}
 
 					req.send_response(ack);
@@ -340,7 +339,7 @@ int main(int argc, char *argv[]) {
 					if (req.payload.size() == 2)
 					{
 						auto val = std::stoi(req.payload[1]);
-						digitizer.disable_io_port();
+						digitizer->disable_io_port();
 					}
 
 					req.send_response(ack);
@@ -366,17 +365,17 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-static std::tuple<uint64_t, uint64_t> get_tof_width(SA220& digitizer, double sample_rate)
+static std::tuple<uint64_t, uint64_t> get_tof_width(SA220 *digitizer, double sample_rate)
 {
 	auto samples_per_trigger = get_trigger_time_stamp_average(digitizer, 20);
 
 	return get_optimal_record_size(digitizer, samples_per_trigger, post_trigger_delay, sample_rate, estimated_trigger_rearm_time);
 }
 
-static uint64_t get_trigger_time_stamp_average(SA220& digitizer, int triggers)
+static uint64_t get_trigger_time_stamp_average(SA220 *digitizer, int triggers)
 {
-	digitizer.set_record_size(1024);
-	auto dig_context = digitizer.configure_cst(digitizer.channel_1, triggers, 1024);
+	digitizer->set_record_size(1024);
+	auto dig_context = digitizer->configure_cst(digitizer->channel_1, triggers, 1024);
 
 	dig_context->start();
 	AcquiredData result = dig_context->acquire(std::chrono::milliseconds(80));
@@ -394,9 +393,9 @@ static uint64_t get_trigger_time_stamp_average(SA220& digitizer, int triggers)
 	return total;
 }
 
-static std::tuple<uint64_t, uint64_t> get_optimal_record_size(SA220& digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s)
+static std::tuple<uint64_t, uint64_t> get_optimal_record_size(SA220 *digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s)
 {
-	uint64_t actual_trigger_width_samples = uint64_t(double(pusher_pulse_pulse_width_samples) * (sample_rate / digitizer.max_sample_rate));
+	uint64_t actual_trigger_width_samples = uint64_t(double(pusher_pulse_pulse_width_samples) * (sample_rate / digitizer->max_sample_rate));
 	uint64_t est_trig_rearm_samples = uint64_t(trig_rearm_s * sample_rate);
 	uint64_t delay_samples = uint64_t(post_trigger_delay_s * sample_rate);
 
