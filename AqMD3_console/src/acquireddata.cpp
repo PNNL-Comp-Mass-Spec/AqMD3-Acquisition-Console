@@ -11,7 +11,6 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 	std::shared_ptr<std::vector<EncodedResult>> results = std::make_shared<std::vector<EncodedResult>>();
 	results->reserve(stamps.size());
 
-	int32_t *ptr = samples_buffer->get_raw_unprocessed();
 	int offset = 0;
 
 	for (int trig_index = 0; trig_index < stamps.size(); trig_index++)
