@@ -204,7 +204,7 @@ int main(int argc, char *argv[]) {
 						std::cout << "post trigger samples: " << calculated_post_trigger_samples << std::endl;
 						digitizer.set_record_size(record_size);
 
-						auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(0, 400));
+						auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32468, 300));
 						auto data_pub = server->get_publisher("tcp://*:5554");
 						
 						std::unique_ptr<AcquireFramePublisher> p = std::make_unique<AcquireFramePublisher>(std::move(context), frame);
@@ -243,7 +243,7 @@ int main(int argc, char *argv[]) {
 					std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
 					digitizer.set_record_size(record_size);
 
-					auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(0, 400));
+					auto context = digitizer.configure_cst_zs1(digitizer.channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32468, 300));
 					calculated_post_trigger_samples = post_trigger_samples;
 					auto data_pub = server->get_publisher("tcp://*:5554");
 					std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(std::move(context));
