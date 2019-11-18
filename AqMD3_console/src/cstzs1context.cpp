@@ -124,11 +124,16 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 		first_element_markers = 0;
 		available_elements_markers = 0;
 		actual_elements_markers = 0;
+
 		if (trig_count <= triggers_per_read)
 		{
 			markers_buffer.reset();
+			int next_markers_to_acquire = markers_to_acquire;
+			
 			do
 			{
+				markers_to_acquire = next_markers_to_acquire;
+
 				AqMD3_StreamFetchDataInt32(
 					session,
 					markers_channel.c_str(),
@@ -138,12 +143,24 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 					&available_elements_markers, &actual_elements_markers, &first_element_markers);
 
 				if (std::chrono::high_resolution_clock::now() > finish)
+				{
+					std::cout << "timeout in acquisition, processing" << std::endl;
 					goto process;
+				}
+
+				if (available_elements_markers < markers_to_acquire && active_multiplier > multiplier_min)
+					next_markers_to_acquire = min_target_records * --active_multiplier;
 
 			} while (actual_elements_markers < markers_to_acquire);
 
-			if (available_elements_markers > markers_to_acquire)
-				markers_to_acquire *= gate_acquisition_multiplier;
+			//std::cout
+			//	<< "markers_to_acquire: " << markers_to_acquire << "\n"
+			//	<< "available_elements_markers: " << available_elements_markers << "\n"
+			//	<< "actual_elements_markers: " << actual_elements_markers << "\n"
+			//	;
+
+			if (available_elements_markers > markers_to_acquire && active_multiplier < multiplier_max)
+				markers_to_acquire = min_target_records * ++active_multiplier;
 
 			markers_buffer.advance_offset(first_element_markers);
 			markers_buffer.advance_acquired(actual_elements_markers);
