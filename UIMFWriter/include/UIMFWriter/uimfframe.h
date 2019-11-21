@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <chrono>
 
 class UimfFrame {
 public:
@@ -34,18 +35,16 @@ public:
 
 	~UimfFrame() {}
 	
-	std::vector<std::shared_ptr<std::vector<EncodedResult>>> get_data() { return data; }
-
+	inline const std::vector<std::shared_ptr<std::vector<EncodedResult>>> get_data() const { return data; }
 	inline std::shared_ptr<UimfFrame> clone_at_frame(uint32_t frame_number_new)
 	{
 		return std::make_shared<UimfFrame>(start_trigger, nbr_samples, nbr_accumulations, frame_length, frame_number_new, offset_bins, file_name);
 	}
 
 	void append_encoded_results(std::shared_ptr<std::vector<EncodedResult>> results);
-	
 	std::shared_ptr<std::vector<EncodedResult>> append_and_return_excess(std::shared_ptr<std::vector<EncodedResult>> results);
-	
-	int get_encoded_result_count();
+	int get_encoded_result_count() const;
+	double get_frame_duration_seconds(double sample_period) const;
 
 };
 

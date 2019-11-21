@@ -10,24 +10,32 @@
 #include <vector>
 #include <iostream>
 #include <tuple>
+#include <mutex>
 
 class UimfWriter {
 private:
+	static const std::string frames_table_name;
+
+	std::mutex sync;
 	SQLite::Database db;
 
-	std::string const insert_scan_statement;
-	size_t const insert_scan_statement_size_bytes;
 
 public:
 	UimfWriter(std::string file) 
 		: db(file, SQLite::OPEN_READWRITE)
-		, insert_scan_statement("INSERT INTO Frame_Scans (FrameNum, ScanNum, NonZeroCount, BPI, BPI_MZ, TIC, Intensities) VALUES(%d, %d, %d, %d, %lf, %d, ?)")
-		, insert_scan_statement_size_bytes(110)
 	{}
 	~UimfWriter()
 	{}
 
-	void write_frame(UimfFrame& results);
+	void write_scan_data(const UimfFrame& frame);
+	void update_timing_information(const UimfFrame& frame, double timestamp_sample_period_s);
+
+private:
+	enum FrameParamKeyType
+	{
+		StartTimeMinutes = 1,
+		DurationSeconds = 2,
+	};
 
 };
 
