@@ -203,14 +203,15 @@ int main(int argc, char *argv[]) {
 						std::cout << "post trigger samples: " << calculated_post_trigger_samples << std::endl;
 						digitizer->set_record_size(record_size);
 
-						auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32468, 300));
+						auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100));
 						auto data_pub = server->get_publisher("tcp://*:5554");
 						
 						std::unique_ptr<AcquireFramePublisher> p = std::make_unique<AcquireFramePublisher>(std::move(context), frame);
 
 						std::shared_ptr<ZmqAcquiredDataSubscriber> vzws = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, frame->nbr_samples);
 						std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame, data_pub);
-						std::shared_ptr<UimfFrameSubscriber> ufs = std::make_shared<UimfFrameSubscriber>(frame);
+						double ts_period = 1.0 / digitizer->max_sample_rate;
+						std::shared_ptr<UimfFrameSubscriber> ufs = std::make_shared<UimfFrameSubscriber>(frame, ts_period);
 						ps->register_subscriber(ufs, SubscriberType::ACQUIRE_FRAME);
 						ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
 						p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
@@ -242,7 +243,7 @@ int main(int argc, char *argv[]) {
 					std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
 					digitizer->set_record_size(record_size);
 
-					auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32468, 300));
+					auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100));
 					calculated_post_trigger_samples = post_trigger_samples;
 					auto data_pub = server->get_publisher("tcp://*:5554");
 					std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(std::move(context));
@@ -297,9 +298,16 @@ int main(int argc, char *argv[]) {
 
 				if (command == "stop")
 				{
-					if (controller)
+					try
 					{
-						controller->stop();
+						if (controller)
+						{
+							controller->stop();
+						}
+					}
+					catch (...)
+					{
+						std::cout << "problem stopping the application" << std::endl;
 					}
 
 					req.send_response(ack);
@@ -351,8 +359,6 @@ int main(int argc, char *argv[]) {
 		//thread t([&] { server->run(); });
 
 		server->run();
-
-		//should_exit = true;
 
 		//server->stop();
 		//t.join();
