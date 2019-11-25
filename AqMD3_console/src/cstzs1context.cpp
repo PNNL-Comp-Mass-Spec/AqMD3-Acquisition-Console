@@ -6,9 +6,7 @@
 #include <fstream>
 #include <iostream>
 
-using namespace std;
-
-#define bad_gates
+//#define bad_gates
 
 AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 {
@@ -18,8 +16,8 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 	int trig_count = 0;
 	int gate_count = 0;
 	uint64_t to_acquire = 0;
-	vector<AcquiredData::TriggerData> stamps;
-	shared_ptr<AcquisitionBuffer> samples_buffer = get_buffer();
+	std::vector<AcquiredData::TriggerData> stamps;
+	std::shared_ptr<AcquisitionBuffer> samples_buffer = get_buffer();
 
 	ViInt64 first_element_markers;
 	ViInt64 available_elements_markers = 0;
@@ -74,8 +72,16 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 #ifdef bad_gates
 						if (to_acquire_memory_blocks_f == 4)
 						{
-							cerr << "gate block difference == 1, (stop samples indx - start samples indx) < 1" << endl;
-							continue;
+							cerr << "gate block difference == 1\n";
+							auto samp_b = (start_block_index - 1) * 8 + start_block_sample_indx;
+							auto samp_e = (end_block_index - 1) * 8 - (8 - end_block_sample_indx);
+
+							print = true;
+							if (samp_e <= samp_b)
+							{
+								cerr << "stop index <= start index -> stop: " << samp_e << " start: " << samp_b << endl;
+								//continue;
+							}
 						}
 #endif
 
@@ -84,7 +90,7 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 
 						if (stamps.size() == 0)
 						{
-							cerr << "\tNo elements in stamps - discarding acquired elements." << endl;
+							std::cerr << "\tNo elements in stamps - discarding acquired elements." << std::endl;
 							markers_buffer.advance_processed(16);
 							break;
 						}
@@ -115,12 +121,12 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 			}
 			case 0x08:	// Should never get here
 			{
-				cerr << "\tERROR -- DUMMY GATE\n";
-				throw string("dummy gate error");
+				std::cerr << "\tERROR -- DUMMY GATE\n";
+				throw std::string("dummy gate error");
 			}
 			default:
-				cerr << "\t(default) header: " << (header & 0x000000FF) << endl;
-				throw string("unexpected header");
+				std::cerr << "\t(default) header: " << (header & 0x000000FF) << std::endl;
+				throw std::string("unexpected header");
 				break;
 			}
 		}
@@ -146,25 +152,50 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 					(ViInt32 *)markers_buffer.get_raw_unaquired(),
 					&available_elements_markers, &actual_elements_markers, &first_element_markers);
 
+				if (actual_elements_markers != 0 && actual_elements_markers < markers_to_acquire)
+				{
+					std::cout << "\tMARKERS: actual_elements_markers != 0 && actual_elements_markers < markers_to_acquire";
+				}
+
+				if (should_stop)
+				{
+					std::cout << "should_stop -> process" << std::endl;
+					goto process;
+				}
+					
 				if (std::chrono::high_resolution_clock::now() > finish)
 				{
-					std::cout << "timeout in acquisition, processing" << std::endl;
-					goto process;
+					std::cerr << "timeout conditions:\n\n";
+					std::cerr << "\tmarkers_buffer.get_size(): " << markers_buffer.get_size() << "\n";
+					std::cerr << "\tmarkers_buffer.get_acquired(): " << markers_buffer.get_acquired() << "\n";
+
+					std::cerr << "\tmarkers_to_acquire: " << markers_to_acquire << "\n";
+					std::cerr << "\tavailable_elements_markers: " << available_elements_markers << "\n";
+					std::cerr << "\tactual_elements_markers: " << actual_elements_markers << "\n\n";
+
+					std::cerr << "\tstamps.size(): " << stamps.size() << "\n";
+					std::cerr << "\ttrig_count: " << trig_count << "\n";
+
+					throw std::string("timeout in acquisition, processing");
 				}
 
 				if (available_elements_markers < markers_to_acquire && active_multiplier > multiplier_min)
+				{
 					next_markers_to_acquire = min_target_records * --active_multiplier;
+				}
 
 			} while (actual_elements_markers < markers_to_acquire);
 
 			//std::cout
-			//	<< "markers_to_acquire: " << markers_to_acquire << "\n"
+			////	<< "markers_to_acquire: " << markers_to_acquire << "\n"
 			//	<< "available_elements_markers: " << available_elements_markers << "\n"
-			//	<< "actual_elements_markers: " << actual_elements_markers << "\n"
+			////	<< "actual_elements_markers: " << actual_elements_markers << "\n"
 			//	;
 
 			if (available_elements_markers > markers_to_acquire && active_multiplier < multiplier_max)
+			{
 				markers_to_acquire = min_target_records * ++active_multiplier;
+			}
 
 			markers_buffer.advance_offset(first_element_markers);
 			markers_buffer.advance_acquired(actual_elements_markers);
@@ -183,12 +214,27 @@ process:
 		(ViInt32 *)samples_buffer->get_raw_unaquired(),
 		&available_elements_samples, &actual_elements_samples, &first_element_samples);
 
-	//cout << "to_acquire: " << to_acquire << endl
-	//	<< "available_elements_samples: " << available_elements_samples << endl
-	//	<< "actual_elements_samples: " << actual_elements_samples << endl;
+	////if (print)
+	////{
+	//	std::cout 
+	//	//	<< "to_acquire: " << to_acquire << "\n"
+	//		<< "available_elements_samples: " << available_elements_samples << "\n"
+	//	//	<< "actual_elements_samples: " << actual_elements_samples << "\n"
+	//		;
+	////}
+
+	if (actual_elements_samples != 0 && actual_elements_samples < to_acquire)
+	{
+		std::cout << "\tSAMPLES: actual_elements_samples != 0 && actual_elements_samples < to_acquire\n";
+		std::cout << "to_acquire: " << to_acquire << "\n"
+					<< "available_elements_samples: " << available_elements_samples << "\n"
+					<< "actual_elements_samples: " << actual_elements_samples << "\n";
+	}
 
 	samples_buffer->advance_offset(first_element_samples);
 	samples_buffer->advance_acquired(actual_elements_samples);
 
+no_process:
 	return AcquiredData(stamps, samples_buffer, samples_per_trigger);
+
 }
