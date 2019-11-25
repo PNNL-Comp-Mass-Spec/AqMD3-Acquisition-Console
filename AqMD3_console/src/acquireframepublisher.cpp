@@ -14,7 +14,7 @@ void AcquireFramePublisher::start()
 		
 		while (triggers_acquired < total_triggers && !should_stop)
 		{
-			auto data = context->acquire(std::chrono::milliseconds(80));
+			auto data = context->acquire(std::chrono::milliseconds(8000));
 			triggers_acquired += data.stamps.size();
 
 			notify(data, SubscriberType::BOTH);
