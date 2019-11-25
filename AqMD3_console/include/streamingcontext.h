@@ -7,6 +7,7 @@
 #include <memory>
 #include <chrono>
 #include <string>
+#include <atomic>
 
 class StreamingContext {
 protected:
@@ -23,6 +24,8 @@ protected:
 	int buffer_takes;
 	int const buffer_max_count = 100;
 
+	std::atomic_bool should_stop;
+
 public:
 	StreamingContext(ViSession session,
 		std::string channel,
@@ -38,6 +41,7 @@ public:
 		, buffer_takes(0)
 		, samples_buffer_pool()
 		, samples_buffer_size(samples_buffer_size)
+		, should_stop(false)
 	{
 		for(int i = 0; i < samples_buffer_count; i++)
 			samples_buffer_pool.push_back(std::make_shared<AcquisitionBuffer>(i, samples_buffer_size));
@@ -47,6 +51,8 @@ public:
 
 	void start();
 	void stop();
+
+	inline bool is_stopped() { return should_stop; }
 
 protected:
 	std::shared_ptr<AcquisitionBuffer> get_buffer();

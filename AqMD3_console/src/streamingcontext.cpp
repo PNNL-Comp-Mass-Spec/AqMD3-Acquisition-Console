@@ -22,12 +22,14 @@ static void check_error(ViStatus status) {
 
 void StreamingContext::start()
 {
+	should_stop = false;
 	int rc = AqMD3_InitiateAcquisition(session);
 	check_error(rc);
 }
 
 void StreamingContext::stop()
 {
+	should_stop = true;
 	int rc = AqMD3_Abort(session);
 	check_error(rc);
 }
