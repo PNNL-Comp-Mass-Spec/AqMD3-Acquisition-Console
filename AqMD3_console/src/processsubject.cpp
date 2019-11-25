@@ -1,5 +1,8 @@
 #include "../include/processsubject.h"
 
+static uint64_t ts_last = 0;
+static uint64_t ts_first = 0;
+
 void ProcessSubject::execute() 
 {
 	while (!items.empty())
@@ -13,6 +16,19 @@ void ProcessSubject::execute()
 		auto ms_0 = std::chrono::duration_cast<std::chrono::milliseconds>(stop_0 - start_0);
 		total_duration += ms_0;
 
+		//ts_first = (ad.stamps.begin())->timestamp;
+		//std::cout << "ts diff: " << ts_first - ts_last << std::endl;
+		//ts_last = (ad.stamps.end() - 1)->timestamp;
+
+		//uint64_t avg_ts = 0;
+		//for (int i = 1; i < ad.stamps.size(); i++)
+		//{
+		//	avg_ts += (ad.stamps[i].timestamp - ad.stamps[i - 1].timestamp);
+		//}
+		//avg_ts /= ad.stamps.size() - 1;
+
+		//std::cout << "timestamps avg: " << avg_ts << std::endl;
+ 
 		if (frame)
 		{
 			int total_triggers = frame->frame_length * frame->nbr_accumulations;
@@ -47,8 +63,15 @@ void ProcessSubject::execute()
 		else
 		{
 			total_triggers_processed += ad.stamps.size();
-			auto results = ad.process(0, offset_bins);
-			notify(results, SubscriberType::BOTH);
+			try
+			{
+				auto results = ad.process(0, offset_bins);
+				notify(results, SubscriberType::BOTH);
+			}
+			catch (...)
+			{
+				std::cout << "processing error" << std::endl;
+			}
 		}
 	}
 }
