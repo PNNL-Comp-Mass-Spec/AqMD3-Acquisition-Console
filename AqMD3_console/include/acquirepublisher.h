@@ -14,6 +14,9 @@ private:
 	std::unique_ptr<StreamingContext> context;
 	std::atomic_bool should_stop;
 
+	std::condition_variable stop_sig;
+	std::mutex stop_mut;
+
 public:
 	AcquirePublisher(std::unique_ptr<StreamingContext> context)
 		: worker_handle()

@@ -8,23 +8,47 @@ void AcquirePublisher::start()
 		context->start();
 		while (!should_stop)
 		{
-			auto data = context->acquire(std::chrono::milliseconds(80));
-			notify(data, SubscriberType::BOTH);
+			try
+			{
+				auto data = context->acquire(std::chrono::milliseconds(80));
+				notify(data, SubscriberType::BOTH);
+			}
+			catch (std::string ex)
+			{
+				std::cout << "data acquire failure -- " << ex << std::endl;
+				context->stop();
+				break;
+			}
 		}
+
+		stop_sig.notify_one();
 	});
 }
 
 void AcquirePublisher::stop()
 {
-	std::cout << "AcquirePublisher :: stop requested" << std::endl;
-	if (!should_stop)
+	try
 	{
-		std::cout << "AcquirePublisher :: stopping acquisition" << std::endl;
-		context->stop();
-		should_stop = true;
-		notify_completed_and_wait();
-		worker_handle.join();
+		if (!should_stop)
+		{
+			should_stop = true;
+
+			{
+				std::unique_lock<std::mutex> lock(stop_mut);
+				stop_sig.wait(lock);
+			}
+
+			std::cout << "AcquirePublisher :: stopping acquisition" << std::endl;
+			if(!context->is_stopped())
+				context->stop();
+			notify_completed_and_wait();
+			worker_handle.join();
+		}
+		std::cout << "AcquirePublisher :: stop completed" << std::endl;
 	}
-	std::cout << "AcquirePublisher :: stop completed" << std::endl;
+	catch (...)
+	{
+		std::cout << "problem stopping application" << std::endl;
+	}
 }
 
