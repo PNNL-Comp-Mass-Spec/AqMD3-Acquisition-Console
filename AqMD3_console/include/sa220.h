@@ -54,7 +54,7 @@ public:
 
 	void set_sampling_rate(double rate);
 	void set_record_size(uint64_t elements);
-	void set_trigger_parameters(std::string trigger, double level, bool isRisingEdgeTriggered, double post_trigger_delay_ms);
+	void set_trigger_parameters(std::string trigger, double level, bool isRisingEdgeTriggered, double trigger_delay_ms);
 	void set_channel_parameters(std::string channel, double range, double offset);
 	void set_channel_data_inversion(std::string channel, bool enable);
 
