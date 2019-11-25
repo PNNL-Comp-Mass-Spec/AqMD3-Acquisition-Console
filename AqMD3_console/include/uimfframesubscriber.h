@@ -14,13 +14,15 @@ class UimfFrameSubscriber : public FrameSubscriber<std::shared_ptr<std::vector<E
 private:
 	std::shared_ptr<UimfFrame> frame;
 	int total_processed;
+	double ts_sample_period;
 
 	std::deque<std::shared_ptr<UimfFrame>> frames;
 
 public:
-	UimfFrameSubscriber(std::shared_ptr<UimfFrame> frame)
+	UimfFrameSubscriber(std::shared_ptr<UimfFrame> frame, double ts_sample_period)
 		: frame(frame)
 		, total_processed(0)
+		, ts_sample_period(ts_sample_period)
 	{
 		if (this->frame->nbr_accumulations == 1)
 		{

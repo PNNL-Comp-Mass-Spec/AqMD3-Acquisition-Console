@@ -26,7 +26,8 @@ void UimfFrameSubscriber::execute()
 				std::cout << "start writing frame" << std::endl;
 				try
 				{
-					writer.write_frame(*current_frame);
+					writer.write_scan_data(*current_frame);
+					//writer.update_timing_information(*current_frame, ts_sample_period);
 				}
 				catch (...)
 				{
