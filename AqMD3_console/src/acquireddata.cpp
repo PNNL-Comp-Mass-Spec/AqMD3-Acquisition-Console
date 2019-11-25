@@ -46,10 +46,16 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 
 		for (int j = 0; j < gate_count; j++)
 		{
-			const auto gate = &trig.gate_data[j];
+			const auto& gate = &trig.gate_data[j];
 			auto blocks = gate->total_processing_blocks;
 			auto samples = blocks * 2;
 			auto first_valid_index = gate->gate_start_intra_block_index;
+
+			if (gate->get_stop_sample_index() <= gate->get_start_sample_index())
+			{
+				offset += blocks;
+				continue;
+			}
 
 			int32_t gate_zero_count = 0;
 			if (j == 0)
