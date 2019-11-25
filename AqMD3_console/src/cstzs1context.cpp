@@ -3,6 +3,8 @@
 #include <vector>
 #include <tuple>
 #include <exception>
+#include <fstream>
+#include <iostream>
 
 using namespace std;
 
@@ -11,6 +13,8 @@ using namespace std;
 AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 {
 	int markers_to_acquire = min_target_records;
+	int active_multiplier = 1;
+
 	int trig_count = 0;
 	int gate_count = 0;
 	uint64_t to_acquire = 0;
