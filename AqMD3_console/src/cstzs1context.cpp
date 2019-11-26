@@ -206,33 +206,39 @@ process:
 	ViInt64 first_element_samples;
 	ViInt64 actual_elements_samples = 0;
 	ViInt64 available_elements_samples = 0;
-	AqMD3_StreamFetchDataInt32(
-		session,
-		samples_channel.c_str(),
-		to_acquire,
-		samples_buffer->get_size(),
-		(ViInt32 *)samples_buffer->get_raw_unaquired(),
-		&available_elements_samples, &actual_elements_samples, &first_element_samples);
 
-	////if (print)
-	////{
-	//	std::cout 
-	//	//	<< "to_acquire: " << to_acquire << "\n"
-	//		<< "available_elements_samples: " << available_elements_samples << "\n"
-	//	//	<< "actual_elements_samples: " << actual_elements_samples << "\n"
-	//		;
-	////}
-
-	if (actual_elements_samples != 0 && actual_elements_samples < to_acquire)
+	do
 	{
-		std::cout << "\tSAMPLES: actual_elements_samples != 0 && actual_elements_samples < to_acquire\n";
-		std::cout << "to_acquire: " << to_acquire << "\n"
-					<< "available_elements_samples: " << available_elements_samples << "\n"
-					<< "actual_elements_samples: " << actual_elements_samples << "\n";
-	}
+		// Should hopefully only need no more than two calls to FetchData. If that's not the case, this will need to be handled differently.
+		int actual_acquire = to_acquire - actual_elements_samples;
 
-	samples_buffer->advance_offset(first_element_samples);
-	samples_buffer->advance_acquired(actual_elements_samples);
+		AqMD3_StreamFetchDataInt32(
+			session,
+			samples_channel.c_str(),
+			//to_acquire,
+			actual_acquire,
+			samples_buffer->get_size(),
+			(ViInt32 *)samples_buffer->get_raw_unaquired(),
+			&available_elements_samples, &actual_elements_samples, &first_element_samples);
+
+		//if (actual_elements_samples != 0 && actual_elements_samples < to_acquire)
+		//{
+		//	std::cout << "\tSAMPLES: actual_elements_samples != 0 && actual_elements_samples < to_acquire\n";
+		//	std::cout << "to_acquire: " << to_acquire << "\n"
+		//		<< "available_elements_samples: " << available_elements_samples << "\n"
+		//		<< "actual_elements_samples: " << actual_elements_samples << "\n";
+		//}
+
+		samples_buffer->advance_offset(first_element_samples);
+		samples_buffer->advance_acquired(actual_elements_samples);
+
+	} while (samples_buffer->get_acquired() < to_acquire);
+
+	//std::cout
+		//<< "to_acquire: " << to_acquire << "\n"
+		//<< "available_elements_samples: " << available_elements_samples << "\n"
+		//<< "actual_elements_samples: " << actual_elements_samples << "\n"
+		//;
 
 no_process:
 	return AcquiredData(stamps, samples_buffer, samples_per_trigger);
