@@ -37,7 +37,7 @@ public:
 		}
 
 		inline uint64_t get_stop_sample_index() const {
-			return (gate_stop_block_index - 1) * processing_block_size - processing_block_size + gate_stop_intra_block_index;
+			return (gate_stop_block_index - 1) * processing_block_size - (processing_block_size - gate_stop_intra_block_index);
 		}
 
 	};

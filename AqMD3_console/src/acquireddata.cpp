@@ -11,7 +11,7 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 	std::shared_ptr<std::vector<EncodedResult>> results = std::make_shared<std::vector<EncodedResult>>();
 	results->reserve(stamps.size());
 
-	int offset = 0;
+	int32_t offset = 0;
 
 	for (int trig_index = 0; trig_index < stamps.size(); trig_index++)
 	{
@@ -42,18 +42,17 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 			}
 		}
 		encoded_samples.reserve(reserve + gate_count);
-		// end try reserve
 
 		for (int j = 0; j < gate_count; j++)
 		{
 			const auto& gate = &trig.gate_data[j];
-			auto blocks = gate->total_processing_blocks;
-			auto samples = blocks * 2;
-			auto first_valid_index = gate->gate_start_intra_block_index;
+			auto elements = gate->total_processing_blocks;
+			
+			auto samples = int64_t(gate->get_stop_sample_index()) - int64_t(gate->get_start_sample_index());
 
 			if (gate->get_stop_sample_index() <= gate->get_start_sample_index())
 			{
-				offset += blocks;
+				offset += elements;
 				continue;
 			}
 
@@ -68,25 +67,29 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 				gate_zero_count = gate->get_start_sample_index() - prev_gate->get_stop_sample_index();
 			}
 
-			if (gate_zero_count != 0)
+			if (gate_zero_count > 0)
 			{
 				encoded_samples.push_back(-1 * gate_zero_count);
 			}
 
 			zero_count += gate_zero_count;
 
-			int processed = 0;
 			int32_t *ptr = samples_buffer->get_raw_unprocessed() + offset;
 
-			int start = first_valid_index / 2;
-			if (first_valid_index % 2 != 0)
+			for (int i = gate->gate_start_intra_block_index; i < gate->gate_start_intra_block_index + samples; i++)
 			{
-				auto val = (ptr[start] >> 16) + range_shift_constant;
+				int32_t val = 0;
+				int data_index = i / 2;
+
+				if (i % 2 == 0)
+					val = ((ptr[data_index] << 16) >> 16) + range_shift_constant;
+				else
+					val = (ptr[data_index] >> 16) + range_shift_constant;
 				
 				if (val > bpi)
 				{
 					bpi = val;
-					index_max_intensity = non_zero_count + zero_count + (2 * start);
+					index_max_intensity = non_zero_count + zero_count;
 					bpi_mz = index_max_intensity;
 				}
 
@@ -94,33 +97,11 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 				non_zero_count++;
 				tic += val;
 
-				start++;
+				non_zero_count++;
 			}
 
-			for (int i = start; i < blocks; i++)
-			{
-				for (const auto val_r : { ((ptr[i] << 16) >> 16), (ptr[i] >> 16) })
-				{
-					auto val = val_r + range_shift_constant;
-
-					if (val > bpi)
-					{
-						bpi = val;
-						index_max_intensity = non_zero_count + zero_count + (2 * start);
-						bpi_mz = index_max_intensity;
-					}
-
-					encoded_samples.push_back(val);
-					non_zero_count++;
-					tic += val;
-				}
-			
-				processed += 2;
-			}
-
-			offset += blocks;
+			offset += elements;
 		}
-
 		results->emplace_back(
 			processing_scan_start_number + trig_index,
 			non_zero_count,
