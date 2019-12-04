@@ -187,7 +187,7 @@ std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, 
 			session,
 			channel,
 			record_size * 256,
-			40,
+			4,
 			record_size,
 			triggers
 		));
