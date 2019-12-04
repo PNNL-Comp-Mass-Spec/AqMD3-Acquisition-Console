@@ -56,7 +56,7 @@
 
 using namespace std;
 
-static std::tuple<uint64_t, uint64_t> get_tof_width(SA220 *digitizer, double sample_rate);
+static std::tuple<uint64_t, uint64_t, uint64_t> get_tof_width(SA220 *digitizer, double sample_rate);
 static std::tuple<uint64_t, uint64_t> get_optimal_record_size(SA220 *digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s);
 static uint64_t get_trigger_time_stamp_average(SA220 *digitizer, int triggers);
 
@@ -66,9 +66,11 @@ static double estimated_trigger_rearm_time = 0.0000001;
 uint32_t calculated_post_trigger_samples = 0;
 
 int main(int argc, char *argv[]) {
+		
 	try
 	{
-		SA220 *digitizer = nullptr;
+		//SA220 *digitizer = nullptr;
+		SA220 *digitizer = new SA220("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
 		auto server = new Server("tcp://*:5555");
 		double sampling_rate = 0.0;
 		std::unique_ptr<AcquisitionControl> controller;
@@ -104,7 +106,6 @@ int main(int argc, char *argv[]) {
 
 				if (command == "init")
 				{
-					digitizer = new SA220("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
 					digitizer->set_trigger_parameters(digitizer->trigger_external, 0.5, true, post_trigger_delay);
 
 					req.send_response(ack);
@@ -237,7 +238,8 @@ int main(int argc, char *argv[]) {
 				{
 					uint64_t record_size;
 					uint64_t post_trigger_samples;
-					std::tie(post_trigger_samples, record_size) = get_tof_width(digitizer, sampling_rate);			
+					uint64_t tof_width;
+					std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer, sampling_rate);			
 					std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
 					std::cout << "record size: " << record_size << std::endl;
 					std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
@@ -260,7 +262,7 @@ int main(int argc, char *argv[]) {
 
 					TofWidthMessage tofMsg;
 					tofMsg.set_num_samples(record_size + post_trigger_samples);
-					tofMsg.set_pusher_pulse_width(6125);
+					tofMsg.set_pusher_pulse_width(tof_width);
 					to_send[0] = (tofMsg.SerializeAsString());
 					vector<uint8_t> hash(picosha2::k_digest_size);
 					picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
@@ -275,7 +277,8 @@ int main(int argc, char *argv[]) {
 				{
 					uint64_t record_size;
 					uint64_t post_trigger_samples;
-					std::tie(post_trigger_samples, record_size) = get_tof_width(digitizer, sampling_rate);
+					uint64_t tof_width;
+					std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer, sampling_rate);
 					std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
 					std::cout << "record size: " << record_size << std::endl;
 					std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
@@ -285,7 +288,7 @@ int main(int argc, char *argv[]) {
 
 					TofWidthMessage tofMsg;
 					tofMsg.set_num_samples(record_size + post_trigger_samples);
-					tofMsg.set_pusher_pulse_width(6125);
+					tofMsg.set_pusher_pulse_width(tof_width);
 					to_send[0] = (tofMsg.SerializeAsString());
 					vector<uint8_t> hash(picosha2::k_digest_size);
 					picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
@@ -371,11 +374,17 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-static std::tuple<uint64_t, uint64_t> get_tof_width(SA220 *digitizer, double sample_rate)
+static std::tuple<uint64_t, uint64_t, uint64_t> get_tof_width(SA220 *digitizer, double sample_rate)
 {
 	auto samples_per_trigger = get_trigger_time_stamp_average(digitizer, 20);
 
-	return get_optimal_record_size(digitizer, samples_per_trigger, post_trigger_delay, sample_rate, estimated_trigger_rearm_time);
+	// necessary to work with Falkor
+	auto tof_width = samples_per_trigger / (2 * 16);
+
+	return std::tuple_cat(
+		get_optimal_record_size(digitizer, samples_per_trigger, post_trigger_delay, sample_rate, estimated_trigger_rearm_time),
+		std::make_tuple(tof_width)
+		);
 }
 
 static uint64_t get_trigger_time_stamp_average(SA220 *digitizer, int triggers)
