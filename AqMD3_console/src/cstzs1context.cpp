@@ -5,8 +5,12 @@
 #include <exception>
 #include <fstream>
 #include <iostream>
+using std::cout;
+using std::cerr;
 
 //#define bad_gates
+//#define print_acq
+//#define variable_m_t_a
 
 AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 {
@@ -17,15 +21,29 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 	int gate_count = 0;
 	uint64_t to_acquire = 0;
 	std::vector<AcquiredData::TriggerData> stamps;
+
 	std::shared_ptr<AcquisitionBuffer> samples_buffer = get_buffer();
+
+#ifdef print_acq
+	std::cout << "\nSTART ACQUIRE\n";
+#endif
 
 	ViInt64 first_element_markers;
 	ViInt64 available_elements_markers = 0;
 	ViInt64 actual_elements_markers = markers_buffer.get_unprocessed();
 
+	// sanity check
+	if (actual_elements_markers % 16 != 0)
+		throw std::string("actual_elements_markers % 16 != 0 at start of acquire");
+
 	auto finish = std::chrono::high_resolution_clock::now() + timeoutMs;
 	while (trig_count <= triggers_per_read)
 	{
+
+#ifdef print_acq
+		auto t1_process = std::chrono::high_resolution_clock::now();
+#endif
+
 		for (int i = 0; i < actual_elements_markers / 16; i++)
 		{
 			int32_t *seg = markers_buffer.get_raw_unprocessed();
@@ -131,18 +149,33 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 			}
 		}
 
-		first_element_markers = 0;
-		available_elements_markers = 0;
-		actual_elements_markers = 0;
+#ifdef print_acq
+		auto t2_process = std::chrono::high_resolution_clock::now();
+		auto dur_process = std::chrono::duration_cast<std::chrono::milliseconds>(t2_process - t1_process);
+		std::cout << "\tTIME TO PROCESS MARKERS: " << dur_process.count() << "\n";
+#endif
 
 		if (trig_count <= triggers_per_read)
 		{
 			markers_buffer.reset();
+#ifdef variable_m_t_a
 			int next_markers_to_acquire = markers_to_acquire;
-			
+#endif		
+#ifdef print_acq
+			auto t1_markers = std::chrono::high_resolution_clock::now();
+#endif
 			do
 			{
+				first_element_markers = 0;
+				available_elements_markers = 0;
+				actual_elements_markers = 0;
+
+#ifdef variable_m_t_a	
 				markers_to_acquire = next_markers_to_acquire;
+#endif	
+#ifdef print_acq
+				auto t1_loop_markers = std::chrono::high_resolution_clock::now();
+#endif
 
 				AqMD3_StreamFetchDataInt32(
 					session,
@@ -152,17 +185,18 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 					(ViInt32 *)markers_buffer.get_raw_unaquired(),
 					&available_elements_markers, &actual_elements_markers, &first_element_markers);
 
+#ifdef print_acq
 				if (actual_elements_markers != 0 && actual_elements_markers < markers_to_acquire)
 				{
-					std::cout << "\tMARKERS: actual_elements_markers != 0 && actual_elements_markers < markers_to_acquire";
+					std::cout << "\tMARKERS: actual_elements_markers != 0 && actual_elements_markers < markers_to_acquire\n";
+					std::cout << "\tFIRST ACQ: " << actual_elements_markers << " offset: "  << first_element_markers <<"\n";
 				}
 
-				if (should_stop)
-				{
-					std::cout << "should_stop -> process" << std::endl;
-					goto process;
-				}
-					
+				auto t2_loop_markers = std::chrono::high_resolution_clock::now();
+				auto dur_loop_markers = std::chrono::duration_cast<std::chrono::milliseconds>(t2_loop_markers - t1_loop_markers);
+				std::cout << "\tTIME TO LOOP ACQUIRE MARKERS: " << dur_loop_markers.count() << "\n";
+#endif
+
 				if (std::chrono::high_resolution_clock::now() > finish)
 				{
 					std::cerr << "timeout conditions:\n\n";
@@ -173,29 +207,37 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 					std::cerr << "\tavailable_elements_markers: " << available_elements_markers << "\n";
 					std::cerr << "\tactual_elements_markers: " << actual_elements_markers << "\n\n";
 
-					std::cerr << "\tstamps.size(): " << stamps.size() << "\n";
 					std::cerr << "\ttrig_count: " << trig_count << "\n";
 
 					throw std::string("timeout in acquisition, processing");
 				}
 
+#ifdef variable_m_t_a
 				if (available_elements_markers < markers_to_acquire && active_multiplier > multiplier_min)
 				{
 					next_markers_to_acquire = min_target_records * --active_multiplier;
 				}
+#endif
+			} while (actual_elements_markers == 0);
 
-			} while (actual_elements_markers < markers_to_acquire);
+#ifdef print_acq
+			auto t2_markers = std::chrono::high_resolution_clock::now();
+			auto dur_markers = std::chrono::duration_cast<std::chrono::milliseconds>(t2_markers - t1_markers);
+			std::cout << "\tTIME TO ACQUIRE MARKERS: " << dur_markers.count() << "\n";
+			
+			std::cout
+				<< "markers_to_acquire: " << markers_to_acquire << "\n"
+				<< "AVAILABLE_ELEMENTS -- MARKERS: " << available_elements_markers << "\n"
+				<< "actual_elements_markers: " << actual_elements_markers << "\n"
+				;
+#endif
 
-			//std::cout
-			////	<< "markers_to_acquire: " << markers_to_acquire << "\n"
-			//	<< "available_elements_markers: " << available_elements_markers << "\n"
-			////	<< "actual_elements_markers: " << actual_elements_markers << "\n"
-			//	;
-
+#ifdef variable_m_t_a
 			if (available_elements_markers > markers_to_acquire && active_multiplier < multiplier_max)
 			{
 				markers_to_acquire = min_target_records * ++active_multiplier;
 			}
+#endif
 
 			markers_buffer.advance_offset(first_element_markers);
 			markers_buffer.advance_acquired(actual_elements_markers);
@@ -207,6 +249,11 @@ process:
 	ViInt64 actual_elements_samples = 0;
 	ViInt64 available_elements_samples = 0;
 
+#ifdef print_acq
+	std::cout << "\tTO ACQUIRE: " << to_acquire << std::endl;	
+	auto t1_samples = std::chrono::high_resolution_clock::now();
+#endif // print_acq
+
 	do
 	{
 		// Should hopefully only need no more than two calls to FetchData. If that's not the case, this will need to be handled differently.
@@ -215,32 +262,35 @@ process:
 		AqMD3_StreamFetchDataInt32(
 			session,
 			samples_channel.c_str(),
-			//to_acquire,
 			actual_acquire,
 			samples_buffer->get_size(),
 			(ViInt32 *)samples_buffer->get_raw_unaquired(),
 			&available_elements_samples, &actual_elements_samples, &first_element_samples);
 
-		//if (actual_elements_samples != 0 && actual_elements_samples < to_acquire)
-		//{
-		//	std::cout << "\tSAMPLES: actual_elements_samples != 0 && actual_elements_samples < to_acquire\n";
-		//	std::cout << "to_acquire: " << to_acquire << "\n"
-		//		<< "available_elements_samples: " << available_elements_samples << "\n"
-		//		<< "actual_elements_samples: " << actual_elements_samples << "\n";
-		//}
+#ifdef print_acq
+		if (actual_elements_samples != 0 && actual_elements_samples < to_acquire)
+		{
+			std::cout << "\tSAMPLES: actual_elements_samples != 0 && actual_elements_samples < to_acquire\n";
+		}
+#endif // print_acq
 
 		samples_buffer->advance_offset(first_element_samples);
 		samples_buffer->advance_acquired(actual_elements_samples);
-
 	} while (samples_buffer->get_acquired() < to_acquire);
+
+#ifdef print_acq
+	auto t2_samples = std::chrono::high_resolution_clock::now();
+	auto dur_samples = std::chrono::duration_cast<std::chrono::milliseconds>(t2_samples - t1_samples);
+	std::cout << "\tTIME TO ACQUIRE SAMPLES: " << dur_samples.count() << "\n";
+	std::cout << "END ACQUIRE. AVAILABLE_ELEMENTS -- MARKERS: " << available_elements_markers << "\n";
+#endif
 
 	//std::cout
 		//<< "to_acquire: " << to_acquire << "\n"
-		//<< "available_elements_samples: " << available_elements_samples << "\n"
+		//<< "\tAVAILABLE_ELEMENTS -- SAMPLES: " << available_elements_samples << "\n"
 		//<< "actual_elements_samples: " << actual_elements_samples << "\n"
 		//;
 
-no_process:
 	return AcquiredData(stamps, samples_buffer, samples_per_trigger);
 
 }
