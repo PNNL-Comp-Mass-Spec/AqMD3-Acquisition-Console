@@ -7,6 +7,7 @@
 #include <iostream>
 using std::cout;
 using std::cerr;
+#include <limits>
 
 //#define bad_gates
 //#define print_acq
@@ -103,6 +104,15 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 						}
 #endif
 
+						if (end_block_index < start_block_index)
+						{
+							std::cout << "end_block_index < start_block_index\n";
+							std::cout << "end_block_index: " << end_block_index << " start_block_index: " << start_block_index << "\n";
+						
+							// suggested in CPP_IVIC_StreamingZeroSuppress example project
+							end_block_index += uint64_t(std::numeric_limits<unsigned int>::max());
+						}
+
 						if (to_acquire_memory_blocks_f % 16 != 0)
 							to_acquire_memory_blocks_f = ((to_acquire_memory_blocks_f / 16) + 1) * 16;
 
@@ -120,12 +130,12 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 							end_block_sample_indx,
 							to_acquire_memory_blocks_f);
 
-						++gate_count;
-
+						gate_count++;
 						to_acquire += to_acquire_memory_blocks_f;
 					}
 					else if ((*l_ptr & 0x000000FF) == 0x0a)
 					{
+						// Do not use pre- or post-gate samples, so no need to store information at the moment
 						uint32_t r_lo = l_ptr[0];
 						uint32_t r_hi = l_ptr[1];
 
