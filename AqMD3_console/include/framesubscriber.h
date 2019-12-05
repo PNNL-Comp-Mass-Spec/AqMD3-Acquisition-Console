@@ -8,6 +8,7 @@
 #include <future>
 
 #include <iostream>
+using std::cerr;
 
 enum class SubscriberType : uint8_t
 {
@@ -62,7 +63,14 @@ public:
 					sig.wait_for(lock, std::chrono::milliseconds(10));
 				}
 
-				execute();
+				try
+				{
+					execute();
+				}
+				catch (std::string ex)
+				{
+					std::cerr << ex << std::endl;
+				}
 			}
 
 			on_completed();
