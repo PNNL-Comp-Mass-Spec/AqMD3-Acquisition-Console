@@ -36,7 +36,7 @@ void ZmqAcquiredDataSubscriber::execute()
 				{
 					index += (-1 * val);
 
-					if (index > data_vector.size())
+					if (index >= data_vector.size())
 						throw std::string("index oob error -> index: ") + std::to_string(index);
 
 					continue;
