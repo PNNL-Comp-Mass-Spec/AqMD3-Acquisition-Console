@@ -64,8 +64,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	//SA220 *digitizer = nullptr;
-	SA220 *digitizer = new SA220("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
+	std::unique_ptr<SA220> digitizer = std::make_unique<SA220>("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
 	auto server = new Server("tcp://*:5555");
 	double sampling_rate = 0.0;
 	std::unique_ptr<AcquisitionControl> controller;
