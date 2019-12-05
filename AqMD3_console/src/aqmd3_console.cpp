@@ -1,56 +1,26 @@
-﻿// FalkorAcquisition.cpp : Defines the entry point for the application.
-
-#include "../include/server.h"
+﻿#include "../include/server.h"
 #include "../include/digitizer.h"
 #include "../include/acquireddata.h"
 #include "../include/sa220.h"
 #include "../include/acquisitioncontrol.h"
 #include "../include/acquirepublisher.h"
 #include "../include/acquireframepublisher.h"
-
 #include "../include/uimfframesubscriber.h"
 #include "../include/zmqacquireddatasubscriber.h"
 #include "../include/processsubject.h"
-
-#include "../include/diagnostic/falsedatapublisher.h"
-#include "../include/diagnostic/rawprintersubscriber.h"
-#include "../include/diagnostic/simplepublisher.h"
-#include "../include/diagnostic/encodeddatawriter.h"
-
 #define NOMINMAX 
 #undef min
 #undef max
 #include "../include/message.pb.h"
-
 #include <UIMFWriter/uimfwriter.h>
-
 #include "AqMD3.h"
-
+#include <visa.h>
 #include <snappy.h>
 #include <zmq.hpp>
 #include <picosha2.h>
-
 #include <iostream>
-#include <thread>
-#include <chrono>
-#include <vector>
-#include <numeric>
-#include <random>
-#include <algorithm>
-#include <iterator>
-#include <functional>
-#include <mutex>
 #include <tuple>
 #include <string>
-
-#include <queue>
-#include <fstream>
-
-#include <cstring>
-#include <cmath>
-#include <ctime>
-
-#include <visa.h>
 
 //#define print_raw
 
