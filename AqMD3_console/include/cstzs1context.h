@@ -21,7 +21,7 @@ private:
 	AcquisitionBuffer markers_buffer;
 
 public:
-	CstZm1Context(Digitizer& digitizer,
+	CstZm1Context(const Digitizer& digitizer,
 		std::string channel,
 		uint64_t samples_buffer_size,
 		uint32_t samples_buffer_count,

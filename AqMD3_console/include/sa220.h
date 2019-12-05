@@ -52,17 +52,17 @@ public:
 		, max_sample_rate(2000000000.0)
 	{}
 
-	void set_sampling_rate(double rate);
-	void set_record_size(uint64_t elements);
-	void set_trigger_parameters(std::string trigger, double level, bool isRisingEdgeTriggered, double trigger_delay_ms);
-	void set_channel_parameters(std::string channel, double range, double offset);
-	void set_channel_data_inversion(std::string channel, bool enable);
+	void set_sampling_rate(double rate) const;
+	void set_record_size(uint64_t elements) const;
+	void set_trigger_parameters(std::string trigger, double level, bool isRisingEdgeTriggered, double trigger_delay_ms) const;
+	void set_channel_parameters(std::string channel, double range, double offset) const;
+	void set_channel_data_inversion(std::string channel, bool enable) const;
 
-	void enable_io_port();
-	void disable_io_port();
+	void enable_io_port() const;
+	void disable_io_port() const;
 
-	std::unique_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers, uint64_t record_size) override;
-	std::unique_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters) override;
+	std::unique_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers, uint64_t record_size) const override;
+	std::unique_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters) const override;
 };
 
 #endif // !SA220P

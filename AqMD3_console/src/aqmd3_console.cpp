@@ -30,9 +30,9 @@ using std::cerr;
 
 using namespace std;
 
-static std::tuple<uint64_t, uint64_t, uint64_t> get_tof_width(SA220 *digitizer, double sample_rate);
-static std::tuple<uint64_t, uint64_t> get_optimal_record_size(SA220 *digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s);
-static uint64_t get_trigger_time_stamp_average(SA220 *digitizer, int triggers);
+static std::tuple<uint64_t, uint64_t, uint64_t> get_tof_width(const SA220 *digitizer, double sample_rate);
+static std::tuple<uint64_t, uint64_t> get_optimal_record_size(const SA220 *digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s);
+static uint64_t get_trigger_time_stamp_average(const SA220 *digitizer, int triggers);
 
 static char ack[] = "ack";
 static double post_trigger_delay = 0.00001;
@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
 				uint64_t record_size;
 				uint64_t post_trigger_samples;
 				uint64_t tof_width;
-				std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer, sampling_rate);			
+				std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer.get(), sampling_rate);			
 				std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
 				std::cout << "record size: " << record_size << std::endl;
 				std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
@@ -272,7 +272,7 @@ int main(int argc, char *argv[]) {
 				uint64_t record_size;
 				uint64_t post_trigger_samples;
 				uint64_t tof_width;
-				std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer, sampling_rate);
+				std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer.get(), sampling_rate);
 				std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
 				std::cout << "record size: " << record_size << std::endl;
 				std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
@@ -357,7 +357,7 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-static std::tuple<uint64_t, uint64_t, uint64_t> get_tof_width(SA220 *digitizer, double sample_rate)
+static std::tuple<uint64_t, uint64_t, uint64_t> get_tof_width(const SA220 * digitizer, double sample_rate)
 {
 	auto samples_per_trigger = get_trigger_time_stamp_average(digitizer, 20);
 
@@ -370,7 +370,7 @@ static std::tuple<uint64_t, uint64_t, uint64_t> get_tof_width(SA220 *digitizer, 
 		);
 }
 
-static uint64_t get_trigger_time_stamp_average(SA220 *digitizer, int triggers)
+static uint64_t get_trigger_time_stamp_average(const SA220 *digitizer, int triggers)
 {
 	digitizer->set_record_size(1024);
 	auto dig_context = digitizer->configure_cst(digitizer->channel_1, triggers, 1024);
@@ -391,7 +391,7 @@ static uint64_t get_trigger_time_stamp_average(SA220 *digitizer, int triggers)
 	return total;
 }
 
-static std::tuple<uint64_t, uint64_t> get_optimal_record_size(SA220 *digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s)
+static std::tuple<uint64_t, uint64_t> get_optimal_record_size(const SA220 *digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s)
 {
 	uint64_t actual_trigger_width_samples = uint64_t(double(pusher_pulse_pulse_width_samples) * (sample_rate / digitizer->max_sample_rate));
 	uint64_t est_trig_rearm_samples = uint64_t(trig_rearm_s * sample_rate);

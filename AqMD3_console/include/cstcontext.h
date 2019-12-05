@@ -7,7 +7,7 @@ class CstContext : public StreamingContext {
 private:
 
 public:
-	CstContext(Digitizer& digitizer, std::string channel, int64_t samples_buffer_size, int32_t samples_buffer_count,
+	CstContext(const Digitizer& digitizer, std::string channel, int64_t samples_buffer_size, int32_t samples_buffer_count,
 		uint64_t samples_per_trigger,
 		uint32_t triggers_per_read)
 		: StreamingContext(digitizer, channel, samples_buffer_size, samples_buffer_count, samples_per_trigger, triggers_per_read)

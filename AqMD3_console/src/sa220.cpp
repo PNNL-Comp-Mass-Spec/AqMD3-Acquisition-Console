@@ -4,7 +4,7 @@
 #include "../include/cstzs1context.h"
 #include <exception>
 
-void SA220::set_sampling_rate(double rate)
+void SA220::set_sampling_rate(double rate) const
 {
 	auto result = configure_sample_rate(rate);
 	if (result.second != Digitizer::None)
@@ -14,7 +14,7 @@ void SA220::set_sampling_rate(double rate)
 	}
 }
 
-void SA220::set_record_size(uint64_t elements)
+void SA220::set_record_size(uint64_t elements) const
 {
 	auto result = configure_record_size(elements);
 	if (result.second != Digitizer::None)
@@ -24,7 +24,7 @@ void SA220::set_record_size(uint64_t elements)
 	}
 }
 
-void SA220::set_trigger_parameters(std::string trigger, double level, bool isRisingEdgeTriggered, double trigger_delay_s)
+void SA220::set_trigger_parameters(std::string trigger, double level, bool isRisingEdgeTriggered, double trigger_delay_s) const
 {
 	ViInt32 slope = isRisingEdgeTriggered ? AQMD3_VAL_TRIGGER_SLOPE_POSITIVE : AQMD3_VAL_TRIGGER_SLOPE_NEGATIVE;
 
@@ -50,7 +50,7 @@ void SA220::set_trigger_parameters(std::string trigger, double level, bool isRis
 	auto td_result = configure_trigger_delay(trigger_delay_s);
 }
 
-void SA220::set_channel_parameters(std::string channel, double range, double offset)
+void SA220::set_channel_parameters(std::string channel, double range, double offset) const
 {
 	auto result = configure_channel(channel.c_str(), range, offset, AQMD3_VAL_VERTICAL_COUPLING_DC);
 	if (result.second != Digitizer::None)
@@ -60,7 +60,7 @@ void SA220::set_channel_parameters(std::string channel, double range, double off
 	}
 }
 
-void SA220::set_channel_data_inversion(std::string channel, bool enable)
+void SA220::set_channel_data_inversion(std::string channel, bool enable) const
 {
 	auto result = configure_channel_data_inversion(channel.c_str(), enable);
 	if (result.second != Digitizer::None)
@@ -70,7 +70,7 @@ void SA220::set_channel_data_inversion(std::string channel, bool enable)
 	}
 }
 
-void SA220::enable_io_port()
+void SA220::enable_io_port() const
 {
 	std::string enable_string("In-TriggerEnable");
 	auto result = configure_io_port(control_io_2.c_str(), enable_string.c_str());
@@ -81,7 +81,7 @@ void SA220::enable_io_port()
 	}
 }
 
-void SA220::disable_io_port()
+void SA220::disable_io_port() const
 {
 	std::string disable_string("Disabled");
 	auto result = configure_io_port(control_io_2.c_str(), disable_string.c_str());
@@ -92,7 +92,7 @@ void SA220::disable_io_port()
 	}
 }
 
-std::unique_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint32_t triggers, uint64_t record_size)
+std::unique_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint32_t triggers, uint64_t record_size) const
 {
 	auto rc = configure_streaming_mode(AQMD3_VAL_STREAMING_MODE_TRIGGERED);
 	if (rc.second != Digitizer::None)
@@ -136,7 +136,7 @@ std::unique_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint
 	return std::move(context);
 }
 
-std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters)
+std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters) const
 {
 	auto rc = configure_streaming_mode(AQMD3_VAL_STREAMING_MODE_TRIGGERED);
 

@@ -45,11 +45,12 @@ public:
 		AqMD3_close(session);
 	}
 
-	virtual std::unique_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers, uint64_t record_size) = 0;
-	virtual std::unique_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters) = 0;
+	virtual std::unique_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers, uint64_t record_size) const = 0;
+	virtual std::unique_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters) const = 0;
 
 private:
-	std::pair<std::string, ErrorType> check_error(ViStatus status) {
+	std::pair<std::string, ErrorType> check_error(ViStatus status) const 
+	{
 		
 		ViInt32 ec;
 		ViChar error_message[512];
@@ -70,37 +71,37 @@ private:
 	}
 	
 public:
-	std::pair<std::string, ErrorType> configure_streaming_mode(ViInt32 mode);
-	std::pair<std::string, ErrorType> configure_sample_rate(ViReal64 rate);
+	std::pair<std::string, ErrorType> configure_streaming_mode(ViInt32 mode) const;
+	std::pair<std::string, ErrorType> configure_sample_rate(ViReal64 rate) const;
 
-	std::pair<std::string, ErrorType> configure_trigger_source(ViConstString trigger_source);
-	std::pair<std::string, ErrorType> configure_trigger_level(ViConstString trigger_source, ViReal64 trigger_level);
-	std::pair<std::string, ErrorType> configure_trigger_slope(ViConstString trigger_source, ViInt32 trigger_slope);
-	std::pair<std::string, ErrorType> configure_trigger_delay(ViReal64 delay);
+	std::pair<std::string, ErrorType> configure_trigger_source(ViConstString trigger_source) const;
+	std::pair<std::string, ErrorType> configure_trigger_level(ViConstString trigger_source, ViReal64 trigger_level) const;
+	std::pair<std::string, ErrorType> configure_trigger_slope(ViConstString trigger_source, ViInt32 trigger_slope) const;
+	std::pair<std::string, ErrorType> configure_trigger_delay(ViReal64 delay) const;
 
-	std::pair<std::string, ErrorType> configure_record_size(ViInt64 record_size);
-	std::pair<std::string, ErrorType> configure_data_reduction(ViInt32 mode);
-	std::pair<std::string, ErrorType> configure_acquisition_mode(ViInt32 mode);
+	std::pair<std::string, ErrorType> configure_record_size(ViInt64 record_size) const;
+	std::pair<std::string, ErrorType> configure_data_reduction(ViInt32 mode) const;
+	std::pair<std::string, ErrorType> configure_acquisition_mode(ViInt32 mode) const;
 
-	std::pair<std::string, ErrorType> configure_zs_hysteresis(ViConstString channel, ViInt32 hysteresis);
-	std::pair<std::string, ErrorType> configure_zs_threshold(ViConstString channel, ViInt32 threshold);
-	std::pair<std::string, ErrorType> configure_zs_pre_gate_samples(ViConstString channel, ViInt32 samples);
-	std::pair<std::string, ErrorType> configure_zs_post_gate_samples(ViConstString channel, ViInt32 samples);
+	std::pair<std::string, ErrorType> configure_zs_hysteresis(ViConstString channel, ViInt32 hysteresis) const;
+	std::pair<std::string, ErrorType> configure_zs_threshold(ViConstString channel, ViInt32 threshold) const;
+	std::pair<std::string, ErrorType> configure_zs_pre_gate_samples(ViConstString channel, ViInt32 samples) const;
+	std::pair<std::string, ErrorType> configure_zs_post_gate_samples(ViConstString channel, ViInt32 samples) const;
 
-	std::pair<std::string, ErrorType> configure_channel(ViConstString channel, ViReal64 range, ViReal64 offset, ViInt32 coupling);
-	std::pair<std::string, ErrorType> configure_channel_data_inversion(ViConstString channel, ViBoolean invert);
+	std::pair<std::string, ErrorType> configure_channel(ViConstString channel, ViReal64 range, ViReal64 offset, ViInt32 coupling) const;
+	std::pair<std::string, ErrorType> configure_channel_data_inversion(ViConstString channel, ViBoolean invert) const;
 
-	std::pair<std::string, ErrorType> configure_io_port(ViConstString port, ViConstString value);
+	std::pair<std::string, ErrorType> configure_io_port(ViConstString port, ViConstString value) const;
 
-	std::pair<std::string, ErrorType> apply_setup();
-	std::pair<std::string, ErrorType> self_calibrate();
+	std::pair<std::string, ErrorType> apply_setup() const;
+	std::pair<std::string, ErrorType> self_calibrate() const;
 
-	std::pair<std::string, ErrorType> begin_acquisition();
-	std::pair<std::string, ErrorType> abort_acquisition();
+	std::pair<std::string, ErrorType> begin_acquisition() const;
+	std::pair<std::string, ErrorType> abort_acquisition() const;
 
-	std::pair<std::string, ErrorType> stream_fetch_data(ViConstString stream, ViInt64 elements_to_Fetch, ViInt64 buffer_size, ViInt32 buffer[], ViInt64* available_elements, ViInt64* actual_elements, ViInt64* first_valid_element_index);
+	std::pair<std::string, ErrorType> stream_fetch_data(ViConstString stream, ViInt64 elements_to_Fetch, ViInt64 buffer_size, ViInt32 buffer[], ViInt64* available_elements, ViInt64* actual_elements, ViInt64* first_valid_element_index) const;
 
-	std::tuple<std::string, ErrorType, ViBoolean> get_calibration_required();
+	std::tuple<std::string, ErrorType, ViBoolean> get_calibration_required() const;
 };
 
 #endif // ! DIGITIZER_H

@@ -27,10 +27,10 @@ protected:
 
 	std::atomic_bool should_stop;
 
-	Digitizer& digitizer;
+	const Digitizer& digitizer;
 
 public:
-	StreamingContext(Digitizer& digitizer,
+	StreamingContext(const Digitizer& digitizer,
 		std::string channel,
 		int64_t samples_buffer_size,
 		int32_t samples_buffer_count,
