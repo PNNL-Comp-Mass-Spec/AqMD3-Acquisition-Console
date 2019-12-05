@@ -60,7 +60,7 @@ std::pair<std::string, Digitizer::ErrorType> Digitizer::begin_acquisition()
 	return check_error(status);
 }
 
-std::pair < std::string, Digitizer:: ErrorType> Digitizer::abort_acquisition()
+std::pair <std::string, Digitizer:: ErrorType> Digitizer::abort_acquisition()
 {
 	ViStatus status = AqMD3_Abort(session);
 	return check_error(status);
@@ -126,5 +126,11 @@ std::pair<std::string, Digitizer::ErrorType> Digitizer::configure_acquisition_mo
 std::pair<std::string, Digitizer::ErrorType> Digitizer::configure_io_port(ViConstString port, ViConstString value)
 {
 	ViStatus status = AqMD3_SetAttributeViString(session, port, AQMD3_ATTR_CONTROL_IO_SIGNAL, value);
+	return check_error(status);
+}
+
+std::pair<std::string, Digitizer::ErrorType> Digitizer::stream_fetch_data(ViConstString stream, ViInt64 elements_to_Fetch, ViInt64 buffer_size, ViInt32 buffer[], ViInt64* available_elements, ViInt64* actual_elements, ViInt64* first_valid_element_index)
+{
+	ViStatus status = AqMD3_StreamFetchDataInt32(session, stream, elements_to_Fetch, buffer_size, buffer, available_elements, actual_elements, first_valid_element_index);
 	return check_error(status);
 }

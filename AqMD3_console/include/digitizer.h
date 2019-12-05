@@ -69,7 +69,7 @@ private:
 		return std::pair<std::string, ErrorType>("", None);
 	}
 	
-protected:
+public:
 	std::pair<std::string, ErrorType> configure_streaming_mode(ViInt32 mode);
 	std::pair<std::string, ErrorType> configure_sample_rate(ViReal64 rate);
 
@@ -97,6 +97,8 @@ protected:
 
 	std::pair<std::string, ErrorType> begin_acquisition();
 	std::pair<std::string, ErrorType> abort_acquisition();
+
+	std::pair<std::string, ErrorType> stream_fetch_data(ViConstString stream, ViInt64 elements_to_Fetch, ViInt64 buffer_size, ViInt32 buffer[], ViInt64* available_elements, ViInt64* actual_elements, ViInt64* first_valid_element_index);
 
 	std::tuple<std::string, ErrorType, ViBoolean> get_calibration_required();
 };
