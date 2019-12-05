@@ -8,16 +8,33 @@ void AcquirePublisher::start()
 		context->start();
 		while (!should_stop)
 		{
+			if (has_errored)
+			{
+				//context->stop();
+				//context->start();
+				//has_errored = false;
+				break;
+			}
+
 			try
 			{
+				//auto t1 = std::chrono::high_resolution_clock::now();
 				auto data = context->acquire(std::chrono::milliseconds(80));
+				//auto t2 = std::chrono::high_resolution_clock::now();
+				//auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+				//std::cout << "\t\tTIME TO ACQUIRE: " << dur.count() << "\n";
+				
+				//auto t1_n = std::chrono::high_resolution_clock::now();
 				notify(data, SubscriberType::BOTH);
+				//auto t2_n = std::chrono::high_resolution_clock::now();
+				//auto dur_n = std::chrono::duration_cast<std::chrono::milliseconds>(t2_n - t1_n);
+				//std::cout << "\t\tTIME TO NOTIFY ACQUIRE: " << dur_n.count() << "\n";
+
 			}
 			catch (std::string ex)
 			{
 				std::cout << "data acquire failure -- " << ex << std::endl;
-				context->stop();
-				break;
+				has_errored = true;
 			}
 		}
 

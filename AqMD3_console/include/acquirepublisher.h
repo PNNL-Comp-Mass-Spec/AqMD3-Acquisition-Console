@@ -17,11 +17,14 @@ private:
 	std::condition_variable stop_sig;
 	std::mutex stop_mut;
 
+	bool has_errored;
+
 public:
 	AcquirePublisher(std::unique_ptr<StreamingContext> context)
 		: worker_handle()
 		, context(std::move(context))
 		, should_stop(false)
+		, has_errored(false)
 	{}
 	virtual ~AcquirePublisher() = default;
 

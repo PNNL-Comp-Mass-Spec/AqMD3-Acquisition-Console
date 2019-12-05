@@ -16,19 +16,27 @@ void ProcessSubject::execute()
 		auto ms_0 = std::chrono::duration_cast<std::chrono::milliseconds>(stop_0 - start_0);
 		total_duration += ms_0;
 
-		//ts_first = (ad.stamps.begin())->timestamp;
+		ts_first = (ad.stamps.begin())->timestamp;
 		//std::cout << "ts diff: " << ts_first - ts_last << std::endl;
-		//ts_last = (ad.stamps.end() - 1)->timestamp;
+		ts_last = (ad.stamps.end() - 1)->timestamp;
 
-		//uint64_t avg_ts = 0;
-		//for (int i = 1; i < ad.stamps.size(); i++)
-		//{
-		//	avg_ts += (ad.stamps[i].timestamp - ad.stamps[i - 1].timestamp);
-		//}
-		//avg_ts /= ad.stamps.size() - 1;
+		uint64_t avg_ts = 0;
+		for (int i = 1; i < ad.stamps.size(); i++)
+		{
+			avg_ts += (ad.stamps[i].timestamp - ad.stamps[i - 1].timestamp);
+			if ((ad.stamps[i].index - ad.stamps[i - 1].index) > 1)
+			{
+				std::cout << "ad.stamps[i].index: " << ad.stamps[i].index << " ad.stamps[i - 1].index: " << ad.stamps[i - 1].index << "\n";
+			}
+		}
+		avg_ts /= ad.stamps.size() - 1;
 
-		//std::cout << "timestamps avg: " << avg_ts << std::endl;
- 
+		if (avg_ts > 200100)
+		{
+			std::cout << "timestamps size: " << ad.stamps.size() << std::endl;
+			std::cout << "timestamps avg: " << avg_ts << std::endl;
+		}
+
 		if (frame)
 		{
 			int total_triggers = frame->frame_length * frame->nbr_accumulations;
@@ -65,8 +73,17 @@ void ProcessSubject::execute()
 			total_triggers_processed += ad.stamps.size();
 			try
 			{
+				//auto t1 = std::chrono::high_resolution_clock::now();
 				auto results = ad.process(0, offset_bins);
+				//auto t2 = std::chrono::high_resolution_clock::now();
+				//auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+				//std::cout << "\t\tTIME TO PROCESS: " << dur.count() << "\n";
+
+				//auto t1_n = std::chrono::high_resolution_clock::now();
 				notify(results, SubscriberType::BOTH);
+				//auto t2_n = std::chrono::high_resolution_clock::now();
+				//auto dur_n = std::chrono::duration_cast<std::chrono::milliseconds>(t2_n - t1_n);
+				//std::cout << "\t\tTIME TO PROCESS NOTIFY: " << dur_n.count() << "\n";
 			}
 			catch (...)
 			{
