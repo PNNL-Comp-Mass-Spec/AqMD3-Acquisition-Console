@@ -21,13 +21,13 @@ private:
 	AcquisitionBuffer markers_buffer;
 
 public:
-	CstZm1Context(ViSession session,
+	CstZm1Context(Digitizer& digitizer,
 		std::string channel,
 		uint64_t samples_buffer_size,
 		uint32_t samples_buffer_count,
 		uint64_t samples_per_trigger,
 		uint32_t triggers_per_read)
-		: StreamingContext(session, channel, samples_buffer_size, samples_buffer_count, samples_per_trigger, triggers_per_read)
+		: StreamingContext(digitizer, channel, samples_buffer_size, samples_buffer_count, samples_per_trigger, triggers_per_read)
 		, min_target_records(triggers_per_read * markers_hunk_size)
 		, markers_buffer(0, (triggers_per_read * markers_hunk_size * multiplier_max) + 15)
 		, active_multiplier(1)

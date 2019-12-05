@@ -9,9 +9,10 @@
 #include <string>
 #include <atomic>
 
+class Digitizer;
+
 class StreamingContext {
 protected:
-	ViSession session;
 	std::vector<std::shared_ptr<AcquisitionBuffer>> samples_buffer_pool;
 
 	std::string markers_channel;
@@ -26,15 +27,16 @@ protected:
 
 	std::atomic_bool should_stop;
 
+	Digitizer& digitizer;
+
 public:
-	StreamingContext(ViSession session,
+	StreamingContext(Digitizer& digitizer,
 		std::string channel,
 		int64_t samples_buffer_size,
 		int32_t samples_buffer_count,
 		uint64_t samples_per_trigger,
 		int32_t triggers_per_read)
-		: session(session)
-		, samples_channel(channel == "Channel1" ? "StreamCh1" : "StreamCh2")
+		: samples_channel(channel == "Channel1" ? "StreamCh1" : "StreamCh2")
 		, markers_channel(channel == "Channel1" ? "MarkersCh1" : "MarkersCh2")
 		, samples_per_trigger(samples_per_trigger)
 		, triggers_per_read(triggers_per_read)
@@ -42,6 +44,7 @@ public:
 		, samples_buffer_pool()
 		, samples_buffer_size(samples_buffer_size)
 		, should_stop(false)
+		, digitizer(digitizer)
 	{
 		for(int i = 0; i < samples_buffer_count; i++)
 			samples_buffer_pool.push_back(std::make_shared<AcquisitionBuffer>(i, samples_buffer_size));

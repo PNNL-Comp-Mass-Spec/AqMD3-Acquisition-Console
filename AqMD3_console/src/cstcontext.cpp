@@ -1,32 +1,34 @@
 #include "../include/cstcontext.h"
 #include "../include/acquisitionbuffer.h"
+#include "../include/digitizer.h"
 
 #include <iostream>
 
 AcquiredData CstContext::acquire(std::chrono::milliseconds timeoutMs)
 {
-	int markers_to_gather = triggers_per_read * 16;
-	std::vector<int32_t> markers(markers_to_gather * 16);
+	int markers_to_acquire = triggers_per_read * 16;
+	std::vector<int32_t> markers_buffer(markers_to_acquire * 16);
 	std::shared_ptr<AcquisitionBuffer> samples_buffer = get_buffer();
 
-	ViInt64 first_element_offset;
+	ViInt64 first_element_markers;
 	ViInt64 available_elements_markers = 0;
 	ViInt64 actual_elements_markers = 0;
 
 	do
 	{
-		AqMD3_StreamFetchDataInt32(
-			session,
+		auto rc = digitizer.stream_fetch_data(
 			markers_channel.c_str(),
-			markers_to_gather,
-			markers.size(),
-			(ViInt32 *)markers.data(),
-			&available_elements_markers, &actual_elements_markers, &first_element_offset);
-	} while (actual_elements_markers < markers_to_gather);
+			markers_to_acquire,
+			markers_buffer.size(),
+			(ViInt32 *)markers_buffer.data(),
+			&available_elements_markers, &actual_elements_markers, &first_element_markers);
+		if (rc.second != Digitizer::None)
+			throw rc.first;
+	} while (actual_elements_markers < markers_to_acquire);
 
 	std::vector<AcquiredData::TriggerData> stamps;
 
-	int32_t *ptr = markers.data() + first_element_offset;
+	int32_t *ptr = markers_buffer.data() + first_element_markers;
 	int32_t offset = 0;
 	for (int i = 0; i < triggers_per_read; i++)
 	{
@@ -40,35 +42,31 @@ AcquiredData CstContext::acquire(std::chrono::milliseconds timeoutMs)
 		uint64_t high = seg[2];
 		uint64_t timestampLow = (low >> 8) & 0x0000000000ffffffL;
 		uint64_t timestampHigh = uint64_t(high) << 24;
-		//std::cout << "\tindex: " << (header >> 8) << endl;
 		stamps.emplace_back(timestampHigh | timestampLow, header >> 8, (-1 * (seg[1] & 0x000000ff)) / 256);
 
 		offset += 16;
 	}
 
-	ViInt64 firstElementSamples;
-	ViInt64 actualElementsSamples = 0;
-	ViInt64 availableElementsSamples = 0;
+	ViInt64 first_element_samples;
+	ViInt64 actual_elements_samples = 0;
+	ViInt64 available_elements_samples = 0;
 
-	int elements_to_gather = (triggers_per_read * samples_per_trigger) / 2;
+	int elements_to_acquire = (triggers_per_read * samples_per_trigger) / 2;
 	
 	do
 	{
-		AqMD3_StreamFetchDataInt32(
-			session,
+		auto rc = digitizer.stream_fetch_data(
 			samples_channel.c_str(),
-			elements_to_gather,
+			elements_to_acquire,
 			samples_buffer->get_size(),
-			(ViInt32 *)samples_buffer->get_raw_data(),
-			&availableElementsSamples, &actualElementsSamples, &firstElementSamples);
-	} while (actualElementsSamples < elements_to_gather);
-	//std::cout << "availableElementsSamples " << availableElementsSamples << std::endl
-	//	<< "actualElementsSamples: " << actualElementsSamples << std::endl
-	//	<< "firstElementSamples: " << firstElementSamples << std::endl;
+			(ViInt32 *)samples_buffer->get_raw_unaquired(),
+			&available_elements_samples, &actual_elements_samples, &first_element_samples);
+		if (rc.second != Digitizer::None)
+			throw rc.first;
+	} while (actual_elements_samples < elements_to_acquire);
 
-
-	samples_buffer->advance_offset(firstElementSamples);
-	samples_buffer->advance_acquired(actualElementsSamples);
+	samples_buffer->advance_offset(first_element_samples);
+	samples_buffer->advance_acquired(actual_elements_samples);
 
 	return AcquiredData(stamps, samples_buffer, samples_per_trigger);
 }

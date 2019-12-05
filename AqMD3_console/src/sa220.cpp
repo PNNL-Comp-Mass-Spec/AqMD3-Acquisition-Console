@@ -125,7 +125,7 @@ std::unique_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint
 	std::unique_ptr<CstContext> context(
 		new CstContext
 		(
-			session,
+			*this,
 			channel,
 			record_size * 64,
 			8,
@@ -182,7 +182,7 @@ std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, 
 	std::unique_ptr<CstZm1Context> context(
 		new CstZm1Context
 		(
-			session,
+			*this,
 			channel,
 			record_size * 256,
 			4,

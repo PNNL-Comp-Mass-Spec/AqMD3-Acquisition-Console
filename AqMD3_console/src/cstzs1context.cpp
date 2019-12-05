@@ -1,4 +1,5 @@
 #include "../include/cstzs1context.h"
+#include "../include/digitizer.h"
 
 #include <vector>
 #include <tuple>
@@ -187,13 +188,14 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 				auto t1_loop_markers = std::chrono::high_resolution_clock::now();
 #endif
 
-				AqMD3_StreamFetchDataInt32(
-					session,
-					markers_channel.c_str(),
-					markers_to_acquire,
-					markers_buffer.get_size(),
-					(ViInt32 *)markers_buffer.get_raw_unaquired(),
-					&available_elements_markers, &actual_elements_markers, &first_element_markers);
+				auto rc = digitizer.stream_fetch_data(
+						markers_channel.c_str(),
+						markers_to_acquire,
+						markers_buffer.get_size(),
+						(ViInt32 *)markers_buffer.get_raw_unaquired(),
+						&available_elements_markers, &actual_elements_markers, &first_element_markers);
+				if (rc.second != Digitizer::None)
+					throw rc.first;
 
 #ifdef print_acq
 				if (actual_elements_markers != 0 && actual_elements_markers < markers_to_acquire)
@@ -268,14 +270,14 @@ process:
 	{
 		// Should hopefully only need no more than two calls to FetchData. If that's not the case, this will need to be handled differently.
 		int actual_acquire = to_acquire - actual_elements_samples;
-
-		AqMD3_StreamFetchDataInt32(
-			session,
-			samples_channel.c_str(),
-			actual_acquire,
-			samples_buffer->get_size(),
-			(ViInt32 *)samples_buffer->get_raw_unaquired(),
-			&available_elements_samples, &actual_elements_samples, &first_element_samples);
+		auto rc = digitizer.stream_fetch_data(
+				samples_channel.c_str(),
+				actual_acquire,
+				samples_buffer->get_size(),
+				(ViInt32 *)samples_buffer->get_raw_unaquired(),
+				&available_elements_samples, &actual_elements_samples, &first_element_samples);
+		if (rc.second != Digitizer::None)
+			throw rc.first;
 
 #ifdef print_acq
 		if (actual_elements_samples != 0 && actual_elements_samples < to_acquire)
