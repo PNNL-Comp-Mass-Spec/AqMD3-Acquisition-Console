@@ -71,6 +71,8 @@ private:
 	}
 	
 public:
+	std::pair<std::string, ErrorType> get_instrument_options_info(ViChar string[]) const;
+
 	std::pair<std::string, ErrorType> configure_streaming_mode(ViInt32 mode) const;
 	std::pair<std::string, ErrorType> configure_sample_rate(ViReal64 rate) const;
 
@@ -102,6 +104,7 @@ public:
 	std::pair<std::string, ErrorType> stream_fetch_data(ViConstString stream, ViInt64 elements_to_Fetch, ViInt64 buffer_size, ViInt32 buffer[], ViInt64* available_elements, ViInt64* actual_elements, ViInt64* first_valid_element_index) const;
 
 	std::tuple<std::string, ErrorType, ViBoolean> get_calibration_required() const;
+
 };
 
 #endif // ! DIGITIZER_H

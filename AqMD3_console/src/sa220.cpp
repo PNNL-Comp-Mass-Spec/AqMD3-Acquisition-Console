@@ -70,6 +70,21 @@ void SA220::set_channel_data_inversion(std::string channel, bool enable) const
 	}
 }
 
+std::string SA220::get_device_info() const
+{
+	std::string str;
+	str.reserve(512);
+
+	auto result = get_instrument_options_info(&str[0]);
+	if (result.second != Digitizer::None)
+	{
+		std::cerr << result.first << std::endl;
+		return "";
+	}
+
+	return str;
+}
+
 void SA220::enable_io_port() const
 {
 	std::string enable_string("In-TriggerEnable");

@@ -93,9 +93,8 @@ int main(int argc, char *argv[]) {
 
 			if (command == "info")
 			{
-				// TODO info
-				req.send_response("");
-				continue;
+				std::string info = digitizer->get_device_info();
+				req.send_response(info);
 			}
 
 			if (command == "init")
