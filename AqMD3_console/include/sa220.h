@@ -3,7 +3,7 @@
 
 #include "digitizer.h"
 
-class SA220 : protected Digitizer {
+class SA220 : private Digitizer {
 public:
 	std::string const channel_1;
 	std::string const channel_2;

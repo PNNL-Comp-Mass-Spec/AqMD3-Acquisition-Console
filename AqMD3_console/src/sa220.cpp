@@ -122,18 +122,8 @@ std::unique_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint
 			throw rc.first;
 	}
 
-	std::unique_ptr<CstContext> context(
-		new CstContext
-		(
-			*this,
-			channel,
-			record_size * 64,
-			8,
-			record_size,
-			triggers
-		));
+	return std::make_unique<CstContext>(dynamic_cast<const Digitizer&>(*this), channel, record_size * 64, 8, record_size, triggers);
 
-	return std::move(context);
 }
 
 std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters) const
@@ -179,16 +169,8 @@ std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, 
 			throw rc.first;
 	}
 
-	std::unique_ptr<CstZm1Context> context(
-		new CstZm1Context
-		(
-			*this,
-			channel,
-			record_size * 256,
-			4,
-			record_size,
-			triggers
-		));
+	auto t = this;
 
-	return std::move(context);
+	return std::make_unique<CstZm1Context>(dynamic_cast<const Digitizer&>(*this), channel, record_size * 256, 4, record_size, triggers);
+
 }
