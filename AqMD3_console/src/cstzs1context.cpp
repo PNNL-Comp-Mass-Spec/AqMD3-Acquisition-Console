@@ -190,12 +190,15 @@ AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
 	}
 
 process:
-	ViInt64 first_element_samples;
+	ViInt64 first_element_samples = 0;
 	ViInt64 actual_elements_samples = 0;
 	ViInt64 available_elements_samples = 0;
 
 	do
 	{
+		if (to_acquire == 0)
+			break;
+
 		// Should hopefully only need no more than two calls to FetchData. If that's not the case, this will need to be handled differently.
 		int actual_acquire = to_acquire - actual_elements_samples;
 		auto rc = digitizer.stream_fetch_data(
