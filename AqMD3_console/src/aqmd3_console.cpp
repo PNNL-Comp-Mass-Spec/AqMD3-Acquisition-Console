@@ -68,6 +68,7 @@ int main(int argc, char *argv[]) {
 	auto server = new Server("tcp://*:5555");
 	double sampling_rate = 0.0;
 	std::unique_ptr<AcquisitionControl> controller;
+	std::shared_ptr<StreamingContext> context;
 
 	server->register_handler([&](Server::ReceivedRequest req)
 	{
@@ -199,8 +200,8 @@ int main(int argc, char *argv[]) {
 
 					auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100));
 					auto data_pub = server->get_publisher("tcp://*:5554");
-						
-					std::unique_ptr<AcquireFramePublisher> p = std::make_unique<AcquireFramePublisher>(std::move(context), frame);
+
+					std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(std::move(context));
 
 					std::shared_ptr<ZmqAcquiredDataSubscriber> vzws = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, frame->nbr_samples);
 					std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame, data_pub);
@@ -220,7 +221,7 @@ int main(int argc, char *argv[]) {
 
 					//if (controller) controller.reset();
 					controller = std::move(p);
-					controller->start();
+					controller->start(frame);
 				}
 
 				req.send_response(ack);
@@ -229,6 +230,9 @@ int main(int argc, char *argv[]) {
 
 			if (command == "acquire")
 			{
+				if (controller && controller->is_acquiring())
+					controller->stop();
+
 				uint64_t record_size;
 				uint64_t post_trigger_samples;
 				uint64_t tof_width;
