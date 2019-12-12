@@ -1,7 +1,7 @@
 #include "..\include\uimfframesubscriber.h"
 #include <UIMFWriter/UIMFWriter.h>
 
-void UimfFrameSubscriber::execute()
+void UimfFrameSubscriber::on_notify()
 {
 	while (!items.empty())
 	{

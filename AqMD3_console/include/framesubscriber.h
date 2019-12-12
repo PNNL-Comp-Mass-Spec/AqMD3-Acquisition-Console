@@ -65,7 +65,7 @@ public:
 
 				try
 				{
-					execute();
+					on_notify();
 				}
 				catch (std::string ex)
 				{
@@ -90,8 +90,9 @@ public:
 	}
 
 private:
-	virtual inline void execute() = 0;
+	virtual inline void on_notify() = 0;
 	virtual inline void on_completed() = 0;
+	// virtual inline void on_error() = 0;
 };
 
 #endif // !FRAME_SUBSCRIBER_H

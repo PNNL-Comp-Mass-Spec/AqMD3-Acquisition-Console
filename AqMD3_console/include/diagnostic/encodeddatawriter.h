@@ -26,14 +26,14 @@ public:
 	}
 
 private:
-	void execute() override;
+	void on_notify() override;
 	void on_completed() override
 	{
 		std::cout << "ENCODED DATA WRITER EXITING" << std::endl;
 	}
 };
 
-void EncodedDataWriter::execute()
+void EncodedDataWriter::on_notify()
 {
 	if (!out_file_stream.is_open())
 		out_file_stream.open(out_file);

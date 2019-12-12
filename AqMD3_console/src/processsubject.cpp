@@ -3,11 +3,11 @@
 static uint64_t ts_last = 0;
 static uint64_t ts_first = 0;
 
-void ProcessSubject::execute() 
+void ProcessSubject::on_notify() 
 {
 	while (!items.empty())
 	{
-		//std::cout << " ProcessSubject unprocessed elements: " << items.size() << std::endl;
+		std::cout << " ProcessSubject unprocessed elements: " << items.size() << std::endl;
 
 		auto start_0 = std::chrono::high_resolution_clock::now();
 		auto ad = items.front();
@@ -73,11 +73,11 @@ void ProcessSubject::execute()
 			total_triggers_processed += ad.stamps.size();
 			try
 			{
-				//auto t1 = std::chrono::high_resolution_clock::now();
+				auto t1 = std::chrono::high_resolution_clock::now();
 				auto results = ad.process(0, offset_bins);
-				//auto t2 = std::chrono::high_resolution_clock::now();
-				//auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-				//std::cout << "\t\tTIME TO PROCESS: " << dur.count() << "\n";
+				auto t2 = std::chrono::high_resolution_clock::now();
+				auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+				std::cout << "\tprocess time: " << dur.count() << "\n";
 
 				//auto t1_n = std::chrono::high_resolution_clock::now();
 				notify(results, SubscriberType::BOTH);

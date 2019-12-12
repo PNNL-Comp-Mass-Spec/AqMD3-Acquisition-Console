@@ -8,7 +8,7 @@
 #undef max
 #include "../include/message.pb.h"
 
-void ZmqAcquiredDataSubscriber::execute()
+void ZmqAcquiredDataSubscriber::on_notify()
 {
 	while (!items.empty())
 	{

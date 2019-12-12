@@ -42,7 +42,7 @@ public:
 	{}
 
 private:
-	void execute() override;
+	void on_notify() override;
 
 	void on_completed() override
 	{

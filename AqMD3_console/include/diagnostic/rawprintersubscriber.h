@@ -26,11 +26,11 @@ public:
 	}
 
 private:
-	void execute() override;
+	void on_notify() override;
 	void on_completed() override {};
 };
 
-void RawPrinterSubscriber::execute()
+void RawPrinterSubscriber::on_notify()
 {
 	if (!out_file_stream.is_open())
 		out_file_stream.open(out_file);
