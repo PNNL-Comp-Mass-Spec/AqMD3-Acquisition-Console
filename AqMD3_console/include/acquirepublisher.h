@@ -14,20 +14,17 @@ private:
 	std::unique_ptr<StreamingContext> context;
 	std::atomic_bool should_stop;
 
-	std::condition_variable stop_sig;
-	std::mutex stop_mut;
-
-	bool has_errored;
+	std::promise<State> stop_signal;
 
 public:
 	AcquirePublisher(std::unique_ptr<StreamingContext> context)
 		: worker_handle()
 		, context(std::move(context))
 		, should_stop(false)
-		, has_errored(false)
 	{}
 	virtual ~AcquirePublisher() = default;
 
+	void start(std::shared_ptr<UimfFrame> frame);
 	void start() override;
 	void stop() override;
 
