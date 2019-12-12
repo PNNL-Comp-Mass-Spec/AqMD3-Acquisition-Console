@@ -29,7 +29,6 @@ add_executable (AqMD3_console
 	src/acquireddata.cpp
 	src/sa220.cpp
 	src/acquirepublisher.cpp
-	src/acquireframepublisher.cpp
 	src/processsubject.cpp
 	src/zmqacquireddatasubscriber.cpp
 	src/uimfframesubscriber.cpp
@@ -46,7 +45,6 @@ add_executable (AqMD3_console
 	include/framepublisher.h
 	include/framesubscriber.h
 	include/acquirepublisher.h
-	include/acquireframepublisher.h
 	include/acquisitioncontrol.h
 	include/processsubject.h
 	include/zmqacquireddatasubscriber.h
