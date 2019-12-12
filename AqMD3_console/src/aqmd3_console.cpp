@@ -4,7 +4,6 @@
 #include "../include/sa220.h"
 #include "../include/acquisitioncontrol.h"
 #include "../include/acquirepublisher.h"
-#include "../include/acquireframepublisher.h"
 #include "../include/uimfframesubscriber.h"
 #include "../include/zmqacquireddatasubscriber.h"
 #include "../include/processsubject.h"
