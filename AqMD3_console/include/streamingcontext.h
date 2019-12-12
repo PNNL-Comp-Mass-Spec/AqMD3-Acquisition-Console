@@ -23,7 +23,7 @@ protected:
 	uint32_t triggers_per_read;
 
 	int buffer_takes;
-	int const buffer_max_count = 100;
+	int const buffer_max_count = 40;
 
 	std::atomic_bool should_stop;
 
@@ -56,6 +56,8 @@ public:
 	void stop();
 
 	inline bool is_stopped() { return should_stop; }
+	
+	int get_available_buffers();
 
 protected:
 	std::shared_ptr<AcquisitionBuffer> get_buffer();
