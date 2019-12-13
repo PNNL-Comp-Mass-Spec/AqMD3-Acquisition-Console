@@ -16,7 +16,7 @@
 #include <visa.h>
 #include <snappy.h>
 #include <zmq.hpp>
-#include <picosha2.h>
+#include "../include/PicoSHA2/picosha2.h"
 #include <iostream>
 #include <tuple>
 #include <string>

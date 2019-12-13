@@ -63,6 +63,3 @@ target_link_libraries(AqMD3_console PRIVATE AqMD3)
 target_link_libraries(AqMD3_console PRIVATE AqLio)
 
 target_link_libraries (AqMD3_console PUBLIC i::uimf)
-
-find_path(PICOSHA_INCLUDE_DIR picosha2.h)
-include_directories(${PICOSHA_INCLUDE_DIR})
