@@ -32,6 +32,7 @@ add_executable (AqMD3_console
 	src/processsubject.cpp
 	src/zmqacquireddatasubscriber.cpp
 	src/uimfframesubscriber.cpp
+	src/uimfframewritersubscriber.cpp
 	include/digitizer.h
 	include/server.h
 	include/acquisitionbuffer.h
@@ -53,6 +54,7 @@ add_executable (AqMD3_console
 	include/diagnostic/simplepublisher.h
 	include/diagnostic/falsedatapublisher.h
 	include/diagnostic/encodeddatawriter.h
+	include/uimfframewritersubscriber.h
 )
 
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)
