@@ -51,20 +51,20 @@ void AcquirePublisher::start()
 		{
 			try
 			{
-				auto start_0 = std::chrono::high_resolution_clock::now();
+				//auto start_0 = std::chrono::high_resolution_clock::now();
 				auto data = context->acquire(std::chrono::milliseconds(250));
-				auto stop_0 = std::chrono::high_resolution_clock::now();
-				auto ms_0 = std::chrono::duration_cast<std::chrono::milliseconds>(stop_0 - start_0);
-				std::cout << "acquire time: " << ms_0.count() << std::endl;
-				std::cout << "available buffers: " << (context->get_available_buffers()) << std::endl;
+				//auto stop_0 = std::chrono::high_resolution_clock::now();
+				//auto ms_0 = std::chrono::duration_cast<std::chrono::milliseconds>(stop_0 - start_0);
+				//std::cout << "acquire time: " << ms_0.count() << std::endl;
+				//std::cout << "available buffers: " << (context->get_available_buffers()) << std::endl;
 				
-				if (context->get_available_buffers() > 25)
+				if (context->get_available_buffers() > 19)
 				{
-					auto start = std::chrono::high_resolution_clock::now();
+					//auto start = std::chrono::high_resolution_clock::now();
 					notify(data, SubscriberType::ACQUIRE);
-					auto stop = std::chrono::high_resolution_clock::now();
-					auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-					std::cout << "notify time: " << ms.count() << std::endl;
+					//auto stop = std::chrono::high_resolution_clock::now();
+					//auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+					//std::cout << "notify time: " << ms.count() << std::endl;
 				}
 				else
 					std::cerr << "dropping " <<  data.stamps.size() << " scans\n";

@@ -4,7 +4,8 @@
 #include "../include/sa220.h"
 #include "../include/acquisitioncontrol.h"
 #include "../include/acquirepublisher.h"
-#include "../include/uimfframesubscriber.h"
+//#include "../include/uimfframesubscriber.h"
+#include "../include/uimfframewritersubscriber.h"
 #include "../include/zmqacquireddatasubscriber.h"
 #include "../include/processsubject.h"
 #define NOMINMAX 
@@ -33,41 +34,39 @@ static std::tuple<uint64_t, uint64_t, uint64_t> get_tof_width(const SA220 *digit
 static std::tuple<uint64_t, uint64_t> get_optimal_record_size(const SA220 *digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s);
 static uint64_t get_trigger_time_stamp_average(const SA220 *digitizer, int triggers);
 
-static char ack[] = "ack";
-static double post_trigger_delay = 0.00001;
-static double estimated_trigger_rearm_time = 0.0000001;
-uint32_t calculated_post_trigger_samples = 0;
-
-int main(int argc, char *argv[]) {
-		
-	// Disable 'Quick Edit Mode' since it can cause the application to hang during acquisition
+void disable_quick_edit()
+{
 	HANDLE handle;
 	DWORD current_settings;
 	handle = GetStdHandle(STD_INPUT_HANDLE);
 
 	if (handle == INVALID_HANDLE_VALUE)
-	{
-		std::cerr << "Error getting standard device handle\n";
-		return 1;
-	}
-	
+		throw std::string("Error getting standard device handle\n");
+
 	if (!GetConsoleMode(handle, &current_settings))
-	{
-		std::cerr << "Error getting console mode.\n";
-		return 1;
-	}
+		throw std::string("Error getting console mode");
 
 	if (!SetConsoleMode(handle, ENABLE_EXTENDED_FLAGS | (current_settings & ~ENABLE_QUICK_EDIT_MODE)))
-	{
-		std::cerr << "Error setting console mode.\n";
-		return 1;
-	}
+		throw std::string("Error setting console mode");
+}
+
+static char ack[] = "ack";
+static double post_trigger_delay = 0.00001;
+static double estimated_trigger_rearm_time = 0.0000001;
+uint32_t calculated_post_trigger_samples = 0;
+uint64_t avg_tof_period_samples = 0;
+
+int main(int argc, char *argv[]) {
+
+	// Disable 'Quick Edit Mode' since it can cause the application to hang during acquisition
+	disable_quick_edit();
 
 	std::unique_ptr<SA220> digitizer = std::make_unique<SA220>("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
 	auto server = new Server("tcp://*:5555");
 	double sampling_rate = 0.0;
 	std::unique_ptr<AcquisitionControl> controller;
 	std::shared_ptr<StreamingContext> context;
+	std::shared_ptr<UimfFrameWriterSubscriber> reusable_frame_writer;
 
 	server->register_handler([&](Server::ReceivedRequest req)
 	{
@@ -203,11 +202,12 @@ int main(int argc, char *argv[]) {
 					std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(std::move(context));
 
 					std::shared_ptr<ZmqAcquiredDataSubscriber> vzws = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, frame->nbr_samples);
-					std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame, data_pub);
+					std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame, data_pub, avg_tof_period_samples);
 					double ts_period = 1.0 / digitizer->max_sample_rate;
-					std::shared_ptr<UimfFrameSubscriber> ufs = std::make_shared<UimfFrameSubscriber>(frame, ts_period);
-					ps->register_subscriber(ufs, SubscriberType::ACQUIRE_FRAME);
-					ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
+					
+					reusable_frame_writer = reusable_frame_writer ? reusable_frame_writer : std::make_shared<UimfFrameWriterSubscriber>();
+					ps->FramePublisher<frame_ptr>::register_subscriber(reusable_frame_writer, SubscriberType::ACQUIRE_FRAME);
+					ps->FramePublisher<segment_ptr>::register_subscriber(vzws, SubscriberType::ACQUIRE);
 					p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
 
 #ifdef print_raw
@@ -229,8 +229,8 @@ int main(int argc, char *argv[]) {
 
 			if (command == "acquire")
 			{
-				if (controller && controller->is_acquiring())
-					controller->stop();
+				//if (controller && controller->is_acquiring())
+				//	controller->stop();
 
 				uint64_t record_size;
 				uint64_t post_trigger_samples;
@@ -240,6 +240,7 @@ int main(int argc, char *argv[]) {
 				std::cout << "record size: " << record_size << std::endl;
 				std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
 				digitizer->set_record_size(record_size);
+				avg_tof_period_samples = tof_width;
 
 				auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100));
 				calculated_post_trigger_samples = post_trigger_samples;
@@ -247,8 +248,8 @@ int main(int argc, char *argv[]) {
 				std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(std::move(context));
 
 				std::shared_ptr<ZmqAcquiredDataSubscriber> vzws = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
-				std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(post_trigger_samples);
-				ps->register_subscriber(vzws, SubscriberType::ACQUIRE);
+				std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(post_trigger_samples, tof_width);
+				ps->FramePublisher<segment_ptr>::register_subscriber(vzws, SubscriberType::ACQUIRE);
 				p->register_subscriber(ps, SubscriberType::ACQUIRE);
 
 				controller = std::move(p);
@@ -257,8 +258,9 @@ int main(int argc, char *argv[]) {
 				vector<string> to_send(2);
 
 				TofWidthMessage tofMsg;
-				tofMsg.set_num_samples(record_size + post_trigger_samples);
-				tofMsg.set_pusher_pulse_width(tof_width);
+				tofMsg.set_num_samples(record_size + post_trigger_samples);				
+				//'tof_width / (2 * 16)' necessary to work with Falkor for the time being
+				tofMsg.set_pusher_pulse_width(tof_width / (2 * 16));				
 				to_send[0] = (tofMsg.SerializeAsString());
 				vector<uint8_t> hash(picosha2::k_digest_size);
 				picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
@@ -363,12 +365,9 @@ static std::tuple<uint64_t, uint64_t, uint64_t> get_tof_width(const SA220 * digi
 {
 	auto samples_per_trigger = get_trigger_time_stamp_average(digitizer, 20);
 
-	// necessary to work with Falkor
-	auto tof_width = samples_per_trigger / (2 * 16);
-
 	return std::tuple_cat(
 		get_optimal_record_size(digitizer, samples_per_trigger, post_trigger_delay, sample_rate, estimated_trigger_rearm_time),
-		std::make_tuple(tof_width)
+		std::make_tuple(samples_per_trigger)
 		);
 }
 
