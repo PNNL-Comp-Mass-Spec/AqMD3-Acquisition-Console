@@ -29,20 +29,20 @@ constexpr enum SubscriberType operator&(const enum SubscriberType left, const en
 
 template <typename T>
 class FrameSubscriber {
-protected:
-	std::deque<T> items;
+private:
 	std::condition_variable sig;
-	std::mutex mut;
-
+	std::mutex sig_sync;
 	std::future<void> worker_handle;
-
 	std::promise<void> has_completed;
-
-	bool reusable;
-
 	std::promise<void> reusable_notifier;
 	std::shared_future<void> is_reusable_stop;
 	bool is_running;
+	bool reusable;
+	std::deque<T> protected_queue;
+	std::mutex queue_sync;
+
+protected:
+	std::deque<T> items;
 
 public:
 	FrameSubscriber(bool reusable = false)
@@ -57,6 +57,9 @@ public:
 	{
 		if (reusable)
 			reusable_notifier.set_value();
+
+		if(worker_handle.valid())
+			worker_handle.wait();
 	};
 
 	std::shared_future<void> setup(std::shared_future<void> pub_stop)
@@ -68,11 +71,21 @@ public:
 			worker_handle = std::async(std::launch::async, [&, stop]()
 			{
 				is_running = true;
-				while (stop.wait_for(std::chrono::seconds(0)) != std::future_status::ready || !items.empty())
+				while (stop.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
 				{
 					{
-						std::unique_lock<std::mutex> lock(mut);
+						std::unique_lock<std::mutex> lock(sig_sync);
 						sig.wait_for(lock, std::chrono::milliseconds(10));
+					}
+
+					{
+						const std::lock_guard<std::mutex> lock(queue_sync);
+						for (int i = 0; i < protected_queue.size(); i++)
+						{
+							items.push_back(protected_queue.front());
+							protected_queue.pop_front();
+						}
+
 					}
 
 					try
@@ -100,13 +113,14 @@ public:
 
 	inline void update(T item)
 	{
-		items.push_back(item);
+		const std::lock_guard<std::mutex> lock(queue_sync);
+		protected_queue.push_back(item);
 		sig.notify_one();
 	}
 
 private:
-	virtual inline void on_notify() = 0;
-	virtual inline void on_completed() = 0;
+	virtual inline void on_notify() {};
+	virtual inline void on_completed() {};
 	// virtual inline void on_error() = 0;
 };
 
