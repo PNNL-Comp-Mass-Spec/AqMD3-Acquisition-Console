@@ -33,7 +33,7 @@ public:
 	StreamingContext(const Digitizer& digitizer,
 		std::string channel,
 		int64_t samples_buffer_size,
-		int32_t samples_buffer_count,
+		int32_t initial_samples_buffer_count,
 		uint64_t samples_per_trigger,
 		int32_t triggers_per_read)
 		: samples_channel(channel == "Channel1" ? "StreamCh1" : "StreamCh2")
@@ -46,7 +46,7 @@ public:
 		, should_stop(false)
 		, digitizer(digitizer)
 	{
-		for(int i = 0; i < samples_buffer_count; i++)
+		for(int i = 0; i < initial_samples_buffer_count; i++)
 			samples_buffer_pool.push_back(std::make_shared<AcquisitionBuffer>(i, samples_buffer_size));
 	}
 

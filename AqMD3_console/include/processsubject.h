@@ -61,6 +61,7 @@ private:
 	void on_completed() override
 	{
 		FramePublisher<segment_ptr>::notify_completed_and_wait();
+		FramePublisher<frame_ptr>::notify_completed_and_wait();
 	}
 };
 

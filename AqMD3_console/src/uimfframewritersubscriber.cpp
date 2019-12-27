@@ -24,5 +24,4 @@ void UimfFrameWriterSubscriber::on_notify()
 
 void UimfFrameWriterSubscriber::on_completed()
 {
-	// smile for the camera
 }

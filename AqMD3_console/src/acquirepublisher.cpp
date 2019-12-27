@@ -10,7 +10,7 @@ void AcquirePublisher::start(std::shared_ptr<UimfFrame> frame)
 		int total_triggers = frame->frame_length * frame->nbr_accumulations;
 		int triggers_acquired = 0;
 
-		std::cout << "AcquireFramePublisher :: starting acquisition" << std::endl;
+		std::cout << "Starting frame acquisition" << std::endl;
 		state = State::ACQUIRING;
 		
 		context->start();
@@ -43,7 +43,7 @@ void AcquirePublisher::start()
 
 	worker_handle = std::thread([&]()
 	{
-		std::cout << "AcquirePublisher :: starting acquisition" << std::endl;
+		std::cout << "Starting acquisition" << std::endl;
 		state = State::ACQUIRING;
 
 		context->start();
@@ -96,6 +96,8 @@ void AcquirePublisher::stop()
 			
 		fut.wait();			
 		state = fut.get();
+		if (state != State::STOPPED)
+			std::cerr << "state != State::STOPPED\n";
 
 		notify_completed_and_wait();
 		worker_handle.join();
@@ -104,7 +106,7 @@ void AcquirePublisher::stop()
 	}
 	catch (...)
 	{
-		std::cerr << "problem stopping application" << std::endl;
+		std::cerr << "problem stopping publisher" << std::endl;
 	}
 }
 

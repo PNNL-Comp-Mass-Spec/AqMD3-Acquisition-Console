@@ -4,7 +4,6 @@
 #include "../include/sa220.h"
 #include "../include/acquisitioncontrol.h"
 #include "../include/acquirepublisher.h"
-//#include "../include/uimfframesubscriber.h"
 #include "../include/uimfframewritersubscriber.h"
 #include "../include/zmqacquireddatasubscriber.h"
 #include "../include/processsubject.h"
@@ -26,7 +25,7 @@ using std::cerr;
 
 #include <windows.h>
 
-//#define print_raw
+//#define REUSABLE_PUB_SUB
 
 using namespace std;
 
@@ -65,8 +64,10 @@ int main(int argc, char *argv[]) {
 	auto server = new Server("tcp://*:5555");
 	double sampling_rate = 0.0;
 	std::unique_ptr<AcquisitionControl> controller;
-	std::shared_ptr<StreamingContext> context;
+	//std::shared_ptr<StreamingContext> context;
+#ifdef REUSABLE_PUB_SUB
 	std::shared_ptr<UimfFrameWriterSubscriber> reusable_frame_writer;
+#endif // reusable_pub_sub
 
 	server->register_handler([&](Server::ReceivedRequest req)
 	{
@@ -204,9 +205,13 @@ int main(int argc, char *argv[]) {
 					std::shared_ptr<ZmqAcquiredDataSubscriber> vzws = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, frame->nbr_samples);
 					std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame, data_pub, avg_tof_period_samples);
 					double ts_period = 1.0 / digitizer->max_sample_rate;
-					
+
+#ifdef REUSABLE_PUB_SUB
 					reusable_frame_writer = reusable_frame_writer ? reusable_frame_writer : std::make_shared<UimfFrameWriterSubscriber>();
 					ps->FramePublisher<frame_ptr>::register_subscriber(reusable_frame_writer, SubscriberType::ACQUIRE_FRAME);
+#else
+					ps->FramePublisher<frame_ptr>::register_subscriber(std::make_shared<UimfFrameWriterSubscriber>(), SubscriberType::ACQUIRE_FRAME);
+#endif
 					ps->FramePublisher<segment_ptr>::register_subscriber(vzws, SubscriberType::ACQUIRE);
 					p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
 
@@ -304,6 +309,7 @@ int main(int argc, char *argv[]) {
 					if (controller)
 					{
 						controller->stop();
+						//controller.reset();
 					}
 				}
 				catch (...)
@@ -356,6 +362,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 	});
+
 	server->run();
 
 	return 0;
