@@ -14,6 +14,7 @@ src/encodedresult.cpp
 src/uimfframe.cpp
 src/lzf_c.c
 src/lzf_d.c
+#src/lzf_c_best.c
 include/UIMFWriter/encodedresult.h
 include/UIMFWriter/uimfwriter.h
 include/UIMFWriter/uimfframe.h
