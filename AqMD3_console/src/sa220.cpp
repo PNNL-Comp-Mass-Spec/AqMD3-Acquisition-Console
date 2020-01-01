@@ -136,7 +136,7 @@ bool SA220::get_is_idle() const
 
 	auto rct = get_calibration_required();
 	if (std::get<1>(rct) != Digitizer::None)
-		throw rc.first;
+		throw std::get<0>(rct);
 
 	bool should_calibrate = (bool)std::get<2>(rct);
 	if (should_calibrate)
@@ -182,7 +182,7 @@ std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, 
 
 	auto rct = get_calibration_required();
 	if (std::get<1>(rct) != Digitizer::None)
-		throw rc.first;
+		throw std::get<0>(rct);
 
 	bool should_calibrate = (bool)std::get<2>(rct);
 	if (should_calibrate)
