@@ -15,12 +15,12 @@ class StreamingContext {
 protected:
 	std::vector<std::shared_ptr<AcquisitionBuffer>> samples_buffer_pool;
 
-	std::string markers_channel;
-	std::string samples_channel;
+	std::string const markers_channel;
+	std::string const samples_channel;
 
-	int64_t samples_buffer_size;
-	uint64_t samples_per_trigger;
-	uint32_t triggers_per_read;
+	int64_t const samples_buffer_size;
+	uint64_t const samples_per_trigger;
+	uint32_t const triggers_per_read;
 
 	int buffer_takes;
 	int const buffer_max_count = 40;
@@ -52,12 +52,13 @@ public:
 
 	virtual AcquiredData acquire(std::chrono::milliseconds timeoutMs) = 0;
 
-	void start();
-	void stop();
+	virtual void start();
+	virtual void stop();
 
 	inline bool is_stopped() { return should_stop; }
 	
 	int get_available_buffers();
+	int64_t get_record_size() { return samples_per_trigger; }
 
 protected:
 	std::shared_ptr<AcquisitionBuffer> get_buffer();
