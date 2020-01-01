@@ -12,6 +12,12 @@ using std::cerr;
 
 #define variable_m_t_a
 
+void CstZs1Context::stop()
+{
+	StreamingContext::stop();
+	markers_buffer.reset();
+}
+
 AcquiredData CstZs1Context::acquire(std::chrono::milliseconds timeoutMs)
 {
 	int markers_to_acquire = min_target_records;

@@ -33,6 +33,7 @@ public:
 		, active_multiplier(1)
 	{}
 
+	void stop() override;
 	AcquiredData acquire(std::chrono::milliseconds timeoutMs) override;
 };
 
