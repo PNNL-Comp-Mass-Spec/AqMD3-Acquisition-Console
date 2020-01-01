@@ -10,7 +10,6 @@ void ProcessSubject::on_notify()
 	while (!items.empty())
 	{
 		//std::cout << " ProcessSubject unprocessed elements: " << items.size() << std::endl;
-
 		auto ad = items.front();
 		items.pop_front();
 
@@ -24,7 +23,9 @@ void ProcessSubject::on_notify()
 			avg_ts += (ad.stamps[i].timestamp - ad.stamps[i - 1].timestamp);
 			if ((ad.stamps[i].index - ad.stamps[i - 1].index) > 1)
 			{
-				std::cout << "ad.stamps[i].index: " << ad.stamps[i].index << " ad.stamps[i - 1].index: " << ad.stamps[i - 1].index << "\n";
+				std::cout << "ad.stamps[i].index: " << ad.stamps[i].index << " --  ad.stamps[i - 1].index: " << ad.stamps[i - 1].index << "\n";
+				std::cout << "i: " << i << " --  ad.stamps().size(): " << ad.stamps.size() << std::endl;
+				std::cout << "total_triggers_processed: " << total_triggers_processed << std::endl;
 			}
 		}
 		avg_ts /= ad.stamps.size() - 1;
@@ -73,6 +74,7 @@ void ProcessSubject::on_notify()
 					memcpy((void *)finished_msg.data(), finished.c_str(), finished.size());
 
 					publisher->send(finished_msg, subject);
+					//auto t2 = std::chrono::high_resolution_clock::now();
 				}
 			}
 		}
@@ -98,5 +100,6 @@ void ProcessSubject::on_notify()
 				std::cout << "processing error" << std::endl;
 			}
 		}
+
 	}
 }

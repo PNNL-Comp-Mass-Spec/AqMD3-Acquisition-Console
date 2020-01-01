@@ -13,9 +13,7 @@ private:
 public:
 	UimfFrameWriterSubscriber()
 		: FrameSubscriber(true)
-	{
-		std::cout << "FRAME WRITER BEING MADE\n";
-	}
+	{}
 
 private:
 	void on_notify() override;
