@@ -12,7 +12,7 @@ void AcquirePublisher::start(std::shared_ptr<UimfFrame> frame)
 
 		std::cout << "Starting frame acquisition" << std::endl;
 		state = State::ACQUIRING;
-		
+		auto start_0 = std::chrono::high_resolution_clock::now();
 		context->start();
 		while (triggers_acquired < total_triggers && !should_stop)
 		{
@@ -33,6 +33,10 @@ void AcquirePublisher::start(std::shared_ptr<UimfFrame> frame)
 		stop_signal.set_value(State::STOPPED);
 stop:
 		context->stop();
+		auto stop_0 = std::chrono::high_resolution_clock::now();
+		auto ms_0 = std::chrono::duration_cast<std::chrono::milliseconds>(stop_0 - start_0);
+		std::cout << "Time to acquire: " << ms_0.count() << "ms\n";
+
 	});
 }
 
@@ -68,6 +72,7 @@ void AcquirePublisher::start()
 				}
 				else
 					std::cerr << "dropping " <<  data.stamps.size() << " scans\n";
+
 			}
 			catch (std::string ex)
 			{
