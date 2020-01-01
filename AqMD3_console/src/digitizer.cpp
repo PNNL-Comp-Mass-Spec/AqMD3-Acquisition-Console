@@ -74,11 +74,20 @@ std::pair <std::string, Digitizer:: ErrorType> Digitizer::abort_acquisition() co
 
 std::tuple<std::string, Digitizer::ErrorType, ViBoolean> Digitizer::get_calibration_required() const
 {
-	ViBoolean isRequired;
-	ViStatus status = AqMD3_GetAttributeViBoolean(session, "", AQMD3_ATTR_CALIBRATION_IS_REQUIRED, &isRequired);
+	ViBoolean is_required;
+	ViStatus status = AqMD3_GetAttributeViBoolean(session, "", AQMD3_ATTR_CALIBRATION_IS_REQUIRED, &is_required);
 	auto err = check_error(status);
 
-	return std::make_tuple(std::get<0>(err), std::get<1>(err), isRequired);
+	return std::make_tuple(std::get<0>(err), std::get<1>(err), is_required);
+}
+
+std::tuple<std::string, Digitizer::ErrorType, ViInt32> Digitizer::get_is_idle() const
+{
+	ViInt32 idle_status;
+	ViStatus status = AqMD3_IsIdle(session, &idle_status);
+	auto err = check_error(status);
+
+	return std::make_tuple(std::get<0>(err), std::get<1>(err), idle_status);;
 }
 
 std::pair<std::string, Digitizer::ErrorType> Digitizer::configure_sample_rate(ViReal64 rate) const

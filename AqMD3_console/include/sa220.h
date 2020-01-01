@@ -65,6 +65,8 @@ public:
 
 	std::unique_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers, uint64_t record_size) const override;
 	std::unique_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters) const override;
+	bool get_is_idle() const;
+
 };
 
 #endif // !SA220P

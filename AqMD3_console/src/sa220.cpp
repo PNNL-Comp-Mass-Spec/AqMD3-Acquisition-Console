@@ -108,6 +108,15 @@ void SA220::disable_io_port() const
 }
 
 std::unique_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint32_t triggers, uint64_t record_size) const
+bool SA220::get_is_idle() const
+{
+	auto result = Digitizer::get_is_idle();
+	if (std::get<1>(result) != Digitizer::None)
+		throw std::get<0>(result);
+
+	return std::get<2>(result) == AQMD3_VAL_ACQUISITION_STATUS_RESULT_TRUE;
+}
+
 {
 	auto rc = configure_streaming_mode(AQMD3_VAL_STREAMING_MODE_TRIGGERED);
 	if (rc.second != Digitizer::None)
