@@ -12,7 +12,7 @@ using std::cerr;
 
 #define variable_m_t_a
 
-AcquiredData CstZm1Context::acquire(std::chrono::milliseconds timeoutMs)
+AcquiredData CstZs1Context::acquire(std::chrono::milliseconds timeoutMs)
 {
 	int markers_to_acquire = min_target_records;
 	int active_multiplier = 1;

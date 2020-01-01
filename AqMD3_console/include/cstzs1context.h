@@ -7,7 +7,7 @@
 #include <tuple>
 #include <algorithm>
 
-class CstZm1Context : public StreamingContext {
+class CstZs1Context : public StreamingContext {
 private:
 	int const gate_acquisition_multiplier = 2;
 	int const markers_hunk_size = 16;
@@ -21,7 +21,7 @@ private:
 	AcquisitionBuffer markers_buffer;
 
 public:
-	CstZm1Context(const Digitizer& digitizer,
+	CstZs1Context(const Digitizer& digitizer,
 		std::string channel,
 		uint64_t samples_buffer_size,
 		uint32_t samples_buffer_count,

@@ -183,5 +183,5 @@ std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, 
 			throw rc.first;
 	}
 
-	return std::make_unique<CstZm1Context>(dynamic_cast<const Digitizer&>(*this), channel, record_size * 256, 20, record_size, triggers);
+	return std::make_shared<CstZs1Context>(dynamic_cast<const Digitizer&>(*this), channel, record_size * 256, 20, record_size, triggers);
 }
