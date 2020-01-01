@@ -11,13 +11,13 @@
 class AcquirePublisher : public AcquisitionControl, public FramePublisher<AcquiredData> {
 private:
 	std::thread worker_handle;
-	std::unique_ptr<StreamingContext> context;
+	std::shared_ptr<StreamingContext> context;
 	std::atomic_bool should_stop;
 
 	std::promise<State> stop_signal;
 
 public:
-	AcquirePublisher(std::unique_ptr<StreamingContext> context)
+	AcquirePublisher(std::shared_ptr<StreamingContext> context)
 		: worker_handle()
 		, context(std::move(context))
 		, should_stop(false)

@@ -107,7 +107,6 @@ void SA220::disable_io_port() const
 	}
 }
 
-std::unique_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint32_t triggers, uint64_t record_size) const
 bool SA220::get_is_idle() const
 {
 	auto result = Digitizer::get_is_idle();
@@ -117,6 +116,7 @@ bool SA220::get_is_idle() const
 	return std::get<2>(result) == AQMD3_VAL_ACQUISITION_STATUS_RESULT_TRUE;
 }
 
+std::shared_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint32_t triggers, uint64_t record_size) const
 {
 	auto rc = configure_streaming_mode(AQMD3_VAL_STREAMING_MODE_TRIGGERED);
 	if (rc.second != Digitizer::None)
@@ -146,10 +146,10 @@ bool SA220::get_is_idle() const
 			throw rc.first;
 	}
 
-	return std::make_unique<CstContext>(dynamic_cast<const Digitizer&>(*this), channel, record_size * 64, 8, record_size, triggers);
+	return std::make_shared<CstContext>(dynamic_cast<const Digitizer&>(*this), channel, record_size * 64, 8, record_size, triggers);
 }
 
-std::unique_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters) const
+std::shared_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters) const
 {
 	auto rc = configure_streaming_mode(AQMD3_VAL_STREAMING_MODE_TRIGGERED);
 
