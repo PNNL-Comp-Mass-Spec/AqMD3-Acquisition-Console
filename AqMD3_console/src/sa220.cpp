@@ -70,19 +70,21 @@ void SA220::set_channel_data_inversion(std::string channel, bool enable) const
 	}
 }
 
-std::string SA220::get_device_info() const
+std::string SA220::get_model() const
 {
-	std::string str;
-	str.reserve(512);
+	char *str = new char[256];
 
-	auto result = get_instrument_options_info(&str[0]);
+	auto result = get_instrument_model(str);
 	if (result.second != Digitizer::None)
 	{
 		std::cerr << result.first << std::endl;
 		return "";
 	}
 
-	return str;
+	std::string model = str;
+	delete str;
+
+	return model;
 }
 
 void SA220::enable_io_port() const

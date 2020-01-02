@@ -58,7 +58,7 @@ public:
 	void set_channel_parameters(std::string channel, double range, double offset) const;
 	void set_channel_data_inversion(std::string channel, bool enable) const;
 
-	std::string get_device_info() const;
+	std::string get_model() const;
 
 	void enable_io_port() const;
 	void disable_io_port() const;

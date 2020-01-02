@@ -72,6 +72,7 @@ private:
 	
 public:
 	std::pair<std::string, ErrorType> get_instrument_options_info(ViChar string[]) const;
+	std::pair<std::string, ErrorType> get_instrument_model(ViChar string[]) const;
 
 	std::pair<std::string, ErrorType> configure_streaming_mode(ViInt32 mode) const;
 	std::pair<std::string, ErrorType> configure_sample_rate(ViReal64 rate) const;

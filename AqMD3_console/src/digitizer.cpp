@@ -6,6 +6,12 @@ std::pair<std::string, Digitizer::ErrorType> Digitizer::get_instrument_options_i
 	return check_error(status);
 }
 
+std::pair<std::string, Digitizer::ErrorType> Digitizer::get_instrument_model(ViChar string[]) const
+{
+	ViStatus status = AqMD3_GetAttributeViString(session, "", AQMD3_ATTR_INSTRUMENT_MODEL, sizeof(string), string);
+	return check_error(status);
+}
+
 std::pair<std::string, Digitizer::ErrorType> Digitizer::configure_streaming_mode(ViInt32 mode) const
 {
 	ViStatus status = AqMD3_SetAttributeViInt32(session, "", AQMD3_ATTR_STREAMING_MODE, mode);

@@ -95,7 +95,8 @@ int main(int argc, char *argv[]) {
 
 			if (command == "info")
 			{
-				std::string info = digitizer->get_device_info();
+				std::string info = digitizer->get_model();
+
 				req.send_response(info);
 			}
 
