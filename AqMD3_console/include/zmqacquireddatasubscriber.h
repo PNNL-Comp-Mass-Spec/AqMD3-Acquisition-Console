@@ -18,7 +18,7 @@ private:
 
 public:
 	ZmqAcquiredDataSubscriber(std::shared_ptr<Server::Publisher> publisher, uint32_t sample_count)
-		: FrameSubscriber()
+		: FrameSubscriber(true)
 		, data_vector(sample_count)
 		, publisher(publisher)
 		, subject("data")

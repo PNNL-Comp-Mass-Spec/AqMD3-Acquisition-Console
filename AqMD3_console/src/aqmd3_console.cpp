@@ -68,7 +68,8 @@ int main(int argc, char *argv[]) {
 #if REUSABLE_PUB_SUB
 	int record_size_c = 0;
 	std::shared_ptr<StreamingContext> context;
-	std::shared_ptr<UimfFrameWriterSubscriber> reusable_frame_writer = std::make_shared<UimfFrameWriterSubscriber>();
+	std::shared_ptr<ZmqAcquiredDataSubscriber> zmq_publisher;
+	std::shared_ptr<UimfFrameWriterSubscriber> frame_writer = std::make_shared<UimfFrameWriterSubscriber>();
 #endif // reusable_pub_sub
 
 	server->register_handler([&](Server::ReceivedRequest req)
@@ -205,20 +206,20 @@ int main(int argc, char *argv[]) {
 
 #if !REUSABLE_PUB_SUB
 					auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100));
+					std::shared_ptr<ZmqAcquiredDataSubscriber> zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, frame->nbr_samples);
 #endif	
 
 					std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context);
 
-					std::shared_ptr<ZmqAcquiredDataSubscriber> vzws = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, frame->nbr_samples);
-					std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame, data_pub, avg_tof_period_samples);
+										std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame, data_pub, avg_tof_period_samples);
 					double ts_period = 1.0 / digitizer->max_sample_rate;
 
 #if REUSABLE_PUB_SUB
-					ps->FramePublisher<frame_ptr>::register_subscriber(reusable_frame_writer, SubscriberType::ACQUIRE_FRAME);
+					ps->FramePublisher<frame_ptr>::register_subscriber(frame_writer, SubscriberType::ACQUIRE_FRAME);
 #else
 					ps->FramePublisher<frame_ptr>::register_subscriber(std::make_shared<UimfFrameWriterSubscriber>(), SubscriberType::ACQUIRE_FRAME);
 #endif
-					ps->FramePublisher<segment_ptr>::register_subscriber(vzws, SubscriberType::ACQUIRE);
+					ps->FramePublisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
 					p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
 
 					//if (controller) controller.reset();
@@ -241,19 +242,21 @@ int main(int argc, char *argv[]) {
 				std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
 				digitizer->set_record_size(record_size);
 				avg_tof_period_samples = tof_width;
+				calculated_post_trigger_samples = post_trigger_samples;
+
+				auto data_pub = server->get_publisher("tcp://*:5554");
+
 
 #if REUSABLE_PUB_SUB
 				context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100));
+				zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
 #else
 				auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100));
+				auto zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
 #endif	
-				calculated_post_trigger_samples = post_trigger_samples;
-				auto data_pub = server->get_publisher("tcp://*:5554");
 				std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context);
-
-				std::shared_ptr<ZmqAcquiredDataSubscriber> vzws = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
 				std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(post_trigger_samples, tof_width);
-				ps->FramePublisher<segment_ptr>::register_subscriber(vzws, SubscriberType::ACQUIRE);
+				ps->FramePublisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
 				p->register_subscriber(ps, SubscriberType::ACQUIRE);
 
 				controller = std::move(p);
