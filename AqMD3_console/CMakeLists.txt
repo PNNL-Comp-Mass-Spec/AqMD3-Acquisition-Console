@@ -55,6 +55,7 @@ add_executable (AqMD3_console
 	include/diagnostic/falsedatapublisher.h
 	include/diagnostic/encodeddatawriter.h
 	include/uimfframewritersubscriber.h
+	include/definitions.h
 )
 
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)

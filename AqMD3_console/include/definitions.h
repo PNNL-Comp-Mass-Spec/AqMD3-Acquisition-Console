@@ -1,0 +1,7 @@
+#ifndef DEFINITIONS_H
+#define DEFINITIONS_H
+
+#define REUSABLE_PUB_SUB 1
+#define PRINT_TIMING_INFORMATION 1
+
+#endif // !DEFINITIONS_H

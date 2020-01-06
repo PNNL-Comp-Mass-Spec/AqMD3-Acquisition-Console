@@ -7,25 +7,27 @@
 #include "../include/uimfframewritersubscriber.h"
 #include "../include/zmqacquireddatasubscriber.h"
 #include "../include/processsubject.h"
-#define NOMINMAX 
-#undef min
-#undef max
-#include "../include/message.pb.h"
+#include "../include/definitions.h"
+
+#include "../include/PicoSHA2/picosha2.h"
+
 #include <UIMFWriter/uimfwriter.h>
 #include "AqMD3.h"
 #include <visa.h>
 #include <snappy.h>
 #include <zmq.hpp>
-#include "../include/PicoSHA2/picosha2.h"
 #include <iostream>
 #include <tuple>
 #include <string>
 #include <iostream>
 using std::cerr;
-
 #include <windows.h>
 
-#define REUSABLE_PUB_SUB 1
+
+#define NOMINMAX 
+#undef min
+#undef max
+#include "../include/message.pb.h"
 
 using namespace std;
 
