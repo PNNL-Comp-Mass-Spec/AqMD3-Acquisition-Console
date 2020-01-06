@@ -18,7 +18,6 @@ void UimfWriter::write_scan_data(const UimfFrame& frame)
 	try
 	{
 		int const extra = 128;
-		std::cout << "starting transaction" << std::endl;
 		SQLite::Transaction transaction(db);
 		char *statement = new char[insert_scan_statement_size_bytes + extra];
 

@@ -1,5 +1,7 @@
 #include "../include/processsubject.h"
 
+static std::string finished = "finished";
+
 static uint64_t ts_last = 0;
 static uint64_t ts_first = 0;
 

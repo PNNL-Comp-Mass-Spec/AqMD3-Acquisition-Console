@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
 	{
 		for (const auto& command : req.payload)
 		{
-			std::cout << "\t" << command << std::endl;
+			//std::cout << "\t" << command << std::endl;
 
 			if (command == "num instruments")
 			{
@@ -198,9 +198,9 @@ int main(int argc, char *argv[]) {
 						);
 
 					uint64_t record_size = frame->nbr_samples - calculated_post_trigger_samples;
-					std::cout << "samples per trigger: " << frame->nbr_samples << std::endl;
-					std::cout << "record size: " << record_size << std::endl;
-					std::cout << "post trigger samples: " << calculated_post_trigger_samples << std::endl;
+					//std::cout << "samples per trigger: " << frame->nbr_samples << std::endl;
+					//std::cout << "record size: " << record_size << std::endl;
+					//std::cout << "post trigger samples: " << calculated_post_trigger_samples << std::endl;
 
 					digitizer->set_record_size(record_size);
 
@@ -239,9 +239,9 @@ int main(int argc, char *argv[]) {
 				uint64_t post_trigger_samples;
 				uint64_t tof_width;
 				std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer.get(), sampling_rate);			
-				std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
-				std::cout << "record size: " << record_size << std::endl;
-				std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
+				//std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
+				//std::cout << "record size: " << record_size << std::endl;
+				//std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
 				digitizer->set_record_size(record_size);
 				avg_tof_period_samples = tof_width;
 				calculated_post_trigger_samples = post_trigger_samples;
@@ -267,7 +267,8 @@ int main(int argc, char *argv[]) {
 				vector<string> to_send(2);
 
 				TofWidthMessage tofMsg;
-				tofMsg.set_num_samples(record_size + post_trigger_samples);				
+				tofMsg.set_num_samples(record_size + post_trigger_samples);
+
 				//'tof_width / (2 * 16)' necessary to work with Falkor for the time being
 				tofMsg.set_pusher_pulse_width(tof_width / (2 * 16));				
 				to_send[0] = (tofMsg.SerializeAsString());
@@ -286,9 +287,9 @@ int main(int argc, char *argv[]) {
 				uint64_t post_trigger_samples;
 				uint64_t tof_width;
 				std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer.get(), sampling_rate);
-				std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
-				std::cout << "record size: " << record_size << std::endl;
-				std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
+				//std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
+				//std::cout << "record size: " << record_size << std::endl;
+				//std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
 				digitizer->set_record_size(record_size);
 
 				vector<string> to_send(2);

@@ -10,7 +10,7 @@ void AcquirePublisher::start(std::shared_ptr<UimfFrame> frame)
 		int total_triggers = frame->frame_length * frame->nbr_accumulations;
 		int triggers_acquired = 0;
 
-		std::cout << "Starting frame acquisition" << std::endl;
+		//std::cout << "Starting frame acquisition" << std::endl;
 		state = State::ACQUIRING;
 		auto start_0 = std::chrono::high_resolution_clock::now();
 		context->start();
@@ -47,7 +47,7 @@ void AcquirePublisher::start()
 
 	worker_handle = std::thread([&]()
 	{
-		std::cout << "Starting acquisition" << std::endl;
+		//std::cout << "Starting acquisition" << std::endl;
 		state = State::ACQUIRING;
 
 		context->start();
@@ -95,7 +95,7 @@ void AcquirePublisher::stop()
 		if (should_stop)
 			return;
 
-		std::cout << "Stopping acquisition" << std::endl;
+		//std::cout << "Stopping acquisition" << std::endl;
 		auto fut = stop_signal.get_future();
 		should_stop = true;
 			
@@ -107,7 +107,7 @@ void AcquirePublisher::stop()
 		notify_completed_and_wait();
 		worker_handle.join();
 
-		std::cout << "stop completed" << std::endl;
+		//std::cout << "stop completed" << std::endl;
 	}
 	catch (...)
 	{
