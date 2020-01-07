@@ -32,7 +32,7 @@ void ProcessSubject::on_notify()
 		}
 		avg_ts /= ad.stamps.size() - 1;
 
-		if (avg_ts > (tof_avg_samples + delta))
+		if (avg_ts > (tof_avg_samples + delta) || avg_ts < (tof_avg_samples - delta))
 		{
 			std::cout << "timestamps size: " << ad.stamps.size() << std::endl;
 			std::cout << "timestamps avg: " << avg_ts << std::endl;
