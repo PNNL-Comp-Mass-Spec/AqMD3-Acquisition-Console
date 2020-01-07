@@ -25,12 +25,15 @@ void UimfWriter::write_scan_data(const UimfFrame& frame)
 		{
 			for (auto& er : *(frame.get_data()[i]))
 			{
+				if (er.scan < frame.start_trigger)
+					continue;
+
 				if (er.encoded_spectra.size() > 1)
 				{
 					int count = sprintf(statement,
 						insert_scan_statement.c_str(),
 						frame.frame_number,
-						er.scan,
+						er.scan - frame.start_trigger,
 						er.non_zero_count,
 						er.bpi,
 						er.bpi_mz,
