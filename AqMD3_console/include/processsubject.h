@@ -8,6 +8,11 @@
 #include "server.h"
 #include <zmq.hpp>
 
+#define NOMINMAX 
+#undef min
+#undef max
+#include "../include/message.pb.h"
+
 using segment_ptr = std::shared_ptr<std::vector<EncodedResult>>;
 using frame_ptr = std::shared_ptr<UimfFrame>;
 
@@ -25,7 +30,7 @@ private:
 	std::deque<std::shared_ptr<UimfFrame>> frames;
 
 public:
-	ProcessSubject(std::shared_ptr<UimfFrame> frame, std::shared_ptr<Server::Publisher> publisher, uint64_t tof_avg_samples)
+	ProcessSubject(UimfRequestMessage uimf, std::shared_ptr<Server::Publisher> publisher, uint64_t tof_avg_samples)
 		: total_triggers_processed(0)
 		, publisher(publisher)
 		, subject("status")
@@ -34,9 +39,19 @@ public:
 		, offset_bins(0)
 		, tof_avg_samples(tof_avg_samples)
 	{
+		std::shared_ptr<UimfFrame> frame = std::make_shared<UimfFrame>(
+			uimf.start_trigger(),
+			uimf.nbr_samples(),
+			uimf.nbr_accumulations(),
+			uimf.frame_length(),
+			uimf.frame_number(),
+			uimf.offset_bins(),
+			uimf.file_name()
+			);
+
 		if (frame->nbr_accumulations == 1)
 		{
-			frames.push_back(frame->clone_at_frame(frame->frame_number));
+			frames.push_back(frame);
 		}
 		else
 		{

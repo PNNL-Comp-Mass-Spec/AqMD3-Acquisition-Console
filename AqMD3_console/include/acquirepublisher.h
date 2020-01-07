@@ -6,7 +6,6 @@
 #include <vector>
 #include <thread>
 #include <atomic>
-#include <iostream>
 
 class AcquirePublisher : public AcquisitionControl, public FramePublisher<AcquiredData> {
 private:
@@ -19,12 +18,12 @@ private:
 public:
 	AcquirePublisher(std::shared_ptr<StreamingContext> context)
 		: worker_handle()
-		, context(std::move(context))
+		, context(context)
 		, should_stop(false)
 	{}
 	virtual ~AcquirePublisher() = default;
 
-	void start(std::shared_ptr<UimfFrame> frame);
+	void start(UimfRequestMessage uimf);
 	void start() override;
 	void stop() override;
 

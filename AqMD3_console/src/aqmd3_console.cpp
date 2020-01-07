@@ -187,17 +187,7 @@ int main(int argc, char *argv[]) {
 					auto uimf = UimfRequestMessage();
 					uimf.MergeFromString(uimf_req_msg);
 
-					std::shared_ptr<UimfFrame> frame = std::make_shared<UimfFrame>(
-						uimf.start_trigger(),
-						uimf.nbr_samples(),
-						uimf.nbr_accumulations(),
-						uimf.frame_length(),
-						uimf.frame_number(),
-						uimf.offset_bins(),
-						uimf.file_name()
-						);
-
-					uint64_t record_size = frame->nbr_samples - calculated_post_trigger_samples;
+					uint64_t record_size = uimf.nbr_samples() - calculated_post_trigger_samples;
 					//std::cout << "samples per trigger: " << frame->nbr_samples << std::endl;
 					//std::cout << "record size: " << record_size << std::endl;
 					//std::cout << "post trigger samples: " << calculated_post_trigger_samples << std::endl;
@@ -213,7 +203,7 @@ int main(int argc, char *argv[]) {
 
 					std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context);
 
-										std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(frame, data_pub, avg_tof_period_samples);
+					std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(uimf, data_pub, avg_tof_period_samples);
 					double ts_period = 1.0 / digitizer->max_sample_rate;
 
 #if REUSABLE_PUB_SUB
@@ -226,7 +216,7 @@ int main(int argc, char *argv[]) {
 
 					//if (controller) controller.reset();
 					controller = std::move(p);
-					controller->start(frame);
+					controller->start(uimf);
 				}
 
 				req.send_response(ack);

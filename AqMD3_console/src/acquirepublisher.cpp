@@ -1,13 +1,17 @@
 #include "../include/acquirepublisher.h"
+#include <iostream>
+using std::cout;
+using std::cerr;
 
-void AcquirePublisher::start(std::shared_ptr<UimfFrame> frame)
+
+void AcquirePublisher::start(UimfRequestMessage uimf)
 {
 	if (should_stop)
 		return;
 
-	worker_handle = std::thread([&]()
+	worker_handle = std::thread([&, uimf]()
 	{
-		int total_triggers = frame->frame_length * frame->nbr_accumulations;
+		int total_triggers = uimf.frame_length() * uimf.nbr_accumulations();
 		int triggers_acquired = 0;
 
 		//std::cout << "Starting frame acquisition" << std::endl;

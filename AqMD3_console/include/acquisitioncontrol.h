@@ -5,6 +5,11 @@
 #include <iostream>
 #include <atomic>
 
+#define NOMINMAX 
+#undef min
+#undef max
+#include "../include/message.pb.h"
+
 // High level interface for managing acquisition.
 class AcquisitionControl {
 protected:
@@ -25,7 +30,7 @@ public:
 
 	virtual ~AcquisitionControl() = default;
 
-	virtual void start(std::shared_ptr<UimfFrame> frame) = 0;
+	virtual void start(UimfRequestMessage uimf) = 0;
 	virtual void start() = 0;
 	virtual void stop() = 0;
 
