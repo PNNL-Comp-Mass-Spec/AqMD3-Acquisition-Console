@@ -23,7 +23,6 @@
 using std::cerr;
 #include <windows.h>
 
-
 #define NOMINMAX 
 #undef min
 #undef max
@@ -117,7 +116,7 @@ int main(int argc, char *argv[]) {
 				{
 					auto horizontal_resolution = std::stod(req.payload[1]);
 					sampling_rate = 1.0 / horizontal_resolution;
-					std::cout << "sampling rate: " << sampling_rate << std::endl;
+					//std::cout << "sampling rate: " << sampling_rate << std::endl;
 					digitizer->set_sampling_rate(sampling_rate);
 				}
 
@@ -182,6 +181,9 @@ int main(int argc, char *argv[]) {
 			{
 				if (req.payload.size() == 2)
 				{
+#if TIMING_INFORMATION
+					auto t_0 = std::chrono::high_resolution_clock::now();
+#endif
 					std::string uimf_req_msg;
 					snappy::Uncompress(req.payload[1].data(), req.payload[1].size(), &uimf_req_msg);
 					auto uimf = UimfRequestMessage();
@@ -217,6 +219,11 @@ int main(int argc, char *argv[]) {
 					//if (controller) controller.reset();
 					controller = std::move(p);
 					controller->start(uimf);
+#if TIMING_INFORMATION
+					auto t_1 = std::chrono::high_resolution_clock::now();
+					auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_1 - t_0);
+					std::cout << "time to setup acquire frame:" << diff.count() << "\n";
+#endif
 				}
 
 				req.send_response(ack);
@@ -303,8 +310,16 @@ int main(int argc, char *argv[]) {
 				{
 					if (controller)
 					{
+#if TIMING_INFORMATION
+						auto t_0 = std::chrono::high_resolution_clock::now();
+#endif
 						controller->stop();
 						//controller.reset();
+#if TIMING_INFORMATION
+						auto t_1 = std::chrono::high_resolution_clock::now();
+						auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_1 - t_0);
+						std::cout << "time to stop:" << diff.count() << "\n";
+#endif
 					}
 				}
 				catch (...)

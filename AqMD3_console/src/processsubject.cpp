@@ -1,23 +1,25 @@
 #include "../include/processsubject.h"
+#include "../include/definitions.h"
+#include <numeric>
 
 static std::string finished = "finished";
-
-static uint64_t ts_last = 0;
-static uint64_t ts_first = 0;
-
 static int delta = 100;
+
+#if TIMING_INFORMATION
+std::chrono::steady_clock::time_point start;
+#endif
 
 void ProcessSubject::on_notify() 
 {
+#if TIMING_INFORMATION
+	if(total_triggers_processed == 0)
+		start = std::chrono::high_resolution_clock::now();
+#endif
+
 	while (!items.empty())
 	{
-		//std::cout << " ProcessSubject unprocessed elements: " << items.size() << std::endl;
 		auto ad = items.front();
 		items.pop_front();
-
-		ts_first = (ad.stamps.begin())->timestamp;
-		//std::cout << "ts diff: " << ts_first - ts_last << std::endl;
-		ts_last = (ad.stamps.end() - 1)->timestamp;
 
 		uint64_t avg_ts = 0;
 		for (int i = 1; i < ad.stamps.size(); i++)
@@ -76,7 +78,13 @@ void ProcessSubject::on_notify()
 					memcpy((void *)finished_msg.data(), finished.c_str(), finished.size());
 
 					publisher->send(finished_msg, subject);
-					//auto t2 = std::chrono::high_resolution_clock::now();
+
+#if TIMING_INFORMATION
+					auto stop = std::chrono::high_resolution_clock::now();
+					auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+					std::cout << "frame:" << frame->frame_number << ";time to process:" << dur.count() << "\n";
+					std::cout << "frame:" << frame->frame_number << ";total samples:" << total_elements_processed << "\n";
+#endif
 				}
 			}
 		}
@@ -85,17 +93,11 @@ void ProcessSubject::on_notify()
 			total_triggers_processed += ad.stamps.size();
 			try
 			{
-				//auto t1 = std::chrono::high_resolution_clock::now();
-				auto results = ad.process(0, offset_bins);
-				//auto t2 = std::chrono::high_resolution_clock::now();
-				//auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-				//std::cout << "\tprocess time: " << dur.count() << "\n";
 
-				//auto t1_n = std::chrono::high_resolution_clock::now();
+				auto results = ad.process(0, offset_bins);
+
 				FramePublisher<segment_ptr>::notify(results, SubscriberType::BOTH);
-				//auto t2_n = std::chrono::high_resolution_clock::now();
-				//auto dur_n = std::chrono::duration_cast<std::chrono::milliseconds>(t2_n - t1_n);
-				//std::cout << "\t\tTIME TO PROCESS NOTIFY: " << dur_n.count() << "\n";
+
 			}
 			catch (...)
 			{

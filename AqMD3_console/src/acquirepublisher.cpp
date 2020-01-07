@@ -1,4 +1,5 @@
 #include "../include/acquirepublisher.h"
+#include "../include/definitions.h"
 #include <iostream>
 using std::cout;
 using std::cerr;
@@ -15,8 +16,12 @@ void AcquirePublisher::start(UimfRequestMessage uimf)
 		int triggers_acquired = 0;
 
 		//std::cout << "Starting frame acquisition" << std::endl;
+
 		state = State::ACQUIRING;
+
+#if TIMING_INFORMATION
 		auto start_0 = std::chrono::high_resolution_clock::now();
+#endif
 		context->start();
 		while (triggers_acquired < total_triggers && !should_stop)
 		{
@@ -37,9 +42,15 @@ void AcquirePublisher::start(UimfRequestMessage uimf)
 		stop_signal.set_value(State::STOPPED);
 stop:
 		context->stop();
+
+#if TIMING_INFORMATION
 		auto stop_0 = std::chrono::high_resolution_clock::now();
 		auto ms_0 = std::chrono::duration_cast<std::chrono::milliseconds>(stop_0 - start_0);
-		std::cout << "Time to acquire: " << ms_0.count() << "ms\n";
+		auto file_name = uimf.file_name();
+		auto frame_num = uint32_t(uimf.frame_number());
+		auto countMs = ms_0.count();
+		std::cout << "frame:" << frame_num << ";time to acquire:" << countMs << "\n";
+#endif
 
 	});
 }
@@ -51,7 +62,6 @@ void AcquirePublisher::start()
 
 	worker_handle = std::thread([&]()
 	{
-		//std::cout << "Starting acquisition" << std::endl;
 		state = State::ACQUIRING;
 
 		context->start();
@@ -59,20 +69,11 @@ void AcquirePublisher::start()
 		{
 			try
 			{
-				//auto start_0 = std::chrono::high_resolution_clock::now();
 				auto data = context->acquire(std::chrono::milliseconds(250));
-				//auto stop_0 = std::chrono::high_resolution_clock::now();
-				//auto ms_0 = std::chrono::duration_cast<std::chrono::milliseconds>(stop_0 - start_0);
-				//std::cout << "acquire time: " << ms_0.count() << std::endl;
-				//std::cout << "available buffers: " << (context->get_available_buffers()) << std::endl;
 				
 				if (context->get_available_buffers() > 19)
 				{
-					//auto start = std::chrono::high_resolution_clock::now();
 					notify(data, SubscriberType::ACQUIRE);
-					//auto stop = std::chrono::high_resolution_clock::now();
-					//auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-					//std::cout << "notify time: " << ms.count() << std::endl;
 				}
 				else
 					std::cerr << "dropping " <<  data.stamps.size() << " scans\n";
