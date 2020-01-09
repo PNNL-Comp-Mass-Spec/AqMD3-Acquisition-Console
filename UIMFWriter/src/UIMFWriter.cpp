@@ -21,7 +21,12 @@ int UimfWriter::write_scan_data(const UimfFrame& frame)
 	try
 	{
 		int const extra = 128;
-		SQLite::Transaction transaction(db);
+
+		SQLite::Statement sync_off(db, "PRAGMA synchronous=0");
+		sync_off.exec();
+		SQLite::Statement b_trans(db, "BEGIN TRANSACTION");
+		b_trans.exec();
+		
 		char *statement = new char[insert_scan_statement_size_bytes + extra];
 
 		for (int i = 0; i < frame.get_data().size(); i++)
@@ -53,7 +58,11 @@ int UimfWriter::write_scan_data(const UimfFrame& frame)
 			}
 		}
 
-		transaction.commit();
+		SQLite::Statement e_trans(db, "END TRANSACTION");
+		e_trans.exec();
+		SQLite::Statement sync_on(db, "PRAGMA synchronous=1");
+		sync_on.exec();
+
 	}
 	catch (std::exception& e)
 	{
