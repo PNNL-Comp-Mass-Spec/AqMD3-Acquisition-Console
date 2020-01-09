@@ -8,8 +8,11 @@
 
 const std::string UimfWriter::frames_table_name = "Frame_Params";
 
-void UimfWriter::write_scan_data(const UimfFrame& frame)
+int UimfWriter::write_scan_data(const UimfFrame& frame)
 {
+
+
+	int bytes = 0;
 	std::string insert_scan_statement = "INSERT INTO Frame_Scans (FrameNum, ScanNum, NonZeroCount, BPI, BPI_MZ, TIC, Intensities) VALUES(%d, %d, %d, %d, %lf, %d, ?)";
 	int insert_scan_statement_size_bytes = 110;
 
@@ -41,6 +44,8 @@ void UimfWriter::write_scan_data(const UimfFrame& frame)
 
 					auto compressed = er.get_compressed_spectra();
 
+					bytes += compressed.size + count;
+
 					SQLite::Statement statement(db, statement);
 					statement.bind(1, compressed.data, compressed.size);
 					statement.exec();
@@ -55,6 +60,7 @@ void UimfWriter::write_scan_data(const UimfFrame& frame)
 		std::cout << "exception: " << e.what() << std::endl;
 	}
 
+	return bytes;
 }
 
 void UimfWriter::update_timing_information(const UimfFrame& frame, double timestamp_sample_period_s)

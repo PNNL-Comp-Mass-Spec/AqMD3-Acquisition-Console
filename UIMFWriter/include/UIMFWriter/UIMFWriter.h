@@ -27,7 +27,7 @@ public:
 	~UimfWriter()
 	{}
 
-	void write_scan_data(const UimfFrame& frame);
+	int write_scan_data(const UimfFrame& frame);
 	void update_timing_information(const UimfFrame& frame, double timestamp_sample_period_s);
 
 private:
