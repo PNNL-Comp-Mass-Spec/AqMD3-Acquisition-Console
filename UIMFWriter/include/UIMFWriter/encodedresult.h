@@ -18,11 +18,11 @@ public:
 
 	struct CompressedSpectra {
 		char const *data;
-		size_t const bytes;
+		size_t const size;
 
-		CompressedSpectra(char *data, size_t bytes)
+		CompressedSpectra(char *data, size_t size)
 			: data(data)
-			, bytes(bytes)
+			, size(size)
 		{}
 		~CompressedSpectra()
 		{

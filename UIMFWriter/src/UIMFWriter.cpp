@@ -42,7 +42,7 @@ void UimfWriter::write_scan_data(const UimfFrame& frame)
 					auto compressed = er.get_compressed_spectra();
 
 					SQLite::Statement statement(db, statement);
-					statement.bind(1, compressed.data, compressed.bytes);
+					statement.bind(1, compressed.data, compressed.size);
 					statement.exec();
 				}
 			}
