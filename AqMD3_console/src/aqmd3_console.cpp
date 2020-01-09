@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
 
 #if !REUSABLE_PUB_SUB
 					auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100));
-					std::shared_ptr<ZmqAcquiredDataSubscriber> zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, frame->nbr_samples);
+					std::shared_ptr<ZmqAcquiredDataSubscriber> zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, uimf.nbr_samples());
 #endif	
 
 					std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context);
