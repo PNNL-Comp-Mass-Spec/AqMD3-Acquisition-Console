@@ -1,9 +1,8 @@
 #ifndef UIMF_FRAME_WRITER_SUBSCRIBER_H
 #define UIMF_FRAME_WRITER_SUBSCRIBER_H
-
 #include "framesubscriber.h"
 #include <UIMFWriter/uimfframe.h>
-
+#include "definitions.h"
 
 class UimfFrameWriterSubscriber : public FrameSubscriber<std::shared_ptr<UimfFrame>> {
 private:
@@ -12,7 +11,9 @@ private:
 
 public:
 	UimfFrameWriterSubscriber()
+#if REUSABLE_PUB_SUB
 		: FrameSubscriber(true)
+#endif
 	{}
 
 private:

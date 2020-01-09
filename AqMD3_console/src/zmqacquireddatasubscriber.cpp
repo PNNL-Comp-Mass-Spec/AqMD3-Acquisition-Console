@@ -1,6 +1,5 @@
-#include "..\include\zmqacquireddatasubscriber.h"
+#include "../include/zmqacquireddatasubscriber.h"
 #include <snappy.h>
-
 #include <iostream>
 
 #define NOMINMAX 

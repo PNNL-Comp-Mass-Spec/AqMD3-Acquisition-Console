@@ -1,9 +1,10 @@
 #include "../include/acquirepublisher.h"
 #include "../include/definitions.h"
+#include <ctime>
+#include <chrono>
 #include <iostream>
 using std::cout;
 using std::cerr;
-
 
 void AcquirePublisher::start(UimfRequestMessage uimf)
 {
@@ -20,7 +21,8 @@ void AcquirePublisher::start(UimfRequestMessage uimf)
 		state = State::ACQUIRING;
 
 #if TIMING_INFORMATION
-		auto start_0 = std::chrono::high_resolution_clock::now();
+		auto start = std::chrono::high_resolution_clock::now();
+		std::cout << "START ACQUIRE FRAME: " << timestamp_now() << std::endl;
 #endif
 		context->start();
 		while (triggers_acquired < total_triggers && !should_stop)
@@ -44,12 +46,12 @@ stop:
 		context->stop();
 
 #if TIMING_INFORMATION
-		auto stop_0 = std::chrono::high_resolution_clock::now();
-		auto ms_0 = std::chrono::duration_cast<std::chrono::milliseconds>(stop_0 - start_0);
+		auto stop = std::chrono::high_resolution_clock::now();
+		auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 		auto file_name = uimf.file_name();
 		auto frame_num = uint32_t(uimf.frame_number());
-		auto countMs = ms_0.count();
-		std::cout << "frame:" << frame_num << ";time to acquire:" << countMs << "\n";
+		auto countMs = ms.count();
+		std::cout << "END ACQUIRE FRAME: " << timestamp_now() << " -- DURATION (ms): " << countMs << std::endl;
 #endif
 
 	});

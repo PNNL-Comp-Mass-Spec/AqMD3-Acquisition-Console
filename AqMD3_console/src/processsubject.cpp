@@ -1,5 +1,6 @@
 #include "../include/processsubject.h"
 #include "../include/definitions.h"
+#include "../include/definitions.h"
 #include <numeric>
 
 static std::string finished = "finished";
@@ -7,15 +8,11 @@ static int delta = 100;
 
 #if TIMING_INFORMATION
 std::chrono::steady_clock::time_point start;
+static bool first = true;
 #endif
 
 void ProcessSubject::on_notify() 
 {
-#if TIMING_INFORMATION
-	if(total_triggers_processed == 0)
-		start = std::chrono::high_resolution_clock::now();
-#endif
-
 	while (!items.empty())
 	{
 		auto ad = items.front();
@@ -42,6 +39,15 @@ void ProcessSubject::on_notify()
 
 		if (!frames.empty())
 		{
+#if TIMING_INFORMATION
+			if (first)
+			{
+				start = std::chrono::high_resolution_clock::now();
+				std::cout << "START PROCESS: " << timestamp_now() << std::endl;
+				first = false;
+			}
+#endif
+
 			auto frame = frames.front();
 
 			int total_triggers = frame->frame_length * frame->nbr_accumulations;
@@ -82,8 +88,8 @@ void ProcessSubject::on_notify()
 #if TIMING_INFORMATION
 					auto stop = std::chrono::high_resolution_clock::now();
 					auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-					std::cout << "frame:" << frame->frame_number << ";time to process:" << dur.count() << "\n";
-					std::cout << "frame:" << frame->frame_number << ";total samples:" << total_elements_processed << "\n";
+					std::cout << "END PROCESS: " << timestamp_now() << " -- DURATION (ms): " << dur.count() << "  -- TOTAL SAMPLES: " << total_elements_processed << std::endl;
+					first = true;
 #endif
 				}
 			}
