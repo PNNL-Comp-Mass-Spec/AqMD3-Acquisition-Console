@@ -9,17 +9,20 @@ void UimfFrame::append_encoded_results(std::shared_ptr<std::vector<EncodedResult
 
 std::shared_ptr<std::vector<EncodedResult>> UimfFrame::append_and_return_excess(const std::shared_ptr<std::vector<EncodedResult>> results)
 {
-	auto count = get_encoded_result_count();
-	auto diff = frame_length - count;
+	auto last_index = (data.size() == 0) ? 0 : data.back()->back().scan;
+	auto diff = frame_length - 1 - last_index;
+
+	std::cout << "last_index: " << last_index << " -- frame_length: " << frame_length << " -- diff: " << diff << '\n';
 
 	if (results->size() <= diff)
 	{
 		data.push_back(results);
-
 		return std::make_shared<std::vector<EncodedResult>>();
 	}
 	else if (diff < results->size() && diff != 0)
 	{
+		//std::cout << "\tdiff: " << diff << '\n';
+		//std::cout << "results->size(): " << results->size() << '\n';
 		auto item_count_to_return = results->size() - diff;
 		auto to_return = std::make_shared<std::vector<EncodedResult>>();
 		auto to_add = std::make_shared<std::vector<EncodedResult>>();
@@ -36,7 +39,7 @@ std::shared_ptr<std::vector<EncodedResult>> UimfFrame::append_and_return_excess(
 	return results;
 }
 
-int UimfFrame::get_encoded_result_count() const
+int UimfFrame::get_encoded_results_count() const
 {
 	int count = 0;
 
@@ -50,15 +53,17 @@ int UimfFrame::get_encoded_result_count() const
 
 double UimfFrame::get_frame_duration_seconds(double ts_sample_period_s) const
 {
-	if (data.empty())
-		return 0.0;
+	//if (data.empty())
+	//	return 0.0;
 
-	if (data.size() == 1)
-		return ((data[0])->back().timestamp - (data[0])->front().timestamp) * ts_sample_period_s;
+	//if (data.size() == 1)
+	//	return ((data[0])->back().timestamp - (data[0])->front().timestamp) * ts_sample_period_s;
 
-	auto ts_first = (data.front())->front().timestamp;
-	auto ts_last = (data.back())->back().timestamp;
+	//auto ts_first = (data.front())->front().timestamp;
+	//auto ts_last = (data.back())->back().timestamp;
 
-	return (ts_last - ts_first) * ts_sample_period_s;
+	//return (ts_last - ts_first) * ts_sample_period_s;
+
+	return -1.0;
 }
 

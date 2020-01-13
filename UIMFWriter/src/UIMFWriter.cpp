@@ -10,8 +10,6 @@ const std::string UimfWriter::frames_table_name = "Frame_Params";
 
 int UimfWriter::write_scan_data(const UimfFrame& frame)
 {
-
-
 	int bytes = 0;
 	std::string insert_scan_statement = "INSERT INTO Frame_Scans (FrameNum, ScanNum, NonZeroCount, BPI, BPI_MZ, TIC, Intensities) VALUES(%d, %d, %d, %d, %lf, %d, ?)";
 	int insert_scan_statement_size_bytes = 110;

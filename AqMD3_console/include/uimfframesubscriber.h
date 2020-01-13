@@ -26,13 +26,13 @@ public:
 	{
 		if (this->frame->nbr_accumulations == 1)
 		{
-			frames.push_back(frame->clone_at_frame(frame->frame_number));
+			frames.push_back(frame->clone(frame->frame_number));
 		}
 		else
 		{
 			for (int i = 0; i < frame->nbr_accumulations; i++)
 			{
-				frames.push_back(frame->clone_at_frame(i));
+				frames.push_back(frame->clone(i));
 			}
 		}
 	}

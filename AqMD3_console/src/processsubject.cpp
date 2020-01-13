@@ -6,6 +6,10 @@
 static std::string finished = "finished";
 static int delta = 100;
 
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
+int notify_on_triggers = 2000;
+
 #if TIMING_INFORMATION
 std::chrono::steady_clock::time_point start;
 static bool first = true;
@@ -66,8 +70,15 @@ void ProcessSubject::on_notify()
 
 				auto excess = frame->append_and_return_excess(results);
 
-				if (frame->frame_length == frame->get_encoded_result_count())
+				auto notify_trigger_count =
+					(int32_t(frame->frame_length) - total_triggers_processed) < (int32_t(frame->frame_length) % notify_on_triggers)
+					? frame->frame_length % notify_on_triggers
+					: notify_on_triggers;
+
+				if(notify_trigger_count <= frame->get_encoded_results_count())
 				{
+					frames.push_back(frames.front()->clone());
+					
 					FramePublisher<frame_ptr>::notify(frame, SubscriberType::BOTH);
 					frames.pop_front();
 

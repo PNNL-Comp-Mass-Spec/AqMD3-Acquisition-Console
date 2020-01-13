@@ -23,7 +23,7 @@ protected:
 	uint32_t const triggers_per_read;
 
 	int buffer_takes;
-	int const buffer_max_count = 40;
+	int const buffer_max_count = 100;
 
 	std::atomic_bool should_stop;
 

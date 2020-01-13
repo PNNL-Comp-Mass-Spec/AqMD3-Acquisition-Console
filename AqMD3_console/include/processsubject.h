@@ -24,7 +24,7 @@ private:
 	std::shared_ptr<Server::Publisher> publisher;
 	std::string subject;
 	std::chrono::milliseconds total_duration;
-	int total_elements_processed;
+	uint64_t total_elements_processed;
 	uint32_t offset_bins;
 	uint64_t tof_avg_samples;
 	std::deque<std::shared_ptr<UimfFrame>> frames;
@@ -57,7 +57,7 @@ public:
 		{
 			for (int i = 0; i < frame->nbr_accumulations; i++)
 			{
-				frames.push_back(frame->clone_at_frame(i));
+				frames.push_back(frame->clone(i));
 			}
 		}
 	}

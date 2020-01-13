@@ -34,16 +34,18 @@ public:
 	{}
 
 	~UimfFrame() {}
-	
+
+	inline std::shared_ptr<UimfFrame> clone(uint32_t frame_number_new) { return std::make_shared<UimfFrame>(start_trigger, nbr_samples, nbr_accumulations, frame_length, frame_number_new, offset_bins, file_name); }
+	inline std::shared_ptr<UimfFrame> clone() { return std::make_shared<UimfFrame>(start_trigger, nbr_samples, nbr_accumulations, frame_length, frame_number, offset_bins, file_name); }
+
 	inline const std::vector<std::shared_ptr<std::vector<EncodedResult>>> get_data() const { return data; }
-	inline std::shared_ptr<UimfFrame> clone_at_frame(uint32_t frame_number_new)
-	{
-		return std::make_shared<UimfFrame>(start_trigger, nbr_samples, nbr_accumulations, frame_length, frame_number_new, offset_bins, file_name);
-	}
 
 	void append_encoded_results(std::shared_ptr<std::vector<EncodedResult>> results);
 	std::shared_ptr<std::vector<EncodedResult>> append_and_return_excess(std::shared_ptr<std::vector<EncodedResult>> results);
-	int get_encoded_result_count() const;
+	
+	int get_encoded_results_count() const;
+	//std::pair<int32_t, int32_t> get_encoded_results_scan_range() const;
+	
 	double get_frame_duration_seconds(double sample_period) const;
 
 };
