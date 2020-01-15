@@ -247,7 +247,7 @@ int main(int argc, char *argv[]) {
 
 
 #if REUSABLE_PUB_SUB
-				context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100));
+				context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 20);
 				zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
 #else
 				auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100));
@@ -391,7 +391,7 @@ static std::tuple<uint64_t, uint64_t, uint64_t> get_tof_width(const SA220 * digi
 static uint64_t get_trigger_time_stamp_average(const SA220 *digitizer, int triggers)
 {
 	digitizer->set_record_size(1024);
-	auto dig_context = digitizer->configure_cst(digitizer->channel_1, triggers, 1024);
+	auto dig_context = digitizer->configure_cst(digitizer->channel_1, triggers, 1024, 10);
 
 	dig_context->start();
 	AcquiredData result = dig_context->acquire(std::chrono::milliseconds(80));

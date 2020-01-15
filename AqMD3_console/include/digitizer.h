@@ -45,8 +45,8 @@ public:
 		AqMD3_close(session);
 	}
 
-	virtual std::shared_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers, uint64_t record_size) const = 0;
-	virtual std::shared_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters) const = 0;
+	virtual std::shared_ptr<StreamingContext> configure_cst(std::string channel, uint32_t triggers, uint64_t record_size, uint32_t preallocated_buffers) const = 0;
+	virtual std::shared_ptr<StreamingContext> configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters, uint32_t preallocated_buffers) const = 0;
 
 private:
 	std::pair<std::string, ErrorType> check_error(ViStatus status) const 
