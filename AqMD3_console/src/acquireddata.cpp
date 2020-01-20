@@ -96,8 +96,6 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 				encoded_samples.push_back(val);
 				non_zero_count++;
 				tic += val;
-
-				non_zero_count++;
 			}
 
 			offset += elements;
