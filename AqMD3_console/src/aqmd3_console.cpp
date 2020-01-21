@@ -11,6 +11,10 @@
 
 #include "../include/PicoSHA2/picosha2.h"
 
+#include "../include/diagnostic/uimfframedecompressorsubscriber.h"
+#include "../include/diagnostic/encodeddatawriter.h"
+#include "../include/diagnostic/rawprintersubscriber.h"
+
 #include <UIMFWriter/uimfwriter.h>
 #include "AqMD3.h"
 #include <visa.h>
@@ -77,7 +81,7 @@ int main(int argc, char *argv[]) {
 	{
 		for (const auto& command : req.payload)
 		{
-			//std::cout << "\t" << command << std::endl;
+			std::cout << "\t" << command << std::endl;
 
 			if (command == "num instruments")
 			{
@@ -213,8 +217,20 @@ int main(int argc, char *argv[]) {
 #else
 					ps->FramePublisher<frame_ptr>::register_subscriber(std::make_shared<UimfFrameWriterSubscriber>(), SubscriberType::ACQUIRE_FRAME);
 #endif
+
 					ps->FramePublisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
 					p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
+
+#if PRINT_RAW
+					std::shared_ptr<RawPrinterSubscriber> rps = std::make_shared<RawPrinterSubscriber>("timestamp_data_" + std::to_string(uimf.frame_number()));
+					std::shared_ptr<EncodedDataWriter> edw = std::make_shared<EncodedDataWriter>("encoded_data_" + std::to_string(uimf.frame_number()));
+					std::shared_ptr<UimfFrameDecompressorSubscriber> fws = std::make_shared<UimfFrameDecompressorSubscriber>("frame_data_" + std::to_string(uimf.frame_number()));
+
+					p->FramePublisher<AcquiredData>::register_subscriber(rps, SubscriberType::ACQUIRE_FRAME);
+					ps->FramePublisher<segment_ptr>::register_subscriber(edw, SubscriberType::ACQUIRE_FRAME);
+					ps->FramePublisher<frame_ptr>::register_subscriber(fws, SubscriberType::ACQUIRE_FRAME);
+#endif
+
 
 					//if (controller) controller.reset();
 					controller = std::move(p);

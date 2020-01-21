@@ -29,7 +29,6 @@ private:
 	void on_notify() override;
 	void on_completed() override
 	{
-		std::cout << "ENCODED DATA WRITER EXITING" << std::endl;
 	}
 };
 
@@ -45,15 +44,18 @@ void EncodedDataWriter::on_notify()
 
 		for (int i = 0; i < ad->size(); i++)
 		{
-			//out_file_stream << "FRAME " << ad->at(i).frame << std::endl;
-			out_file_stream << "NON-ZERO COUNT " << ad->at(i).non_zero_count << std::endl;
+			out_file_stream << "non_zero_count: " << ad->at(i).non_zero_count << std::endl;
+			out_file_stream << "bpi: " << ad->at(i).bpi << std::endl;
+			out_file_stream << "bpi_mz: " << ad->at(i).bpi_mz << std::endl;
+			out_file_stream << "index_max_intensity: " << ad->at(i).index_max_intensity << std::endl;
+			out_file_stream << "non_zero_count: " << ad->at(i).non_zero_count << std::endl;
 			out_file_stream << "DATA [" << std::endl;
 			for (int j = 0; j < ad->at(i).encoded_spectra.size(); j++)
 			{
 				out_file_stream << ad->at(i).encoded_spectra[j] << ", ";
 			}
 			out_file_stream << "]"<< std::endl;
-			out_file_stream << endl;
+			out_file_stream << std::endl;
 		}
 
 	}

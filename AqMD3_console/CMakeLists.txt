@@ -50,10 +50,11 @@ add_executable (AqMD3_console
 	include/processsubject.h
 	include/zmqacquireddatasubscriber.h
 	include/uimfframesubscriber.h
-#	include/diagnostic/rawprintersubscriber.h
+	include/diagnostic/rawprintersubscriber.h
+	include/diagnostic/uimfframedecompressorsubscriber.h
 #	include/diagnostic/simplepublisher.h
 #	include/diagnostic/falsedatapublisher.h
-#	include/diagnostic/encodeddatawriter.h
+	include/diagnostic/encodeddatawriter.h
 	include/uimfframewritersubscriber.h
 	include/definitions.h
 	include/util/timehelpers.h
