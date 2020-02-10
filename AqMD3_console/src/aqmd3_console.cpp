@@ -209,7 +209,13 @@ int main(int argc, char *argv[]) {
 
 					std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context);
 
-					std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(uimf, data_pub, avg_tof_period_samples);
+					if (calculated_post_trigger_samples <= 0)
+					{
+						std::cerr << "Calculated post-trigger samples must be greater than 0. Post-trigger samples: " << calculated_post_trigger_samples << std::endl;
+						break;
+					}
+
+					std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(uimf, data_pub, calculated_post_trigger_samples, avg_tof_period_samples);
 					double ts_period = 1.0 / digitizer->max_sample_rate;
 
 #if REUSABLE_PUB_SUB
@@ -252,9 +258,9 @@ int main(int argc, char *argv[]) {
 				uint64_t post_trigger_samples;
 				uint64_t tof_width;
 				std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer.get(), sampling_rate);			
-				//std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
-				//std::cout << "record size: " << record_size << std::endl;
-				//std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
+				std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
+				std::cout << "record size: " << record_size << std::endl;
+				std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
 				digitizer->set_record_size(record_size);
 				avg_tof_period_samples = tof_width;
 				calculated_post_trigger_samples = post_trigger_samples;

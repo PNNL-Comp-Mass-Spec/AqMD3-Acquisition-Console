@@ -58,7 +58,11 @@ void ProcessSubject::on_notify()
 
 			if (total_triggers_processed < total_triggers)
 			{
-				auto results = ad.process(total_triggers_processed % frame->frame_length, frame->offset_bins);
+				// Use calculated offset_bins and not frame->offset_bins as the value in the UIMF frame request
+				// message might represent the 'TimeOffset' in ns (which is currently hardcoded to be 10000 in Falkor)
+				// and not the number of post-trigger samples to reject: 0.00001s -> 20000 samples @ 2GS/s.
+				auto results = ad.process(total_triggers_processed % frame->frame_length, offset_bins);
+				
 				total_triggers_processed += ad.stamps.size();
 
 				for (int i = 0; i < results->size(); i++)

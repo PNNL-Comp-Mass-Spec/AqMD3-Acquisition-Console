@@ -30,13 +30,13 @@ private:
 	std::deque<std::shared_ptr<UimfFrame>> frames;
 
 public:
-	ProcessSubject(UimfRequestMessage uimf, std::shared_ptr<Server::Publisher> publisher, uint64_t tof_avg_samples)
+	ProcessSubject(UimfRequestMessage uimf, std::shared_ptr<Server::Publisher> publisher, uint32_t offset_bins, uint64_t tof_avg_samples)
 		: total_triggers_processed(0)
 		, publisher(publisher)
 		, subject("status")
 		, total_duration(0)
 		, total_elements_processed(0)
-		, offset_bins(0)
+		, offset_bins(offset_bins)
 		, tof_avg_samples(tof_avg_samples)
 	{
 		std::shared_ptr<UimfFrame> frame = std::make_shared<UimfFrame>(
