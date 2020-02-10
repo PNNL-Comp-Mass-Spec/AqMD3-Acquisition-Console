@@ -72,13 +72,13 @@ void AcquirePublisher::start()
 			try
 			{
 				auto data = context->acquire(std::chrono::milliseconds(250));
-				
-				if (context->get_available_buffers() > 19)
+				auto available = context->get_available_buffers();
+				if (available > 19)
 				{
 					notify(data, SubscriberType::ACQUIRE);
 				}
 				else
-					std::cerr << "dropping " <<  data.stamps.size() << " scans\n";
+					std::cerr <<"bufs: " << available << " -- dropping " <<  data.stamps.size() << " scans\n";
 
 			}
 			catch (std::string ex)

@@ -8,7 +8,7 @@ static int delta = 100;
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-int notify_on_triggers = 2000;
+int notify_on_triggers = 5000;
 
 #if TIMING_INFORMATION
 std::chrono::steady_clock::time_point start;
@@ -70,8 +70,7 @@ void ProcessSubject::on_notify()
 
 				auto excess = frame->append_and_return_excess(results);
 
-				auto notify_trigger_count =
-					(int32_t(frame->frame_length) - total_triggers_processed) < (int32_t(frame->frame_length) % notify_on_triggers)
+				auto notify_trigger_count = (int32_t(frame->frame_length) - total_triggers_processed) < (int32_t(frame->frame_length) % notify_on_triggers)
 					? frame->frame_length % notify_on_triggers
 					: notify_on_triggers;
 

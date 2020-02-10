@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
 	// Disable 'Quick Edit Mode' since it can cause the application to hang during acquisition
 	disable_quick_edit();
 
-	std::unique_ptr<SA220> digitizer = std::make_unique<SA220>("PXI3::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
+	std::unique_ptr<SA220> digitizer = std::make_unique<SA220>("PXI1::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
 	auto server = new Server("tcp://*:5555");
 	double sampling_rate = 0.0;
 	std::unique_ptr<AcquisitionControl> controller;
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
 
 			if (command == "init")
 			{
-				digitizer->set_trigger_parameters(digitizer->trigger_external, 0.5, true, post_trigger_delay);
+				digitizer->set_trigger_parameters(digitizer->trigger_external, 2.0, true, post_trigger_delay);
 
 				req.send_response(ack);
 				continue;
@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
 					uimf.MergeFromString(uimf_req_msg);
 
 					uint64_t record_size = uimf.nbr_samples() - calculated_post_trigger_samples;
-					//std::cout << "samples per trigger: " << frame->nbr_samples << std::endl;
+					//std::cout << "samples per trigger: " << uimf.nbr_samples() << std::endl;
 					//std::cout << "record size: " << record_size << std::endl;
 					//std::cout << "post trigger samples: " << calculated_post_trigger_samples << std::endl;
 
@@ -263,7 +263,7 @@ int main(int argc, char *argv[]) {
 
 
 #if REUSABLE_PUB_SUB
-				context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 20);
+				context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);
 				zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
 #else
 				auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100));
@@ -300,16 +300,16 @@ int main(int argc, char *argv[]) {
 				uint64_t post_trigger_samples;
 				uint64_t tof_width;
 				std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer.get(), sampling_rate);
-				//std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
-				//std::cout << "record size: " << record_size << std::endl;
-				//std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
+				std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
+				std::cout << "record size: " << record_size << std::endl;
+				std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
 				digitizer->set_record_size(record_size);
 
 				vector<string> to_send(2);
 
 				TofWidthMessage tofMsg;
 				tofMsg.set_num_samples(record_size + post_trigger_samples);
-				tofMsg.set_pusher_pulse_width(tof_width);
+				tofMsg.set_pusher_pulse_width(tof_width / (2 * 16));
 				to_send[0] = (tofMsg.SerializeAsString());
 				vector<uint8_t> hash(picosha2::k_digest_size);
 				picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
