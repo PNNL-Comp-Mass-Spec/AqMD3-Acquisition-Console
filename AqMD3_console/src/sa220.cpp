@@ -143,9 +143,14 @@ std::shared_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint
 	bool should_calibrate = (bool)std::get<2>(rct);
 	if (should_calibrate)
 	{
+		auto start = std::chrono::high_resolution_clock::now();
+		std::cout << "Calibrating" << std::endl;
 		rc = self_calibrate();
 		if (rc.second != Digitizer::None)
 			throw rc.first;
+		auto stop = std::chrono::high_resolution_clock::now();
+		auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+		std::cout << "Time to calibrate: " << ms.count() << " ms\n";
 	}
 
 	return std::make_shared<CstContext>(dynamic_cast<const Digitizer&>(*this), channel, record_size * 64, preallocated_buffers, record_size, triggers);
@@ -189,9 +194,14 @@ std::shared_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, 
 	bool should_calibrate = (bool)std::get<2>(rct);
 	if (should_calibrate)
 	{
+		auto start = std::chrono::high_resolution_clock::now();
+		std::cout << "Calibrating" << std::endl;
 		rc = self_calibrate();
 		if (rc.second != Digitizer::None)
 			throw rc.first;
+		auto stop = std::chrono::high_resolution_clock::now();
+		auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+		std::cout << "Time to calibrate: " << ms.count() << " ms\n";
 	}
 
 	return std::make_shared<CstZs1Context>(dynamic_cast<const Digitizer&>(*this), channel, record_size * 256, preallocated_buffers, record_size, triggers);
