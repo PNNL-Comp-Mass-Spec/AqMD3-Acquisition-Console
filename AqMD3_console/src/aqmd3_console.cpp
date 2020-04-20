@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
 					auto data_pub = server->get_publisher("tcp://*:5554");
 
 #if !REUSABLE_PUB_SUB
-					auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100));
+					auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);
 					std::shared_ptr<ZmqAcquiredDataSubscriber> zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, uimf.nbr_samples());
 #endif	
 
@@ -272,7 +272,7 @@ int main(int argc, char *argv[]) {
 				context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);
 				zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
 #else
-				auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100));
+				auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);
 				auto zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
 #endif	
 				std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context);
