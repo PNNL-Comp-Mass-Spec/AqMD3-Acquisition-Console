@@ -258,6 +258,7 @@ int main(int argc, char *argv[]) {
 				uint64_t post_trigger_samples;
 				uint64_t tof_width;
 				std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer.get(), sampling_rate);			
+				std::cout << "tof width: " << tof_width << std::endl;
 				std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
 				std::cout << "record size: " << record_size << std::endl;
 				std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
