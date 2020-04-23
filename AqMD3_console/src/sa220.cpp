@@ -3,6 +3,7 @@
 #include "../include/cstcontext.h"
 #include "../include/cstzs1context.h"
 #include <exception>
+#include <cstring>
 
 void SA220::set_sampling_rate(double rate) const
 {
@@ -70,21 +71,19 @@ void SA220::set_channel_data_inversion(std::string channel, bool enable) const
 	}
 }
 
-std::string SA220::get_model() const
+std::string SA220::get_info() const
 {
-	char *str = new char[256];
+	std::string info(256, (char)0);
 
-	auto result = get_instrument_model(str);
+	auto result = get_instrument_serial_number(info);
 	if (result.second != Digitizer::None)
 	{
 		std::cerr << result.first << std::endl;
 		return "";
 	}
+	info.resize(strlen(info.c_str()));
 
-	std::string model = str;
-	delete str;
-
-	return model;
+	return info;
 }
 
 void SA220::enable_io_port() const

@@ -1,14 +1,20 @@
 #include "../include/digitizer.h"
 
-std::pair<std::string, Digitizer::ErrorType> Digitizer::get_instrument_options_info(ViChar string[]) const
+std::pair<std::string, Digitizer::ErrorType> Digitizer::get_instrument_options_info(std::string &options) const
 {
-	ViStatus status = AqMD3_GetAttributeViString(session, "", AQMD3_ATTR_INSTRUMENT_INFO_OPTIONS, sizeof(string), string);
+	ViStatus status = AqMD3_GetAttributeViString(session, "", AQMD3_ATTR_INSTRUMENT_INFO_OPTIONS, options.length(), &options[0]);
 	return check_error(status);
 }
 
-std::pair<std::string, Digitizer::ErrorType> Digitizer::get_instrument_model(ViChar string[]) const
+std::pair<std::string, Digitizer::ErrorType> Digitizer::get_instrument_model(std::string &model) const
 {
-	ViStatus status = AqMD3_GetAttributeViString(session, "", AQMD3_ATTR_INSTRUMENT_MODEL, sizeof(string), string);
+	ViStatus status = AqMD3_GetAttributeViString(session, "", AQMD3_ATTR_INSTRUMENT_MODEL, model.length(), &model[0]);
+	return check_error(status);
+}
+
+std::pair<std::string, Digitizer::ErrorType> Digitizer::get_instrument_serial_number(std::string &serial_number) const
+{
+	ViStatus status = AqMD3_GetAttributeViString(session, "", AQMD3_ATTR_INSTRUMENT_INFO_SERIAL_NUMBER_STRING, serial_number.length(), &serial_number[0]);
 	return check_error(status);
 }
 

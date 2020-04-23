@@ -101,8 +101,7 @@ int main(int argc, char *argv[]) {
 
 			if (command == "info")
 			{
-				std::string info = digitizer->get_model();
-
+				std::string info = digitizer->get_info();
 				req.send_response(info);
 			}
 
