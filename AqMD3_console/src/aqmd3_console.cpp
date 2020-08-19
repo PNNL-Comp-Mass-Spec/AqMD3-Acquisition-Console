@@ -34,9 +34,28 @@ using std::cerr;
 
 using namespace std;
 
-static std::tuple<uint64_t, uint64_t, uint64_t> get_tof_width(const SA220 *digitizer, double sample_rate);
-static std::tuple<uint64_t, uint64_t> get_optimal_record_size(const SA220 *digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s);
-static uint64_t get_trigger_time_stamp_average(const SA220 *digitizer, int triggers);
+namespace AqirisDigitizer
+{
+	class TofTimingInformation
+	{
+	public:
+		uint64_t samples_per_trigger;
+		uint64_t record_size;
+		uint64_t post_trigger_delay_samples;
+		uint64_t trigger_rearm_samples;
+
+		TofTimingInformation(uint64_t samples_per_trigger, uint64_t record_size, uint64_t post_trigger_delay_samples, uint64_t trigger_rearm_samples)
+			: post_trigger_delay_samples(post_trigger_delay_samples)
+			, record_size(record_size)
+			, samples_per_trigger(samples_per_trigger)
+			, trigger_rearm_samples(trigger_rearm_samples)
+		{}
+	};
+
+	static TofTimingInformation get_timing_information(const SA220 *digitizer, double sample_rate);
+	static std::tuple<uint64_t, uint64_t, uint64_t> get_optimal_record_size(const SA220 *digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s);
+	static uint64_t get_trigger_time_stamp_average(const SA220 *digitizer, int triggers);
+}
 
 void disable_quick_edit()
 {
@@ -56,7 +75,7 @@ void disable_quick_edit()
 
 static char ack[] = "ack";
 static double post_trigger_delay = 0.00001;
-static double estimated_trigger_rearm_time = 0.0000001;
+static double estimated_trigger_rearm_time = 0.000002048;
 uint32_t calculated_post_trigger_samples = 0;
 uint64_t avg_tof_period_samples = 0;
 
@@ -253,10 +272,11 @@ int main(int argc, char *argv[]) {
 
 			if (command == "acquire")
 			{
-				uint64_t record_size;
-				uint64_t post_trigger_samples;
-				uint64_t tof_width;
-				std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer.get(), sampling_rate);			
+				auto timing = AqirisDigitizer::get_timing_information(digitizer.get(), sampling_rate);
+				uint64_t record_size = timing.record_size;
+				uint64_t post_trigger_samples = timing.post_trigger_delay_samples;
+				uint64_t tof_width = timing.samples_per_trigger;
+				//std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer.get(), sampling_rate);			
 				std::cout << "tof width: " << tof_width << std::endl;
 				std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
 				std::cout << "record size: " << record_size << std::endl;
@@ -302,10 +322,11 @@ int main(int argc, char *argv[]) {
 
 			if (command == "tof width")
 			{
-				uint64_t record_size;
-				uint64_t post_trigger_samples;
-				uint64_t tof_width;
-				std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer.get(), sampling_rate);
+				auto timing = AqirisDigitizer::get_timing_information(digitizer.get(), sampling_rate);
+				uint64_t record_size = timing.record_size;
+				uint64_t post_trigger_samples = timing.post_trigger_delay_samples;
+				uint64_t tof_width = timing.samples_per_trigger;
+				//std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer.get(), sampling_rate);
 				std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
 				std::cout << "record size: " << record_size << std::endl;
 				std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
@@ -400,17 +421,15 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-static std::tuple<uint64_t, uint64_t, uint64_t> get_tof_width(const SA220 * digitizer, double sample_rate)
+static AqirisDigitizer::TofTimingInformation AqirisDigitizer::get_timing_information(const SA220 * digitizer, double sample_rate)
 {
-	auto samples_per_trigger = get_trigger_time_stamp_average(digitizer, 20);
+	auto samples_per_trigger = AqirisDigitizer::get_trigger_time_stamp_average(digitizer, 20);
+	auto t = get_optimal_record_size(digitizer, samples_per_trigger, post_trigger_delay, sample_rate, estimated_trigger_rearm_time);
 
-	return std::tuple_cat(
-		get_optimal_record_size(digitizer, samples_per_trigger, post_trigger_delay, sample_rate, estimated_trigger_rearm_time),
-		std::make_tuple(samples_per_trigger)
-		);
+	return AqirisDigitizer::TofTimingInformation(samples_per_trigger, std::get<1>(t), std::get<0>(t), std::get<2>(t));
 }
 
-static uint64_t get_trigger_time_stamp_average(const SA220 *digitizer, int triggers)
+static uint64_t AqirisDigitizer::get_trigger_time_stamp_average(const SA220 *digitizer, int triggers)
 {
 	digitizer->set_record_size(1024);
 	auto dig_context = digitizer->configure_cst(digitizer->channel_1, triggers, 1024, 10);
@@ -431,15 +450,15 @@ static uint64_t get_trigger_time_stamp_average(const SA220 *digitizer, int trigg
 	return total;
 }
 
-static std::tuple<uint64_t, uint64_t> get_optimal_record_size(const SA220 *digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s)
+static std::tuple<uint64_t, uint64_t, uint64_t> AqirisDigitizer::get_optimal_record_size(const SA220 *digitizer, uint64_t pusher_pulse_pulse_width_samples, double post_trigger_delay_s, double sample_rate, double trig_rearm_s)
 {
 	uint64_t actual_trigger_width_samples = uint64_t(double(pusher_pulse_pulse_width_samples) * (sample_rate / digitizer->max_sample_rate));
-	uint64_t est_trig_rearm_samples = uint64_t(trig_rearm_s * sample_rate);
+	uint64_t trig_rearm_samples = uint64_t(trig_rearm_s * sample_rate);
 	uint64_t delay_samples = uint64_t(post_trigger_delay_s * sample_rate);
 
-	auto record_size_samples = actual_trigger_width_samples - delay_samples - est_trig_rearm_samples;
+	auto record_size_samples = actual_trigger_width_samples - delay_samples - trig_rearm_samples;
 	if (record_size_samples % 32 != 0)
 		record_size_samples = (record_size_samples / 32) * 32;
 
-	return std::make_tuple(delay_samples, record_size_samples);
+	return std::make_tuple(delay_samples, record_size_samples, trig_rearm_samples);
 }
