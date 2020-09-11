@@ -8,6 +8,7 @@
 #include <string>
 #include <memory>
 #include <map>
+#include <functional>
 
 class Server {
 public:
