@@ -17,27 +17,27 @@ public:
 		uint64_t const gate_start_block_index;
 		uint64_t const gate_stop_block_index;
 
-		uint32_t const gate_start_intra_block_index;
-		uint32_t const gate_stop_intra_block_index;
+		uint32_t const gate_start_sample_pos;
+		uint32_t const gate_stop_sample_pos;
 
-		uint32_t const total_processing_blocks;
+		uint32_t const element_count;
 
-		GateData(uint64_t gate_start_block_index, uint32_t gate_start_intra_block_index, uint64_t gate_stop_block_index,
-			uint32_t gate_stop_intra_block_index,
-			uint32_t total_processing_blocks)
+		GateData(uint64_t gate_start_block_index, uint32_t gate_start_sample_pos, uint64_t gate_stop_block_index,
+			uint32_t gate_stop_sample_pos,
+			uint32_t element_count)
 			: gate_start_block_index(gate_start_block_index)
-			, gate_start_intra_block_index(gate_start_intra_block_index)
+			, gate_start_sample_pos(gate_start_sample_pos)
 			, gate_stop_block_index(gate_stop_block_index)
-			, gate_stop_intra_block_index(gate_stop_intra_block_index)
-			, total_processing_blocks(total_processing_blocks)
+			, gate_stop_sample_pos(gate_stop_sample_pos)
+			, element_count(element_count)
 		{}
 
 		inline uint64_t get_start_sample_index() const {
-			return (gate_start_block_index - 1) * processing_block_size + gate_start_intra_block_index;
+			return (gate_start_block_index - 1) * processing_block_size + gate_start_sample_pos;
 		}
 
 		inline uint64_t get_stop_sample_index() const {
-			return (gate_stop_block_index - 1) * processing_block_size - (processing_block_size - gate_stop_intra_block_index);
+			return (gate_stop_block_index - 1) * processing_block_size - (processing_block_size - gate_stop_sample_pos);
 		}
 
 	};

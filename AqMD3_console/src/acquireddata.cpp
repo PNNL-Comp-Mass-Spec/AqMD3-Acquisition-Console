@@ -46,7 +46,7 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 		for (int j = 0; j < gate_count; j++)
 		{
 			const auto& gate = &trig.gate_data[j];
-			auto elements = gate->total_processing_blocks;
+			auto elements = gate->element_count;
 			
 			auto samples = int64_t(gate->get_stop_sample_index()) - int64_t(gate->get_start_sample_index());
 
@@ -76,7 +76,7 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 
 			int32_t *ptr = samples_buffer->get_raw_unprocessed() + offset;
 
-			for (int i = gate->gate_start_intra_block_index; i < gate->gate_start_intra_block_index + samples; i++)
+			for (int i = gate->gate_start_sample_pos; i < gate->gate_start_sample_pos + samples; i++)
 			{
 				int32_t val = 0;
 				int data_index = i / 2;
