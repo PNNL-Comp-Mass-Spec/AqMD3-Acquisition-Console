@@ -8,9 +8,10 @@ class UimfFrameWriterSubscriber : public FrameSubscriber<std::shared_ptr<UimfFra
 private:
 	std::deque<std::shared_ptr<UimfFrame>> frames;
 	bool append_excess;
+	bool write_timestamps;
 
 public:
-	UimfFrameWriterSubscriber()
+	UimfFrameWriterSubscriber(bool write_timestamps = true)
 #if REUSABLE_PUB_SUB
 		: FrameSubscriber(true)
 #endif

@@ -1,7 +1,10 @@
 #include "../include/uimfframewritersubscriber.h"
 #include "../include/definitions.h"
 #include<UIMFWriter/UIMFWriter.h>
-
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <algorithm>
 
 void UimfFrameWriterSubscriber::on_notify()
 {
@@ -18,7 +21,47 @@ void UimfFrameWriterSubscriber::on_notify()
 			std::cout << "START FRAME WRITE: " << timestamp_now() << std::endl;
 #endif
 			int b = writer.write_scan_data(*frame);
-			//writer.update_timing_information(*current_frame, ts_sample_period);
+
+			if (write_timestamps)
+			{
+				std::fstream file;
+				const std::string ts_file = "timestamps.csv";
+
+				const std::string uimf_file = frame->file_name;
+				size_t last_index = uimf_file.find_last_of("\\");
+				std::string containing_folder = uimf_file.substr(0, last_index);
+				std::string file_name = containing_folder + "\\" + ts_file;
+
+				file.open(file_name, std::ios::app | std::ios::out);
+
+				// Look for first scan in frame
+				auto has_first_scan = std::any_of(frame->get_data().begin(), frame->get_data().end(), [](std::shared_ptr<std::vector<EncodedResult>> er) {return er->front().scan == 0; });
+
+				// If this is the first frame, and data contains fist scan, add headers
+				if (frame->frame_number == 1 && has_first_scan)
+				{
+					std::string header = "frame,scan,timestamp\n";
+					file.write(header.c_str(), header.length());
+				}
+
+				// Write frame number, scan number, and timestamp to file
+				size_t buf_len = 128;
+				auto buf = new char[buf_len];
+				for each (auto segments in frame->get_data())
+				{
+					for each(auto &scan in *segments)
+					{
+						auto size = snprintf(buf, buf_len, "%u,%d,%llu\n", frame->frame_number, scan.scan, scan.timestamp);
+						if (size <= 0 || size > buf_len)
+						{
+							std::cout << "returned size of snprintf() = " << size << std::endl;
+							continue;
+						}
+						file.write(buf, size);
+					}
+				}
+			}
+
 #if TIMING_INFORMATION
 			auto t2 = std::chrono::high_resolution_clock::now();
 			auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
