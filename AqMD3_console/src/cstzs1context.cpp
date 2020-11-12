@@ -34,6 +34,8 @@ AcquiredData CstZs1Context::acquire(std::chrono::milliseconds timeoutMs)
 	ViInt64 available_elements_markers = 0;
 	ViInt64 actual_elements_markers = markers_buffer.get_unprocessed();
 
+	bool use_timeout = (timeoutMs == std::chrono::milliseconds::zero()) ? false : true;
+
 	// sanity check
 	if (actual_elements_markers % 16 != 0)
 		throw std::string("actual_elements_markers % 16 != 0 at start of acquire");
@@ -167,7 +169,7 @@ AcquiredData CstZs1Context::acquire(std::chrono::milliseconds timeoutMs)
 				if (rc.second != Digitizer::None)
 					throw rc.first;
 
-				if (std::chrono::high_resolution_clock::now() > finish)
+				if (use_timeout && std::chrono::high_resolution_clock::now() > finish)
 				{
 					std::cerr << "timeout conditions:\n\n";
 					std::cerr << "\tmarkers_buffer.get_size(): " << markers_buffer.get_size() << "\n";
