@@ -1,0 +1,14 @@
+# _____________________________________________________________________________________________
+#        / POST TRIGGER /            ACQUIRING TOF              / TRIGGER REARM /   
+# ______/____DELAY_____/________________SIGNAL_________________/____DEAD TIME__/___...REPEAT...
+#       <-------------- RISING EDGE TRIGGERED, ONE SCAN ---------------------->
+#        ____                                                                   ____
+#       ^    |                                                                 ^    |
+# ______|    |___________________TOF PUSHER PULSE CLOCK________________________|    |_________
+
+# The time in seconds after a trigger is detected that the acquisition firmware
+# waits before a sample can be detected.
+PostTriggerDelay=0.00001
+
+# The time in seconds that the acquisition software allows the digitizer to rearm.
+TriggerRearmDeadTime=0.00001

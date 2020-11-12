@@ -15,6 +15,8 @@
 #include "../include/diagnostic/encodeddatawriter.h"
 #include "../include/diagnostic/rawprintersubscriber.h"
 
+#include "../include/util/config.h"
+
 #include <UIMFWriter/uimfwriter.h>
 #include "AqMD3.h"
 #include <visa.h>
@@ -83,6 +85,22 @@ int main(int argc, char *argv[]) {
 
 	// Disable 'Quick Edit Mode' since it can cause the application to hang during acquisition
 	disable_quick_edit();
+
+	// Set parameters found in config. All configurable parameters must be present.
+	auto config = Config("config.txt");
+	bool has_config = config.exists();
+	config.read();
+	
+	std::cout << (has_config ? "config found" : "no config found") << "\n";
+
+	if (has_config)
+	{
+		std::cout << "config PostTriggerDelay: " << config.get_param("PostTriggerDelay") << "\n";
+		std::cout << "config TriggerRearmDeadTime: " << config.get_param("TriggerRearmDeadTime") << "\n";
+
+		post_trigger_delay = std::stod(config.get_param("PostTriggerDelay"));
+		estimated_trigger_rearm_time = std::stod(config.get_param("TriggerRearmDeadTime"));
+	}
 
 	std::unique_ptr<SA220> digitizer = std::make_unique<SA220>("PXI1::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
 	auto server = new Server("tcp://*:5555");

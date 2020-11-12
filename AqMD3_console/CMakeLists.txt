@@ -58,6 +58,7 @@ add_executable (AqMD3_console
 	include/uimfframewritersubscriber.h
 	include/definitions.h
 	include/util/timehelpers.h
+	include/util/config.h
 )
 
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)
@@ -68,3 +69,5 @@ target_link_libraries(AqMD3_console PRIVATE AqMD3)
 target_link_libraries(AqMD3_console PRIVATE AqLio)
 
 target_link_libraries (AqMD3_console PUBLIC i::uimf)
+
+add_custom_command(TARGET AqMD3_console PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/config.txt $<TARGET_FILE_DIR:AqMD3_console>)
