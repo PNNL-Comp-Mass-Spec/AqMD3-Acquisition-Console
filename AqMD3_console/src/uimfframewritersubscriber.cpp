@@ -10,7 +10,16 @@ void UimfFrameWriterSubscriber::on_notify()
 		auto frame = items.front();
 		items.pop_front();
 
+#if TIMING_INFORMATION
+		auto t1_open = std::chrono::high_resolution_clock::now();
+#endif
 		UimfWriter writer(frame->file_name);
+#if TIMING_INFORMATION
+		auto t2_open = std::chrono::high_resolution_clock::now();
+		auto dur_open = std::chrono::duration_cast<std::chrono::milliseconds>(t2_open - t1_open);
+		std::cout << "TIME TO OPEN DB: " << dur_open.count() <<"\n";
+#endif
+
 		try
 		{
 #if TIMING_INFORMATION

@@ -372,14 +372,14 @@ int main(int argc, char *argv[]) {
 					if (controller)
 					{
 #if TIMING_INFORMATION
-						//auto t_0 = std::chrono::high_resolution_clock::now();
+						auto t_0 = std::chrono::high_resolution_clock::now();
 #endif
 						controller->stop();
 						//controller.reset();
 #if TIMING_INFORMATION
-						//auto t_1 = std::chrono::high_resolution_clock::now();
-						//auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_1 - t_0);
-						//std::cout << "time to stop:" << diff.count() << "\n";
+						auto t_1 = std::chrono::high_resolution_clock::now();
+						auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_1 - t_0);
+						std::cout << "time to stop:" << diff.count() << "\n";
 #endif
 					}
 				}

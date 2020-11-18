@@ -1,6 +1,7 @@
 #include "../include/processsubject.h"
 #include "../include/definitions.h"
 #include "../include/definitions.h"
+#include "../include/util//timehelpers.h"
 #include <numeric>
 
 static std::string finished = "finished";
@@ -82,6 +83,7 @@ void ProcessSubject::on_notify()
 				{
 					frames.push_back(frames.front()->clone());
 					
+					std::cout << std::to_string(notify_on_triggers) << " scans processed, notifying -- " << timestamp_now() << "\n";
 					FramePublisher<frame_ptr>::notify(frame, SubscriberType::BOTH);
 					frames.pop_front();
 
