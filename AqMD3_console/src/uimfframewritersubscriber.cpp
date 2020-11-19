@@ -23,15 +23,25 @@ void UimfFrameWriterSubscriber::on_notify()
 		std::cout << "TIME TO OPEN DB: " << dur_open.count() <<"\n";
 #endif
 
+#if TIMING_INFORMATION
+		auto t1 = std::chrono::high_resolution_clock::now();
+		std::cout << "START FRAME WRITE: " << timestamp_now() << std::endl;
+#endif
+		int b = 0;
 		try
 		{
-#if TIMING_INFORMATION
-			auto t1 = std::chrono::high_resolution_clock::now();
-			std::cout << "START FRAME WRITE: " << timestamp_now() << std::endl;
-#endif
-			int b = writer.write_scan_data(*frame);
+			b = writer.write_scan_data(*frame);
+		}
+		catch (...)
+		{
+			std::cerr << "there was an error writing the UIMF frame" << std::endl;
+			std::cerr << "\tframe number:" << frame->frame_number << "\n";
+		}
 
-			if (write_timestamps)
+		// Optionally write timestamp information
+		if (write_timestamps)
+		{
+			try
 			{
 				std::fstream file;
 				const std::string ts_file = "timestamps.csv";
@@ -54,7 +64,7 @@ void UimfFrameWriterSubscriber::on_notify()
 				}
 
 				// Write frame number, scan number, and timestamp to file
-				size_t buf_len = 128;
+				size_t buf_len = 256;
 				auto buf = new char[buf_len];
 				for each (auto segments in frame->get_data())
 				{
@@ -70,20 +80,21 @@ void UimfFrameWriterSubscriber::on_notify()
 					}
 				}
 			}
+			catch (...)
+			{
+				std::cerr << "There was an error writing timestamp information." << std::endl;
+				std::cerr << "\tframe number:" << frame->frame_number << "\n";
+			}
+		}
 
 #if TIMING_INFORMATION
-			auto t2 = std::chrono::high_resolution_clock::now();
-			auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-			std::cout << "END FRAME WRITE: " << timestamp_now() 
-				<< " -- DURATION (ms): " << dur.count() 
-				<< " -- TOTAL BYTES: " << b
-				<< std::endl;
+		auto t2 = std::chrono::high_resolution_clock::now();
+		auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+		std::cout << "END FRAME WRITE: " << timestamp_now() 
+			<< " -- DURATION (ms): " << dur.count() 
+			<< " -- TOTAL BYTES: " << b
+			<< std::endl;
 #endif
-		}
-		catch (...)
-		{
-			std::cout << "there was an error writing the UIMF frame" << std::endl;
-		}
 	}
 }
 
