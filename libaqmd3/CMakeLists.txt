@@ -5,9 +5,6 @@ cmake_minimum_required (VERSION 3.12)
 
 project (libaqmd3)
 
-#include_directories("C:/Program Files/IVI Foundation/IVI/Include")
-#link_directories("C:/Program Files/IVI Foundation/IVI/Lib_x64/msc")
-
 add_library (libaqmd3
 	src/digitizer.cpp
 	src/acquisitionbuffer.cpp
@@ -26,7 +23,6 @@ add_library (libaqmd3
 )
 add_library(i::digi ALIAS libaqmd3)
 
-#target_link_libraries(libaqmd3 PRIVATE AqMD3)
 include_directories("C:/Program Files/IVI Foundation/IVI/Include")
 include_directories("C:/Program Files/IVI Foundation/VISA/Win64/Include")
 find_library(AQMD3_LIBRARY AqMD3 HINTS "C:/Program Files/IVI Foundation/IVI/Lib_x64/*")
