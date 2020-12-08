@@ -2,7 +2,7 @@
 #define ENCODED_DATA_WRITER_H
 
 #include "../framesubscriber.h"
-#include "../acquireddata.h"
+#include <libaqmd3/acquireddata.h>
 #include <UIMFWriter/encodedresult.h>
 
 #include <string>

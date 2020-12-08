@@ -2,7 +2,7 @@
 #define UIMF_DECOMPRESSOR_SUBSCRIBER_H
 
 #include "../framesubscriber.h"
-#include "../acquireddata.h"
+#include <libaqmd3/acquireddata.h>
 #include <UIMFWriter/uimfframe.h>
 
 extern "C" {

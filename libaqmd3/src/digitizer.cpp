@@ -1,4 +1,4 @@
-#include "../include/digitizer.h"
+#include "../include/libaqmd3/digitizer.h"
 
 std::pair<std::string, Digitizer::ErrorType> Digitizer::get_instrument_options_info(std::string &options) const
 {

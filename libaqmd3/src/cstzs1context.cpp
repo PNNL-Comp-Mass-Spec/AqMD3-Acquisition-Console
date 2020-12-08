@@ -1,5 +1,5 @@
-#include "../include/cstzs1context.h"
-#include "../include/digitizer.h"
+#include "../include/libaqmd3/cstzs1context.h"
+#include "../include/libaqmd3/digitizer.h"
 
 #include <vector>
 #include <tuple>

@@ -1,7 +1,6 @@
-#include "../include/sa220.h"
-
-#include "../include/cstcontext.h"
-#include "../include/cstzs1context.h"
+#include "../include/libaqmd3/sa220.h"
+#include "../include/libaqmd3/cstcontext.h"
+#include "../include/libaqmd3/cstzs1context.h"
 #include <exception>
 #include <cstring>
 

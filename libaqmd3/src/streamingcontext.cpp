@@ -1,6 +1,5 @@
-#include "../include/streamingcontext.h"
-
-#include "../include/digitizer.h"
+#include "../include/libaqmd3/streamingcontext.h"
+#include "../include/libaqmd3/digitizer.h"
 #include <iostream>
 
 void StreamingContext::start()

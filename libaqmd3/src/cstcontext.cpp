@@ -1,6 +1,6 @@
-#include "../include/cstcontext.h"
-#include "../include/acquisitionbuffer.h"
-#include "../include/digitizer.h"
+#include "../include/libaqmd3/cstcontext.h"
+#include "../include/libaqmd3/acquisitionbuffer.h"
+#include "../include/libaqmd3/digitizer.h"
 
 #include <iostream>
 

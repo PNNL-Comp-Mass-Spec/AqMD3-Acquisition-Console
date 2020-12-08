@@ -10,4 +10,5 @@ project ("AqMD3_console")
 
 # Include sub-projects.
 add_subdirectory ("UIMFWriter")
+add_subdirectory ("libaqmd3")
 add_subdirectory ("AqMD3_console")

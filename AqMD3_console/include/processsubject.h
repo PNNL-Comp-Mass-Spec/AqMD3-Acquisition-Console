@@ -3,7 +3,7 @@
 
 #include "framesubscriber.h"
 #include "framepublisher.h"
-#include "acquireddata.h"
+#include <libaqmd3/acquireddata.h>
 #include <UIMFWriter/encodedresult.h>
 #include "server.h"
 #include <zmq.hpp>

@@ -2,7 +2,6 @@
 #define ENCODED_RESULT_H
 
 #include <vector>
-#include <SQLiteCpp/SQLiteCpp.h>
 
 class EncodedResult {
 public:

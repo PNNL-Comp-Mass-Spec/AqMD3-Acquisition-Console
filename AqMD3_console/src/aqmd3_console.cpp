@@ -1,13 +1,14 @@
 ﻿#include "../include/server.h"
-#include "../include/digitizer.h"
-#include "../include/acquireddata.h"
-#include "../include/sa220.h"
 #include "../include/acquisitioncontrol.h"
 #include "../include/acquirepublisher.h"
 #include "../include/uimfframewritersubscriber.h"
 #include "../include/zmqacquireddatasubscriber.h"
 #include "../include/processsubject.h"
 #include "../include/definitions.h"
+
+#include <libaqmd3/digitizer.h>
+#include <libaqmd3/acquireddata.h>
+#include <libaqmd3/sa220.h>
 
 #include "../include/PicoSHA2/picosha2.h"
 
@@ -18,7 +19,6 @@
 #include "../include/util/config.h"
 
 #include <UIMFWriter/uimfwriter.h>
-#include "AqMD3.h"
 #include <visa.h>
 #include <snappy.h>
 #include <zmq.hpp>

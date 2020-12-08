@@ -2,7 +2,7 @@
 #define ZMQ_ACQUIRED_DATA_SUBSCRIBER_H
 
 #include "framesubscriber.h"
-#include "acquireddata.h"
+#include <libaqmd3/acquireddata.h>
 #include "server.h"
 #include <string>
 #include <zmq.hpp>

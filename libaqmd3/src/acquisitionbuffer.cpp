@@ -1,4 +1,4 @@
-#include "../include/acquisitionbuffer.h"
+#include "../include/libaqmd3/acquisitionbuffer.h"
 
 int AcquisitionBuffer::get_size()
 {
