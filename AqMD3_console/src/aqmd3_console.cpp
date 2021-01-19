@@ -138,8 +138,20 @@ int main(int argc, char *argv[]) {
 
 			if (command == "info")
 			{
-				std::string info = digitizer->get_info();
-				req.send_response(info);
+				auto info = digitizer->get_info();
+				req.send_response("");
+			}
+
+			if (command == "firmware")
+			{
+				auto info = digitizer->get_info();
+				req.send_response(info.firmware_revision);
+			}
+
+			if (command == "serial")
+			{
+				auto info = digitizer->get_info();
+				req.send_response(info.serial_number);
 			}
 
 			if (command == "init")

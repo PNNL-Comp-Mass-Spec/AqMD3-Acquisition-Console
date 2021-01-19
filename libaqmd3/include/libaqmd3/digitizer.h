@@ -74,6 +74,7 @@ public:
 	std::pair<std::string, ErrorType> get_instrument_options_info(std::string &options) const;
 	std::pair<std::string, ErrorType> get_instrument_model(std::string &model) const;
 	std::pair<std::string, ErrorType> get_instrument_serial_number(std::string &serial_number) const;
+	std::pair<std::string, ErrorType> get_instrument_firmware_revision(std::string &firmware_revision) const;
 
 	std::pair<std::string, ErrorType> configure_streaming_mode(ViInt32 mode) const;
 	std::pair<std::string, ErrorType> configure_sample_rate(ViReal64 rate) const;

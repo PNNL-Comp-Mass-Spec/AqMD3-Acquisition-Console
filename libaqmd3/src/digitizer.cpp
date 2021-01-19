@@ -18,6 +18,12 @@ std::pair<std::string, Digitizer::ErrorType> Digitizer::get_instrument_serial_nu
 	return check_error(status);
 }
 
+std::pair<std::string, Digitizer::ErrorType> Digitizer::get_instrument_firmware_revision(std::string &firmware_revision) const
+{
+	ViStatus status = AqMD3_GetAttributeViString(session, "", AQMD3_ATTR_INSTRUMENT_FIRMWARE_REVISION, firmware_revision.length(), &firmware_revision[0]);
+	return check_error(status);
+}
+
 std::pair<std::string, Digitizer::ErrorType> Digitizer::configure_streaming_mode(ViInt32 mode) const
 {
 	ViStatus status = AqMD3_SetAttributeViInt32(session, "", AQMD3_ATTR_STREAMING_MODE, mode);
@@ -161,3 +167,4 @@ std::pair<std::string, Digitizer::ErrorType> Digitizer::stream_fetch_data(ViCons
 	ViStatus status = AqMD3_StreamFetchDataInt32(session, stream, elements_to_Fetch, buffer_size, buffer, available_elements, actual_elements, first_valid_element_index);
 	return check_error(status);
 }
+
