@@ -29,7 +29,7 @@ void AcquirePublisher::start(UimfRequestMessage uimf)
 		{
 			try
 			{
-				auto data = context->acquire(std::chrono::milliseconds(1000));
+				auto data = context->acquire(std::chrono::milliseconds::zero());
 				triggers_acquired += data.stamps.size();
 				notify(data, SubscriberType::BOTH);
 			}

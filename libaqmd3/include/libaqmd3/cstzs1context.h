@@ -34,7 +34,7 @@ public:
 	{}
 
 	void stop() override;
-	AcquiredData acquire(std::chrono::milliseconds timeoutMs = std::chrono::milliseconds::zero()) override;
+	AcquiredData acquire(std::chrono::milliseconds timeoutMs) override;
 };
 
 #endif // !CST_ZS1_CONTEXT_H
