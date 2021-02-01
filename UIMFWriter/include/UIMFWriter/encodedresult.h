@@ -31,7 +31,7 @@ public:
 
 public:
 	EncodedResult(int32_t scan, int32_t non_zero_count, std::vector<int32_t> encoded_spectra, int64_t tic, int64_t bpi, double bpi_mz, int32_t index_max_intensity, uint64_t timestamp)
-	: encoded_spectra(encoded_spectra)
+	: encoded_spectra(std::move(encoded_spectra))
 		, scan(scan)
 		, non_zero_count(non_zero_count)
 		, tic(tic)
