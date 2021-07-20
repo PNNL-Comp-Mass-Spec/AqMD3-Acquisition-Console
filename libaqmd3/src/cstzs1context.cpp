@@ -146,19 +146,16 @@ AcquiredData CstZs1Context::acquire(std::chrono::milliseconds timeoutMs)
 		if (trig_count <= triggers_per_read)
 		{
 			markers_buffer.reset();
-#ifdef variable_m_t_a
+
 			int next_markers_to_acquire = markers_to_acquire;
-#endif		
+	
 			first_element_markers = 0;
 			available_elements_markers = 0;
 			actual_elements_markers = 0;
 
 			do
 			{
-
-#ifdef variable_m_t_a	
 				markers_to_acquire = next_markers_to_acquire;
-#endif	
 
 				auto rc = digitizer.stream_fetch_data(
 						markers_channel.c_str(),
@@ -208,7 +205,6 @@ process:
 		if (to_acquire == 0)
 			break;
 
-		// Should hopefully only need no more than two calls to FetchData. If that's not the case, this will need to be handled differently.
 		int actual_acquire = to_acquire - actual_elements_samples;
 		auto rc = digitizer.stream_fetch_data(
 				samples_channel.c_str(),
@@ -222,12 +218,6 @@ process:
 		samples_buffer->advance_offset(first_element_samples);
 		samples_buffer->advance_acquired(actual_elements_samples);
 	} while (samples_buffer->get_acquired() < to_acquire);
-
-	//std::cout
-		//<< "to_acquire: " << to_acquire << "\n"
-		//<< "\tAVAILABLE_ELEMENTS -- SAMPLES: " << available_elements_samples << "\n"
-		//<< "actual_elements_samples: " << actual_elements_samples << "\n"
-		//;
 
 	return AcquiredData(stamps, samples_buffer, samples_per_trigger);
 

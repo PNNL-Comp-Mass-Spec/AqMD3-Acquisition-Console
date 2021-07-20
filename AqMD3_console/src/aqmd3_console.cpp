@@ -168,7 +168,6 @@ int main(int argc, char *argv[]) {
 				{
 					auto horizontal_resolution = std::stod(req.payload[1]);
 					sampling_rate = 1.0 / horizontal_resolution;
-					//std::cout << "sampling rate: " << sampling_rate << std::endl;
 					digitizer->set_sampling_rate(sampling_rate);
 				}
 
@@ -234,18 +233,15 @@ int main(int argc, char *argv[]) {
 				if (req.payload.size() == 2)
 				{
 #if TIMING_INFORMATION
-					//auto t_0 = std::chrono::high_resolution_clock::now();
+					auto t_0 = std::chrono::high_resolution_clock::now();
 #endif
 					std::string uimf_req_msg;
 					snappy::Uncompress(req.payload[1].data(), req.payload[1].size(), &uimf_req_msg);
 					auto uimf = UimfRequestMessage();
 					uimf.MergeFromString(uimf_req_msg);
 
+					// Set number of samples in record
 					uint64_t record_size = uimf.nbr_samples() - calculated_post_trigger_samples;
-					//std::cout << "samples per trigger: " << uimf.nbr_samples() << std::endl;
-					//std::cout << "record size: " << record_size << std::endl;
-					//std::cout << "post trigger samples: " << calculated_post_trigger_samples << std::endl;
-
 					digitizer->set_record_size(record_size);
 
 					auto data_pub = server->get_publisher("tcp://*:5554");
@@ -285,14 +281,16 @@ int main(int argc, char *argv[]) {
 					ps->FramePublisher<frame_ptr>::register_subscriber(fws, SubscriberType::ACQUIRE_FRAME);
 #endif
 
-
-					//if (controller) controller.reset();
+					// Move active acquisition chain
 					controller = std::move(p);
+
+					// Start acquire. Waits for external enabe signal.
 					controller->start(uimf);
+
 #if TIMING_INFORMATION
-					//auto t_1 = std::chrono::high_resolution_clock::now();
-					//auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_1 - t_0);
-					//std::cout << "time to setup acquire frame:" << diff.count() << "\n";
+					auto t_1 = std::chrono::high_resolution_clock::now();
+					auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_1 - t_0);
+					std::cout << "time to setup acquire frame:" << diff.count() << "\n";
 #endif
 				}
 

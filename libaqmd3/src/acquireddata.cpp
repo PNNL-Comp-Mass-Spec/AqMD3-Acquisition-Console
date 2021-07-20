@@ -24,7 +24,6 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 		int64_t bpi = 0;
 		double bpi_mz = 0.0;
 		int32_t index_max_intensity = 0;
-
 		int32_t non_zero_count = 0;
 		int32_t zero_count = 0;
 
@@ -56,6 +55,7 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 				continue;
 			}
 
+#pragma region zero_count
 			int32_t gate_zero_count = 0;
 			if (j == 0)
 			{
@@ -73,6 +73,7 @@ std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing
 			}
 
 			zero_count += gate_zero_count;
+#pragma endregion
 
 			int32_t *ptr = samples_buffer->get_raw_unprocessed() + offset;
 
