@@ -4,7 +4,7 @@
 #       <-------------- RISING EDGE TRIGGERED, ONE SCAN ---------------------->
 #        ____                                                                   ____
 #       ^    |                                                                 ^    |
-# ______|    |___________________TOF PUSHER PULSE CLOCK________________________|    |_________
+# ______|    |___________________________CLOCK_________________________________|    |_________ <TRG IN>
 
 # The time in seconds after a trigger is detected that the acquisition firmware
 # waits before a sample can be detected.
