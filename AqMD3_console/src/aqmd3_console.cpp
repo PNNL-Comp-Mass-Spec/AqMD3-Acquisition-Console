@@ -76,10 +76,18 @@ void disable_quick_edit()
 }
 
 static char ack[] = "ack";
+// Default post trigger delay in 10us
 static double post_trigger_delay = 0.00001;
+// Default allowed trigger rearm time is 2us
 static double estimated_trigger_rearm_time = 0.000002048;
 uint32_t calculated_post_trigger_samples = 0;
 uint64_t avg_tof_period_samples = 0;
+
+static bool print_and_return_has_key(const std::string& key, const Config& config) {
+	auto hasKey = config.has_key(key);
+	std::cout << key << " found? " << (hasKey ? "Yes" : "No") << "\n";
+	return hasKey;
+}
 
 int main(int argc, char *argv[]) {
 
@@ -90,19 +98,20 @@ int main(int argc, char *argv[]) {
 	auto config = Config("config.txt");
 	bool has_config = config.exists();
 	config.read();
+	// Default instrument resource name
+	std::string resource_name = "PXI0::0::0::INSTR";
 	
 	std::cout << (has_config ? "config found" : "no config found") << "\n";
 
 	if (has_config)
 	{
-		std::cout << "config PostTriggerDelay: " << config.get_param("PostTriggerDelay") << "\n";
-		std::cout << "config TriggerRearmDeadTime: " << config.get_param("TriggerRearmDeadTime") << "\n";
-
-		post_trigger_delay = std::stod(config.get_param("PostTriggerDelay"));
-		estimated_trigger_rearm_time = std::stod(config.get_param("TriggerRearmDeadTime"));
+		// TODO stop application or indicate default value is being used if config kvp not found
+		post_trigger_delay = print_and_return_has_key("PostTriggerDelay", config) ? std::stod(config.get_value("PostTriggerDelay")) : post_trigger_delay;
+		estimated_trigger_rearm_time = print_and_return_has_key("TriggerRearmDeadTime", config) ? std::stod(config.get_value("TriggerRearmDeadTime")) : estimated_trigger_rearm_time;
+		resource_name = print_and_return_has_key("ResourceName", config) ? config.get_value("ResourceName") : resource_name;
 	}
 
-	std::unique_ptr<SA220> digitizer = std::make_unique<SA220>("PXI1::0::0::INSTR", "Simulate=false, DriverSetup= Model=SA220P");
+	std::unique_ptr<SA220> digitizer = std::make_unique<SA220>(resource_name, "Simulate=false, DriverSetup= Model=SA220P");
 	auto server = new Server("tcp://*:5555");
 	double sampling_rate = 0.0;
 	std::unique_ptr<AcquisitionControl> controller;

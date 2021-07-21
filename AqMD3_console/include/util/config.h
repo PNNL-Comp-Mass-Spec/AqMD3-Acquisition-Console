@@ -60,13 +60,21 @@ public:
 		}
 	};
 
-	std::string get_param(std::string param) const {
-		if (config_map.count(param) == 0) {
-			std::cerr << "param " << param << " not found\n";
-			return {};
+	std::string get_value(std::string key) const {
+		if (config_map.count(key) == 0) {
+			throw std::string("key " + key + " not found\n");
 		}
 
-		return std::get<1>(*(config_map.find(param)));
+		return std::get<1>(*(config_map.find(key)));
+	}
+
+	bool has_key(std::string key) const {
+		bool hasKey = false;
+		if (config_map.count(key) == 1) {
+			hasKey = true;
+		}
+
+		return hasKey;
 	}
 
 };
