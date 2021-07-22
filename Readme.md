@@ -14,9 +14,9 @@ Once vcpkg is installed, navigate to the directoy containing vcpkg.exe and execu
 PS C:\vcpkg> .\vcpkg.exe install zeromq:x64-windows sqlitecpp:x64-windows sqlite3:x64-windows snappy:x64-windows protobuf:x64-windows
 ```
 
-The **CMAKE_TOOLCHAIN_FILE** variable must have its value updated to be the filepath to the file vcpkg.cmake, an example of this is shown [here](https://github.com/microsoft/vcpkg/blob/master/docs/examples/installing-and-using-packages.md) under **Section 2: Use**.
+The **CMAKE_TOOLCHAIN_FILE** variable must have its value updated to be the file path for vcpkg.cmake, an example of this is shown [here](https://github.com/microsoft/vcpkg/blob/master/docs/examples/installing-and-using-packages.md) under **Section 2: Use**.
 
-Acqiris MD3 Software and drivers for the SA220P must be installed on the system to both run and build the application. The installer and software is made available by Acqiris and can be found [here](https://extranet.acqiris.com/homepage?field_res_products_target_id=23).
+Acqiris MD3 Software and drivers for the SA220P must be installed on the system to both run and build the application. The software installer is made available by Acqiris and can be found [here](https://extranet.acqiris.com/homepage?field_res_products_target_id=23).
 
 
 
