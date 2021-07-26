@@ -22,9 +22,9 @@ Acqiris MD3 Software and drivers for the SA220P must be installed on the system 
 
 ## Contacts
 
-Written by Cameron Giberson for the Department of Energy (PNNL, Richland, WA)\
+Written by Cameron Giberson and Joon-Yong Lee for the Department of Energy (PNNL, Richland, WA)\
 Copyright 2021, Battelle Memorial Institute. All Rights Reserved.\
-E-mail: cameron.giberson@pnnl.gov or proteomics@pnnl.gov\
+E-mail: cameron.giberson@pnnl.gov or joonyong.lee@pnnl.gov or proteomics@pnnl.gov\
 Website: https://omics.pnl.gov/ or https://panomics.pnnl.gov/
 
 
