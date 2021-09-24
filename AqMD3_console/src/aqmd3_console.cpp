@@ -10,15 +10,12 @@
 #include <libaqmd3/acquireddata.h>
 #include <libaqmd3/sa220.h>
 
-#include "../include/PicoSHA2/picosha2.h"
 
-#include "../include/diagnostic/uimfframedecompressorsubscriber.h"
-#include "../include/diagnostic/encodeddatawriter.h"
-#include "../include/diagnostic/rawprintersubscriber.h"
 
 #include "../include/util/config.h"
 
 #include <UIMFWriter/uimfwriter.h>
+#include <picosha2.h>
 #include <visa.h>
 #include <snappy.h>
 #include <zmq.hpp>

@@ -5,6 +5,8 @@ cmake_minimum_required (VERSION 3.12)
 
 project (AqMD3_console)
 
+find_path(PICOSHA2_INCLUDE_DIRS "picosha2.h")
+
 find_package(cppzmq CONFIG REQUIRED) 
 find_package(protobuf CONFIG REQUIRED)
 find_package(Snappy CONFIG REQUIRED)
@@ -44,6 +46,7 @@ add_executable (AqMD3_console
 	include/util/timehelpers.h
 	include/util/config.h
 )
+target_include_directories(AqMD3_console PRIVATE ${PICOSHA2_INCLUDE_DIRS})
 
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)
 target_link_libraries(AqMD3_console PRIVATE protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite)
