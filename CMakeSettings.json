@@ -1,73 +1,66 @@
 ﻿{
-  "configurations": [
-    {
-      "name": "x64-Release",
-      "generator": "Visual Studio 15 2017 Win64",
-      "configurationType": "RelWithDebInfo",
-      "inheritEnvironments": [
-        "msvc_x64_x64"
-      ],
-      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
-      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "",
-      "buildCommandArgs": "",
-      "ctestCommandArgs": "",
-      "variables": [
-        {
-          "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "C:/users/gibe617/documents/vcpkg/scripts/buildsystems/vcpkg.cmake"
-        },
-        {
-          "name": "VCPKG_TARGET_TRIPLET",
-          "value": "x64-windows"
-        }
-      ]
-    },
-    {
-      "name": "x64-Debug",
-      "generator": "Visual Studio 15 2017 Win64",
-      "configurationType": "Debug",
-      "inheritEnvironments": [
-        "msvc_x64_x64"
-      ],
-      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
-      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "",
-      "buildCommandArgs": "",
-      "ctestCommandArgs": "",
-      "variables": [
-        {
-          "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "C:/users/gibe617/documents/vcpkg/scripts/buildsystems/vcpkg.cmake"
-        },
-        {
-          "name": "VCPKG_TARGET_TRIPLET",
-          "value": "x64-windows"
-        }
-      ]
-    },
-    {
-      "name": "x64-Release-true",
-      "generator": "Visual Studio 15 2017 Win64",
-      "configurationType": "Release",
-      "inheritEnvironments": [
-        "msvc_x64_x64"
-      ],
-      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
-      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
-      "cmakeCommandArgs": "",
-      "buildCommandArgs": "",
-      "ctestCommandArgs": "",
-      "variables": [
-        {
-          "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "C:/users/gibe617/documents/vcpkg/scripts/buildsystems/vcpkg.cmake"
-        },
-        {
-          "name": "VCPKG_TARGET_TRIPLET",
-          "value": "x64-windows"
-        }
-      ]
-    }
-  ]
+	"configurations": [
+		{
+			"name": "x64-Release",
+			"generator": "Visual Studio 16 2019 Win64",
+			"configurationType": "RelWithDebInfo",
+			"inheritEnvironments": [ "msvc_x64_x64" ],
+			"buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+			"installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
+			"cmakeCommandArgs": "",
+			"buildCommandArgs": "",
+			"ctestCommandArgs": "",
+			"variables": [
+				{
+					"name": "VCPKG_TARGET_TRIPLET",
+					"value": "x64-windows",
+					"type": "STRING"
+				}
+			],
+			"cmakeToolchain": "D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+		},
+		{
+			"name": "x64-Debug",
+			"generator": "Visual Studio 16 2019 Win64",
+			"configurationType": "Debug",
+			"inheritEnvironments": [ "msvc_x64_x64" ],
+			"buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+			"installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
+			"cmakeCommandArgs": "",
+			"buildCommandArgs": "",
+			"ctestCommandArgs": "",
+			"variables": [
+				{
+					"name": "VCPKG_TARGET_TRIPLET",
+					"value": "x64-windows",
+					"type": "STRING"
+				}
+			],
+			"cmakeToolchain": "D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+		},
+		{
+			"name": "x64-Release-true",
+			"generator": "Visual Studio 15 2017 Win64",
+			"configurationType": "Release",
+			"inheritEnvironments": [ "clang_cl_x86" ],
+			"buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\build\\${name}",
+			"installRoot": "${env.USERPROFILE}\\CMakeBuilds\\${workspaceHash}\\install\\${name}",
+			"cmakeCommandArgs": "",
+			"buildCommandArgs": "",
+			"ctestCommandArgs": "",
+			"variables": [
+				{
+					"name": "CMAKE_TOOLCHAIN_FILE",
+					"value": "C:/users/gibe617/documents/vcpkg/scripts/buildsystems/vcpkg.cmake",
+					"type": "STRING"
+				},
+				{
+					"name": "VCPKG_TARGET_TRIPLET",
+					"value": "x64-windows",
+					"type": "STRING"
+				}
+			],
+			"cmakeToolchain": "D:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+		}
+	]
 }
