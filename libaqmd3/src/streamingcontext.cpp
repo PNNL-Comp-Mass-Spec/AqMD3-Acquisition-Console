@@ -34,7 +34,7 @@ std::shared_ptr<AcquisitionBuffer> StreamingContext::get_buffer()
 	for (int i = 0; i < total; i++)
 	{
 		int index = (buffer_takes + i) % total;
-		if (samples_buffer_pool[index].unique())
+		if (samples_buffer_pool[index].use_count() == 1)	// .use_count() not reliable
 		{
 			buffer_takes++;
 			samples_buffer_pool[index]->reset();

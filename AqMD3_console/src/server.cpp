@@ -42,7 +42,7 @@ void Server::respond_more(const std::string& client, const std::vector<std::stri
 	send_more(router, client);
 	send_more(router, "");
 
-	for (auto& response = responses.begin(); response != std::prev(responses.end()); response++)
+	for (auto response = responses.begin(); response != std::prev(responses.end()); response++)
 	{
 		send_more(router, *response);
 	}

@@ -49,9 +49,9 @@ int UimfWriter::write_scan_data(const UimfFrame& frame)
 
 					bytes += compressed.size + count;
 
-					SQLite::Statement statement(db, statement);
-					statement.bind(1, compressed.data, compressed.size);
-					statement.exec();
+					SQLite::Statement sql_statement(db, (const char *)statement);
+					sql_statement.bind(1, compressed.data, compressed.size);
+					sql_statement.exec();
 				}
 			}
 		}
