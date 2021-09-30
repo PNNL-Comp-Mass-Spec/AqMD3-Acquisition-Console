@@ -1,7 +1,6 @@
 #ifndef FRAME_SUBSCRIBER_H
 #define FRAME_SUBSCRIBER_H
 
-#include <UIMFWriter/uimfframe.h>
 #include <deque>
 #include <mutex>
 #include <condition_variable>

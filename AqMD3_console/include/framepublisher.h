@@ -2,8 +2,6 @@
 #define FRAME_PUBLISHER_H
 
 #include "framesubscriber.h"
-#include <libaqmd3/streamingcontext.h>
-#include <UIMFWriter/uimfframe.h>
 #include <list>
 #include <tuple>
 #include <future>

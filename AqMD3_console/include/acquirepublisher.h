@@ -3,6 +3,7 @@
 
 #include "framepublisher.h"
 #include "acquisitioncontrol.h"
+#include <libaqmd3/streamingcontext.h>
 #include <vector>
 #include <thread>
 #include <atomic>

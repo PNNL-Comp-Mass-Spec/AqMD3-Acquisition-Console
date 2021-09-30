@@ -5,6 +5,7 @@
 #include "framepublisher.h"
 #include <libaqmd3/acquireddata.h>
 #include <UIMFWriter/encodedresult.h>
+#include <UIMFWriter/uimfframe.h>
 #include "server.h"
 #include <zmq.hpp>
 
