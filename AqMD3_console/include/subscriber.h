@@ -27,7 +27,7 @@ constexpr enum SubscriberType operator&(const enum SubscriberType left, const en
 }
 
 template <typename T>
-class FrameSubscriber {
+class Subscriber {
 private:
 	std::condition_variable sig;
 	std::mutex sig_sync;
@@ -44,7 +44,7 @@ protected:
 	std::deque<T> items;
 
 public:
-	FrameSubscriber(bool reusable = false)
+	Subscriber(bool reusable = false)
 		: items()
 		, worker_handle()
 		, reusable(reusable)
@@ -52,7 +52,7 @@ public:
 		, is_running(false)
 	{}
 
-	virtual ~FrameSubscriber()
+	virtual ~Subscriber()
 	{
 		if (reusable)
 			reusable_notifier.set_value();

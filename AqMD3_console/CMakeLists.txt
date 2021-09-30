@@ -31,8 +31,8 @@ add_executable (AqMD3_console
 	include/server.h
 	include/server.h
 	include/message.pb.h
-	include/framepublisher.h
-	include/framesubscriber.h
+	"include/publisher.h"
+	"include/subscriber.h"
 	include/acquirepublisher.h
 	include/acquisitioncontrol.h
 	include/processsubject.h

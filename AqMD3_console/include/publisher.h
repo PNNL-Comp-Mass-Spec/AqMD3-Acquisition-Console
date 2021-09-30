@@ -1,26 +1,26 @@
 #ifndef FRAME_PUBLISHER_H
 #define FRAME_PUBLISHER_H
 
-#include "framesubscriber.h"
+#include "subscriber.h"
 #include <list>
 #include <tuple>
 #include <future>
 
 template <typename T>
-class FramePublisher {
+class Publisher {
 protected:
-	std::list<std::tuple<SubscriberType, std::shared_ptr<FrameSubscriber<T>>, std::shared_future<void>>> subscribers;
+	std::list<std::tuple<SubscriberType, std::shared_ptr<Subscriber<T>>, std::shared_future<void>>> subscribers;
 	std::promise<void> completed_signal;
 	std::shared_future<void> completed_future;
 
 public:
-	FramePublisher()
+	Publisher()
 		: completed_future(completed_signal.get_future())
 	{}
 
-	virtual ~FramePublisher() = default;
+	virtual ~Publisher() = default;
 
-	inline void register_subscriber(std::shared_ptr<FrameSubscriber<T>> subscriber, SubscriberType type)
+	inline void register_subscriber(std::shared_ptr<Subscriber<T>> subscriber, SubscriberType type)
 	{
 		auto sub_finished = subscriber->setup(completed_future);
 		subscribers.emplace_back(type, subscriber, sub_finished);

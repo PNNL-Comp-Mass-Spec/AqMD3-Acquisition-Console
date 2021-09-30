@@ -1,7 +1,7 @@
 #ifndef ENCODED_DATA_WRITER_H
 #define ENCODED_DATA_WRITER_H
 
-#include "../framesubscriber.h"
+#include "../subscriber.h"
 #include <libaqmd3/acquireddata.h>
 #include <UIMFWriter/encodedresult.h>
 
@@ -9,7 +9,7 @@
 #include <fstream>
 #include <vector>
 
-class EncodedDataWriter : public FrameSubscriber<std::shared_ptr<std::vector<EncodedResult>>>
+class EncodedDataWriter : public Subscriber<std::shared_ptr<std::vector<EncodedResult>>>
 {
 private:
 	std::ofstream out_file_stream;

@@ -71,7 +71,7 @@ void ProcessSubject::on_notify()
 					total_elements_processed += results->at(i).non_zero_count;
 				}
 
-				FramePublisher<segment_ptr>::notify(results, SubscriberType::BOTH);
+				Publisher<segment_ptr>::notify(results, SubscriberType::BOTH);
 
 				auto excess = frame->append_and_return_excess(results);
 
@@ -84,7 +84,7 @@ void ProcessSubject::on_notify()
 					frames.push_back(frames.front()->clone());
 					
 					std::cout << std::to_string(notify_on_triggers) << " scans processed, notifying -- " << timestamp_now() << "\n";
-					FramePublisher<frame_ptr>::notify(frame, SubscriberType::BOTH);
+					Publisher<frame_ptr>::notify(frame, SubscriberType::BOTH);
 					frames.pop_front();
 
 					if (excess->size() > 0 && !frames.empty())
@@ -118,7 +118,7 @@ void ProcessSubject::on_notify()
 
 				auto results = ad.process(0, offset_bins);
 
-				FramePublisher<segment_ptr>::notify(results, SubscriberType::BOTH);
+				Publisher<segment_ptr>::notify(results, SubscriberType::BOTH);
 
 			}
 			catch (...)

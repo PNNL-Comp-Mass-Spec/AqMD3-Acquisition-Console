@@ -1,13 +1,13 @@
 #ifndef SIMPLE_PUBLISHER_H
 #define SIMPLE_PUBLISHER_H
 
-#include "../framepublisher.h"
+#include "../publisher.h"
 #include "../acquireddata.h"
 #include "../streamingcontext.h"
 
 #include <chrono>
 
-class SimplePublisher : public FramePublisher<AcquiredData> {
+class SimplePublisher : public Publisher<AcquiredData> {
 private:
 	std::unique_ptr<StreamingContext> context;
 

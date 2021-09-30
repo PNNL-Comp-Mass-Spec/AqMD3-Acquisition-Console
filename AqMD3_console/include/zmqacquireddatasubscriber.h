@@ -1,7 +1,7 @@
 #ifndef ZMQ_ACQUIRED_DATA_SUBSCRIBER_H
 #define ZMQ_ACQUIRED_DATA_SUBSCRIBER_H
 
-#include "framesubscriber.h"
+#include "subscriber.h"
 #include <libaqmd3/acquireddata.h>
 #include "server.h"
 #include <string>
@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-class ZmqAcquiredDataSubscriber : public FrameSubscriber<std::shared_ptr<std::vector<EncodedResult>>> {
+class ZmqAcquiredDataSubscriber : public Subscriber<std::shared_ptr<std::vector<EncodedResult>>> {
 private:
 	std::shared_ptr<Server::Publisher> publisher;
 	std::string subject;
@@ -18,7 +18,7 @@ private:
 
 public:
 	ZmqAcquiredDataSubscriber(std::shared_ptr<Server::Publisher> publisher, uint32_t sample_count)
-		: FrameSubscriber(true)
+		: Subscriber(true)
 		, data_vector(sample_count)
 		, publisher(publisher)
 		, subject("data")

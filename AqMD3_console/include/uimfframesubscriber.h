@@ -1,8 +1,8 @@
 #ifndef UIMF_FRAME_SUBSCRIBER_H
 #define UIMF_FRAME_SUBSCRIBER_H
 
-#include "framepublisher.h"
-#include "framesubscriber.h"
+#include "publisher.h"
+#include "subscriber.h"
 #include <vector>
 #include <UIMFWriter/uimfframe.h>
 #include <thread>
@@ -10,7 +10,7 @@
 #include <iostream>
 
 
-class UimfFrameSubscriber : public FrameSubscriber<std::shared_ptr<std::vector<EncodedResult>>> {
+class UimfFrameSubscriber : public Subscriber<std::shared_ptr<std::vector<EncodedResult>>> {
 private:
 	std::shared_ptr<UimfFrame> frame;
 	int total_processed;

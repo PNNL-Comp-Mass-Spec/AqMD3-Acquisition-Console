@@ -269,12 +269,12 @@ int main(int argc, char *argv[]) {
 					double ts_period = 1.0 / digitizer->max_sample_rate;
 
 #if REUSABLE_PUB_SUB
-					ps->FramePublisher<frame_ptr>::register_subscriber(frame_writer, SubscriberType::ACQUIRE_FRAME);
+					ps->Publisher<frame_ptr>::register_subscriber(frame_writer, SubscriberType::ACQUIRE_FRAME);
 #else
-					ps->FramePublisher<frame_ptr>::register_subscriber(std::make_shared<UimfFrameWriterSubscriber>(), SubscriberType::ACQUIRE_FRAME);
+					ps->Publisher<frame_ptr>::register_subscriber(std::make_shared<UimfFrameWriterSubscriber>(), SubscriberType::ACQUIRE_FRAME);
 #endif
 
-					ps->FramePublisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
+					ps->Publisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
 					p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
 
 #if PRINT_RAW
@@ -282,9 +282,9 @@ int main(int argc, char *argv[]) {
 					std::shared_ptr<EncodedDataWriter> edw = std::make_shared<EncodedDataWriter>("encoded_data_" + std::to_string(uimf.frame_number()));
 					std::shared_ptr<UimfFrameDecompressorSubscriber> fws = std::make_shared<UimfFrameDecompressorSubscriber>("frame_data_" + std::to_string(uimf.frame_number()));
 
-					p->FramePublisher<AcquiredData>::register_subscriber(rps, SubscriberType::ACQUIRE_FRAME);
-					ps->FramePublisher<segment_ptr>::register_subscriber(edw, SubscriberType::ACQUIRE_FRAME);
-					ps->FramePublisher<frame_ptr>::register_subscriber(fws, SubscriberType::ACQUIRE_FRAME);
+					p->Publisher<AcquiredData>::register_subscriber(rps, SubscriberType::ACQUIRE_FRAME);
+					ps->Publisher<segment_ptr>::register_subscriber(edw, SubscriberType::ACQUIRE_FRAME);
+					ps->Publisher<frame_ptr>::register_subscriber(fws, SubscriberType::ACQUIRE_FRAME);
 #endif
 
 					// Move active acquisition chain
@@ -331,7 +331,7 @@ int main(int argc, char *argv[]) {
 #endif	
 				std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context);
 				std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(post_trigger_samples, tof_width);
-				ps->FramePublisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
+				ps->Publisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
 				p->register_subscriber(ps, SubscriberType::ACQUIRE);
 
 				controller = std::move(p);
