@@ -18,7 +18,7 @@
         },
         {
           "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "C:/users/gibe617/documents/vcpkg/scripts/buildsystems/vcpkg.cmake",
+          "value": "C:/vcpkg/scripts/buildsystems/vcpkg.cmake",
           "type": "FILEPATH"
         }
       ]
@@ -36,7 +36,7 @@
       "variables": [
         {
           "name": "CMAKE_TOOLCHAIN_FILE",
-          "value": "C:/users/gibe617/documents/vcpkg/scripts/buildsystems/vcpkg.cmake",
+          "value": "C:/vcpkg/scripts/buildsystems/vcpkg.cmake",
           "type": "FILEPATH"
         },
         {
