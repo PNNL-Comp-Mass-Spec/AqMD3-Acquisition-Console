@@ -1,7 +1,7 @@
 #ifndef UIMF_DECOMPRESSOR_SUBSCRIBER_H
 #define UIMF_DECOMPRESSOR_SUBSCRIBER_H
 
-#include "../framesubscriber.h"
+#include "../subscriber.h"
 #include <libaqmd3/acquireddata.h>
 #include <UIMFWriter/uimfframe.h>
 
@@ -12,7 +12,7 @@ extern "C" {
 #include <string>
 #include <fstream>
 
-class UimfFrameDecompressorSubscriber : public FrameSubscriber<std::shared_ptr<UimfFrame>>
+class UimfFrameDecompressorSubscriber : public Subscriber<std::shared_ptr<UimfFrame>>
 {
 private:
 	std::ofstream out_file_stream;

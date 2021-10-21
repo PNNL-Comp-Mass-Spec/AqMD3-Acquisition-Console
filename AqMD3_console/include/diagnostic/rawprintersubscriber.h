@@ -1,13 +1,13 @@
 #ifndef RAW_PRINTER_SUBSCRIBER_H
 #define RAW_PRINTER_SUBSCRIBER_H
 
-#include "../framesubscriber.h"
+#include "../subscriber.h"
 #include <libaqmd3/acquireddata.h>
 
 #include <string>
 #include <fstream>
 
-class RawPrinterSubscriber : public FrameSubscriber<AcquiredData> 
+class RawPrinterSubscriber : public Subscriber<AcquiredData> 
 {
 private:
 	std::ofstream out_file_stream;

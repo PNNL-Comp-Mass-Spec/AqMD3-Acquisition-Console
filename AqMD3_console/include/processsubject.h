@@ -1,10 +1,11 @@
 #ifndef PROCESS_SUBJECT_H
 #define PROCESS_SUBJECT_H
 
-#include "framesubscriber.h"
-#include "framepublisher.h"
+#include "subscriber.h"
+#include "publisher.h"
 #include <libaqmd3/acquireddata.h>
 #include <UIMFWriter/encodedresult.h>
+#include <UIMFWriter/uimfframe.h>
 #include "server.h"
 #include <zmq.hpp>
 
@@ -16,9 +17,9 @@
 using segment_ptr = std::shared_ptr<std::vector<EncodedResult>>;
 using frame_ptr = std::shared_ptr<UimfFrame>;
 
-class ProcessSubject : public FrameSubscriber<AcquiredData>, 
-	public FramePublisher<segment_ptr>,
-	public FramePublisher<frame_ptr> {
+class ProcessSubject : public Subscriber<AcquiredData>, 
+	public Publisher<segment_ptr>,
+	public Publisher<frame_ptr> {
 private:
 	int total_triggers_processed;
 	std::shared_ptr<Server::Publisher> publisher;
@@ -75,8 +76,8 @@ private:
 
 	void on_completed() override
 	{
-		FramePublisher<segment_ptr>::notify_completed_and_wait();
-		FramePublisher<frame_ptr>::notify_completed_and_wait();
+		Publisher<segment_ptr>::notify_completed_and_wait();
+		Publisher<frame_ptr>::notify_completed_and_wait();
 	}
 };
 

@@ -1,0 +1,24 @@
+{
+  "name": "aqmd3-acquisition-console",
+  "version": "1.0.0",
+  "dependencies": [
+    "snappy",
+    "zeromq",
+    "cppzmq",
+    "sqlite3",
+    "sqlitecpp",
+    "protobuf",
+    "picosha2"
+  ],
+  "builtin-baseline": "30b217b1ede50f6c27b7234388114f4b0d60a3f7",
+  "overrides": [
+    {
+      "name": "snappy",
+      "version": "1.1.8"
+    },
+    {
+      "name": "protobuf",
+      "version": "3.9.0"
+    }
+  ]
+}

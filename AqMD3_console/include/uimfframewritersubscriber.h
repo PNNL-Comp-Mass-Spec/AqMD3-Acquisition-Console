@@ -1,10 +1,10 @@
 #ifndef UIMF_FRAME_WRITER_SUBSCRIBER_H
 #define UIMF_FRAME_WRITER_SUBSCRIBER_H
-#include "framesubscriber.h"
+#include "subscriber.h"
 #include <UIMFWriter/uimfframe.h>
 #include "definitions.h"
 
-class UimfFrameWriterSubscriber : public FrameSubscriber<std::shared_ptr<UimfFrame>> {
+class UimfFrameWriterSubscriber : public Subscriber<std::shared_ptr<UimfFrame>> {
 private:
 	std::deque<std::shared_ptr<UimfFrame>> frames;
 	bool append_excess;
@@ -13,7 +13,7 @@ private:
 public:
 	UimfFrameWriterSubscriber(bool write_timestamps = true)
 #if REUSABLE_PUB_SUB
-		: FrameSubscriber(true)
+		: Subscriber(true)
 #endif
 	{}
 

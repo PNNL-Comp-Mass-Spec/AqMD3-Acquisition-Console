@@ -3,7 +3,7 @@
 
 #include "../acquireddata.h"
 #include "../acquisitioncontrol.h"
-#include "../framepublisher.h"
+#include "../publisher.h"
 #include "../acquireddata.h"
 #include "../streamingcontext.h"
 
@@ -12,7 +12,7 @@
 
 using namespace std;
 
-class FalseDataPublisher : public AcquisitionControl, public FramePublisher<AcquiredData> {
+class FalseDataPublisher : public AcquisitionControl, public Publisher<AcquiredData> {
 private:
 	AcquiredData *data1;
 	int count;

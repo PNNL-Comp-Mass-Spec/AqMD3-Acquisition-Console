@@ -90,7 +90,7 @@ public:
 
 	// Processes the raw sample data and returns a vector of processed results equivalent to a row of scan data in a .uimf file. 
 	// Should not be called if the data was acquired without data-reduction enabled.
-	std::shared_ptr<std::vector<EncodedResult>> AcquiredData::process(int processing_scan_start_number, uint32_t post_trigger_samples) const;
+	std::shared_ptr<std::vector<EncodedResult>> process(int processing_scan_start_number, uint32_t post_trigger_samples) const;
 
 };
 

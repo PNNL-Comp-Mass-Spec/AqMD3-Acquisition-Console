@@ -3,7 +3,7 @@
 
 #include <string>
 #include <fstream>
-#include <experimental/filesystem>
+#include <filesystem>
 #include <map>
 #include <sstream>
 #include <vector>
@@ -22,7 +22,7 @@ public:
 	{}
 
 	bool exists() {
-		return std::experimental::filesystem::exists(config_filename);
+		return std::filesystem::exists(config_filename);
 	}
 	
 	void read() {

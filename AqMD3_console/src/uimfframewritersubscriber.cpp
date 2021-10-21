@@ -66,9 +66,9 @@ void UimfFrameWriterSubscriber::on_notify()
 				// Write frame number, scan number, and timestamp to file
 				size_t buf_len = 256;
 				auto buf = new char[buf_len];
-				for each (auto segments in frame->get_data())
+				for (auto segments : frame->get_data())
 				{
-					for each(auto &scan in *segments)
+					for (auto &scan : *segments)
 					{
 						auto size = snprintf(buf, buf_len, "%u,%d,%llu\n", frame->frame_number, scan.scan, scan.timestamp);
 						if (size <= 0 || size > buf_len)

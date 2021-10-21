@@ -1,13 +1,14 @@
 #ifndef ACQUIRE_PUBLISHER_H
 #define ACQUIRE_PUBLISHER_H
 
-#include "framepublisher.h"
+#include "publisher.h"
 #include "acquisitioncontrol.h"
+#include <libaqmd3/streamingcontext.h>
 #include <vector>
 #include <thread>
 #include <atomic>
 
-class AcquirePublisher : public AcquisitionControl, public FramePublisher<AcquiredData> {
+class AcquirePublisher : public AcquisitionControl, public Publisher<AcquiredData> {
 private:
 	std::thread worker_handle;
 	std::shared_ptr<StreamingContext> context;

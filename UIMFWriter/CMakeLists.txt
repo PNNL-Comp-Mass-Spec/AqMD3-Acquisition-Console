@@ -5,7 +5,7 @@ cmake_minimum_required (VERSION 3.12)
 
 project (UIMFWriter)
 
-find_package(sqlite3 CONFIG REQUIRED)
+find_package(unofficial-sqlite3 CONFIG REQUIRED)
 find_package(SQLiteCpp CONFIG REQUIRED)
 
 add_library (UIMFWriter 
@@ -24,7 +24,7 @@ include/lzf/lzfP.h
 add_library(i::uimf ALIAS UIMFWriter)
     
 target_link_libraries(UIMFWriter PRIVATE SQLiteCpp)
-target_link_libraries(UIMFWriter PRIVATE sqlite3)
+target_link_libraries(UIMFWriter PRIVATE unofficial::sqlite3::sqlite3)
 
 target_include_directories ( UIMFWriter
 	PUBLIC ${PROJECT_SOURCE_DIR}/include
