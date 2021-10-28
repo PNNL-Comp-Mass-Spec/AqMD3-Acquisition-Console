@@ -71,7 +71,7 @@ void AcquirePublisher::start()
 		{
 			try
 			{
-				auto data = context->acquire(std::chrono::milliseconds(250));
+				auto data = context->acquire(std::chrono::milliseconds::zero());
 				auto available = context->get_available_buffers();
 				if (available > 19)
 				{
