@@ -34,7 +34,7 @@ int UimfWriter::write_scan_data(const UimfFrame& frame)
 				if (er.scan < frame.start_trigger)
 					continue;
 
-				if (er.encoded_spectra.size() > 1)
+				if (er.encoded_spectra.size() > 1 || er.scan == 0)
 				{
 					int count = sprintf(statement,
 						insert_scan_statement.c_str(),
