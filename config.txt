@@ -15,3 +15,7 @@ TriggerRearmDeadTime=0.00001
 
 # The handle for the digitizer, can be found in the MD3 SFP
 ResourceName=PXI0::0::0::INSTR
+
+# The number of scans written to the data file at a time during acquisition. Decreasing this number results in data being written
+# to disk more often. 
+NotifyOnScansCount=499

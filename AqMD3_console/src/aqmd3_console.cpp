@@ -79,6 +79,7 @@ static double post_trigger_delay = 0.00001;
 static double estimated_trigger_rearm_time = 0.000002048;
 uint32_t calculated_post_trigger_samples = 0;
 uint64_t avg_tof_period_samples = 0;
+uint64_t notify_on_scans_count = 500;
 
 static bool print_and_return_has_key(const std::string& key, const Config& config) {
 	auto hasKey = config.has_key(key);
@@ -106,6 +107,7 @@ int main(int argc, char *argv[]) {
 		post_trigger_delay = print_and_return_has_key("PostTriggerDelay", config) ? std::stod(config.get_value("PostTriggerDelay")) : post_trigger_delay;
 		estimated_trigger_rearm_time = print_and_return_has_key("TriggerRearmDeadTime", config) ? std::stod(config.get_value("TriggerRearmDeadTime")) : estimated_trigger_rearm_time;
 		resource_name = print_and_return_has_key("ResourceName", config) ? config.get_value("ResourceName") : resource_name;
+		notify_on_scans_count = print_and_return_has_key("NotifyOnScansCount", config) ? std::stod(config.get_value("NotifyOnScansCount")) : notify_on_scans_count;
 	}
 
 	std::unique_ptr<SA220> digitizer = std::make_unique<SA220>(resource_name, "Simulate=false, DriverSetup= Model=SA220P");

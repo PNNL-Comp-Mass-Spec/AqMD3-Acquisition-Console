@@ -29,9 +29,10 @@ private:
 	uint32_t offset_bins;
 	uint64_t tof_avg_samples;
 	std::deque<std::shared_ptr<UimfFrame>> frames;
+	uint64_t notify_on_scans_count;
 
 public:
-	ProcessSubject(UimfRequestMessage uimf, std::shared_ptr<Server::Publisher> publisher, uint32_t offset_bins, uint64_t tof_avg_samples)
+	ProcessSubject(UimfRequestMessage uimf, std::shared_ptr<Server::Publisher> publisher, uint32_t offset_bins, uint64_t tof_avg_samples, uint64_t notify_on_scans_count = 500)
 		: total_triggers_processed(0)
 		, publisher(publisher)
 		, subject("status")
@@ -39,6 +40,7 @@ public:
 		, total_elements_processed(0)
 		, offset_bins(offset_bins)
 		, tof_avg_samples(tof_avg_samples)
+		, notify_on_scans_count(notify_on_scans_count)
 	{
 		std::shared_ptr<UimfFrame> frame = std::make_shared<UimfFrame>(
 			uimf.start_trigger(),
