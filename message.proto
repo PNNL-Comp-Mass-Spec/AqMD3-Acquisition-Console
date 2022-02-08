@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+message Message {
+    repeated int32 mz = 1;
+    repeated uint32 tic = 2;
+    repeated uint64 time_stamps = 3;
+}
+
+message TofWidthMessage {
+    uint64 pusher_pulse_width = 1;
+    uint64 num_samples =2;
+}
+
+message SetupMessage {
+    double horizontal = 1;
+    double vertical = 2;
+    TrigClassMessage Trig = 3;
+    TrigSourceMessage Source = 4;
+}
+
+message TrigClassMessage {
+    enum TrigClass {
+        Edge = 0;
+        Tv = 1;
+        Or = 3;
+        Nor = 4;
+        And = 5;
+        Nand = 6;
+    }
+    TrigClass trig_class = 1;
+    int32 source_pattern = 2;
+}
+
+message TrigSourceMessage {
+    int32 channel = 1;
+    enum TrigCoupling {
+        Dc = 0;
+        Ac = 1;
+        HfReject = 2;
+        Dc50Ohms = 3;
+        Ac50Ohms = 4;
+    }
+    TrigCoupling trig_coupling = 2;
+    enum TrigSlope {
+        Positive = 0;
+        Negative = 1;
+    }
+    double trig_level_1 = 3;
+    double trig_level_2 = 4;
+}
+
+message UimfRequestMessage {
+    uint64 start_trigger = 1;
+    uint64 nbr_samples = 2;
+    uint64 frame_length = 3;
+    uint64 nbr_accumulations = 4;
+    uint32 frame_number = 5;
+    uint32 offset_bins = 6;
+    string file_name = 7;
+    enum FrameType {
+        MS = 0;
+        MSMS = 1;
+        Calibration = 2;
+        Prescan = 3;
+    }
+    FrameType frame_type = 8;
+}
+
+message DigitizerSetupMessage {
+    double horizontal = 1;
+    double vertical = 2;
+    double trig_class = 3;
+    double trig_source = 4;
+    int32 mode = 5;
+    uint32 samples = 6;
+    uint32 segments = 7;
+    uint32 post_samples = 8;
+    uint32 pre_samples = 9;
+}
