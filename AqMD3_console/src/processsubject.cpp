@@ -9,8 +9,6 @@ static int delta = 100;
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-int notify_on_triggers = 5000;
-
 #if TIMING_INFORMATION
 std::chrono::steady_clock::time_point start;
 static bool first = true;
@@ -75,15 +73,15 @@ void ProcessSubject::on_notify()
 
 				auto excess = frame->append_and_return_excess(results);
 
-				auto notify_trigger_count = (int32_t(frame->frame_length) - total_triggers_processed) < (int32_t(frame->frame_length) % notify_on_triggers)
-					? frame->frame_length % notify_on_triggers
-					: notify_on_triggers;
+				auto notify_trigger_count = (int32_t(frame->frame_length) - total_triggers_processed) < (int32_t(frame->frame_length) % notify_on_scans_count)
+					? frame->frame_length % notify_on_scans_count
+					: notify_on_scans_count;
 
 				if(notify_trigger_count <= frame->get_encoded_results_count())
 				{
 					frames.push_back(frames.front()->clone());
 					
-					std::cout << std::to_string(notify_on_triggers) << " scans processed, notifying -- " << timestamp_now() << "\n";
+					std::cout << std::to_string(notify_on_scans_count) << " scans processed, notifying -- " << timestamp_now() << "\n";
 					Publisher<frame_ptr>::notify(frame, SubscriberType::BOTH);
 					frames.pop_front();
 
