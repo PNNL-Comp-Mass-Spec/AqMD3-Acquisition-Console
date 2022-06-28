@@ -8,13 +8,14 @@
     "sqlite3",
     "sqlitecpp",
     "protobuf",
-    "picosha2"
+    "picosha2",
+    "spdlog"
   ],
   "builtin-baseline": "30b217b1ede50f6c27b7234388114f4b0d60a3f7",
   "overrides": [
     {
       "name": "snappy",
-      "version": "1.1.8"
+      "version": "1.1.7"
     },
     {
       "name": "protobuf",

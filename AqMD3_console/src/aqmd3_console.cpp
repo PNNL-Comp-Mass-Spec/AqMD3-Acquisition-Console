@@ -31,6 +31,10 @@ using std::cerr;
 #undef max
 #include "../include/message.pb.h"
 
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/daily_file_sink.h"
+
 using namespace std;
 
 namespace AqirisDigitizer
@@ -73,42 +77,77 @@ void disable_quick_edit()
 }
 
 static char ack[] = "ack";
-// Default post trigger delay in 10us
-static double post_trigger_delay = 0.00001;
-// Default allowed trigger rearm time is 2us
-static double estimated_trigger_rearm_time = 0.000002048;
 uint32_t calculated_post_trigger_samples = 0;
 uint64_t avg_tof_period_samples = 0;
-uint64_t notify_on_scans_count = 500;
 
-static bool print_and_return_has_key(const std::string& key, const Config& config) {
-	auto hasKey = config.has_key(key);
-	std::cout << key << " found? " << (hasKey ? "Yes" : "No") << "\n";
-	return hasKey;
+// Configuration variables
+static double post_trigger_delay = 0.00001; // Default post trigger delay in 10us
+static double estimated_trigger_rearm_time = 0.000002048; // Default allowed trigger rearm time is 2us
+uint64_t notify_on_scans_count = 500;
+std::string resource_name = "PXI0::0::0::INSTR";
+
+static void print_config_value(const std::string& key, const std::string &value, bool is_found) {
+	std::string msg = "Config value \"" + key;
+	if (is_found)
+	{
+		msg += "\" found, value set to " + value;
+	}
+	else
+	{
+		msg += " not found, value defaulted to " + value;
+	}
+
+	spdlog::info(msg);
+}
+
+void configure_logger()
+{
+	try 
+	{
+		auto daily_sink = std::make_shared<spdlog::sinks::daily_file_sink_mt>("logs/log", 2, 0);
+		daily_sink->set_level(spdlog::level::trace);
+
+		auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+		console_sink->set_level(spdlog::level::trace);
+
+		auto logger = std::make_shared<spdlog::logger>("Log", spdlog::sinks_init_list( { daily_sink, console_sink }));
+		spdlog::set_default_logger(logger);
+		spdlog::info("Logger initialized");
+	}
+	catch (const spdlog::spdlog_ex& ex)
+	{
+		std::cout << "Log init failed: " << ex.what() << std::endl;
+	}
+}
+
+void configure_settings()
+{
+	auto config = Config("config.txt");
+	bool has_config = config.exists();
+	config.read();
+
+	auto config_found = (has_config ? "config found\n" : "no config found, using default values\n");
+	spdlog::info(config_found);
+
+	post_trigger_delay = config.has_key("PostTriggerDelay") ? std::stod(config.get_value("PostTriggerDelay")) : post_trigger_delay;
+	print_config_value("PostTriggerDelay", std::to_string(post_trigger_delay), config.has_key("PostTriggerDelay"));
+
+	estimated_trigger_rearm_time = config.has_key("TriggerRearmDeadTime") ? std::stod(config.get_value("TriggerRearmDeadTime")) : estimated_trigger_rearm_time;
+	print_config_value("TriggerRearmDeadTime", std::to_string(estimated_trigger_rearm_time), config.has_key("TriggerRearmDeadTime"));
+
+	resource_name = config.has_key("ResourceName") ? config.get_value("ResourceName") : resource_name;
+	print_config_value("ResourceName", resource_name, config.has_key("ResourceName"));
+
+	notify_on_scans_count = config.has_key("NotifyOnScansCount") ? std::stod(config.get_value("NotifyOnScansCount")) : notify_on_scans_count;
+	print_config_value("NotifyOnScansCount", std::to_string(notify_on_scans_count), config.has_key("NotifyOnScansCount"));
 }
 
 int main(int argc, char *argv[]) {
 
 	// Disable 'Quick Edit Mode' since it can cause the application to hang during acquisition
 	disable_quick_edit();
-
-	// Set parameters found in config. All configurable parameters must be present.
-	auto config = Config("config.txt");
-	bool has_config = config.exists();
-	config.read();
-	// Default instrument resource name
-	std::string resource_name = "PXI0::0::0::INSTR";
-	
-	std::cout << (has_config ? "config found" : "no config found") << "\n";
-
-	if (has_config)
-	{
-		// TODO stop application or indicate default value is being used if config kvp not found
-		post_trigger_delay = print_and_return_has_key("PostTriggerDelay", config) ? std::stod(config.get_value("PostTriggerDelay")) : post_trigger_delay;
-		estimated_trigger_rearm_time = print_and_return_has_key("TriggerRearmDeadTime", config) ? std::stod(config.get_value("TriggerRearmDeadTime")) : estimated_trigger_rearm_time;
-		resource_name = print_and_return_has_key("ResourceName", config) ? config.get_value("ResourceName") : resource_name;
-		notify_on_scans_count = print_and_return_has_key("NotifyOnScansCount", config) ? std::stod(config.get_value("NotifyOnScansCount")) : notify_on_scans_count;
-	}
+	configure_logger();
+	configure_settings();
 
 	std::unique_ptr<SA220> digitizer = std::make_unique<SA220>(resource_name, "Simulate=false, DriverSetup= Model=SA220P");
 	auto server = new Server("tcp://*:5555");
