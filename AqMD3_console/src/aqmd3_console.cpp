@@ -302,7 +302,7 @@ int main(int argc, char *argv[]) {
 
 					if (calculated_post_trigger_samples <= 0)
 					{
-						std::cerr << "Calculated post-trigger samples must be greater than 0. Post-trigger samples: " << calculated_post_trigger_samples << std::endl;
+						spdlog::error("Calculated post-trigger samples must be greater than 0. Post-trigger samples: " + std::to_string(calculated_post_trigger_samples));
 						break;
 					}
 
@@ -350,12 +350,11 @@ int main(int argc, char *argv[]) {
 				auto timing = AqirisDigitizer::get_timing_information(digitizer.get(), sampling_rate);
 				uint64_t record_size = timing.record_size;
 				uint64_t post_trigger_samples = timing.post_trigger_delay_samples;
-				uint64_t tof_width = timing.samples_per_trigger;
-				//std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer.get(), sampling_rate);			
-				std::cout << "tof width: " << tof_width << std::endl;
-				std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
-				std::cout << "record size: " << record_size << std::endl;
-				std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
+				uint64_t tof_width = timing.samples_per_trigger;		
+				spdlog::info("tof width: " + std::to_string(tof_width));
+				spdlog::info("samples per trigger: " + std::to_string(record_size + post_trigger_samples));
+				spdlog::info("record size: " + std::to_string(record_size));
+				spdlog::info("post trigger samples: " + std::to_string(post_trigger_samples));
 				digitizer->set_record_size(record_size);
 				avg_tof_period_samples = tof_width;
 				calculated_post_trigger_samples = post_trigger_samples;
@@ -401,10 +400,9 @@ int main(int argc, char *argv[]) {
 				uint64_t record_size = timing.record_size;
 				uint64_t post_trigger_samples = timing.post_trigger_delay_samples;
 				uint64_t tof_width = timing.samples_per_trigger;
-				//std::tie(post_trigger_samples, record_size, tof_width) = get_tof_width(digitizer.get(), sampling_rate);
-				std::cout << "samples per trigger: " << record_size + post_trigger_samples << std::endl;
-				std::cout << "record size: " << record_size << std::endl;
-				std::cout << "post trigger samples: " << post_trigger_samples << std::endl;
+				spdlog::info("samples per trigger: " + std::to_string(record_size + post_trigger_samples));
+				spdlog::info("record size: " + std::to_string(record_size));
+				spdlog::info("post trigger samples: " + std::to_string(post_trigger_samples));
 				digitizer->set_record_size(record_size);
 
 				vector<string> to_send(2);
@@ -432,7 +430,6 @@ int main(int argc, char *argv[]) {
 						auto t_0 = std::chrono::high_resolution_clock::now();
 #endif
 						controller->stop();
-						//controller.reset();
 #if TIMING_INFORMATION
 						auto t_1 = std::chrono::high_resolution_clock::now();
 						auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_1 - t_0);
@@ -442,7 +439,7 @@ int main(int argc, char *argv[]) {
 				}
 				catch (...)
 				{
-					std::cout << "problem stopping the application" << std::endl;
+					spdlog::error("Unable to stop acquisition loop");
 				}
 
 				req.send_response(ack);
