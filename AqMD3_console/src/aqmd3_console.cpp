@@ -31,9 +31,11 @@ using std::cerr;
 #undef max
 #include "../include/message.pb.h"
 
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
-#include "spdlog/sinks/daily_file_sink.h"
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/daily_file_sink.h>
+#include <boost/exception/diagnostic_information.hpp> 
+
 
 using namespace std;
 
@@ -143,354 +145,362 @@ void configure_settings()
 }
 
 int main(int argc, char *argv[]) {
+	try
+	{
+		// Disable 'Quick Edit Mode' since it can cause the application to hang during acquisition
+		disable_quick_edit();
+		configure_logger();
+		configure_settings();
 
-	// Disable 'Quick Edit Mode' since it can cause the application to hang during acquisition
-	disable_quick_edit();
-	configure_logger();
-	configure_settings();
-
-	std::unique_ptr<SA220> digitizer = std::make_unique<SA220>(resource_name, "Simulate=false, DriverSetup= Model=SA220P");
-	auto server = new Server("tcp://*:5555");
-	double sampling_rate = 0.0;
-	std::unique_ptr<AcquisitionControl> controller;
+		std::unique_ptr<SA220> digitizer = std::make_unique<SA220>(resource_name, "Simulate=false, DriverSetup= Model=SA220P");
+		auto server = new Server("tcp://*:5555");
+		double sampling_rate = 0.0;
+		std::unique_ptr<AcquisitionControl> controller;
 
 #if REUSABLE_PUB_SUB
-	int record_size_c = 0;
-	std::shared_ptr<StreamingContext> context;
-	std::shared_ptr<ZmqAcquiredDataSubscriber> zmq_publisher;
-	std::shared_ptr<UimfFrameWriterSubscriber> frame_writer = std::make_shared<UimfFrameWriterSubscriber>();
+		int record_size_c = 0;
+		std::shared_ptr<StreamingContext> context;
+		std::shared_ptr<ZmqAcquiredDataSubscriber> zmq_publisher;
+		std::shared_ptr<UimfFrameWriterSubscriber> frame_writer = std::make_shared<UimfFrameWriterSubscriber>();
 #endif // reusable_pub_sub
 
-	server->register_handler([&](Server::ReceivedRequest req)
-	{
-		for (const auto& command : req.payload)
-		{
-			std::cout << "\t" << command << std::endl;
-
-			if (command == "num instruments")
+		server->register_handler([&](Server::ReceivedRequest req)
 			{
-				ViSession rm = VI_NULL;
-				viOpenDefaultRM(&rm);
-				ViChar search[] = "PXI?*::INSTR";
-				ViFindList find = VI_NULL;
-				ViUInt32 count = 0;
-				ViChar rsrc[256];
-
-				ViStatus status = viFindRsrc(rm, search, &find, &count, rsrc);
-				viClose(rm);
-
-				req.send_response(std::to_string(count));
-				return;
-			}
-
-			if (command == "info")
-			{
-				auto info = digitizer->get_info();
-				req.send_response("");
-			}
-
-			if (command == "firmware")
-			{
-				auto info = digitizer->get_info();
-				req.send_response(info.firmware_revision);
-			}
-
-			if (command == "serial")
-			{
-				auto info = digitizer->get_info();
-				req.send_response(info.serial_number);
-			}
-
-			if (command == "init")
-			{
-				digitizer->set_trigger_parameters(digitizer->trigger_external, 2.0, true, post_trigger_delay);
-
-				req.send_response(ack);
-				continue;
-			}
-
-			if (command == "horizontal")
-			{
-				if (req.payload.size() == 2)
+				for (const auto& command : req.payload)
 				{
-					auto horizontal_resolution = std::stod(req.payload[1]);
-					sampling_rate = 1.0 / horizontal_resolution;
-					digitizer->set_sampling_rate(sampling_rate);
-				}
+					std::cout << "\t" << command << std::endl;
 
-				req.send_response(ack);
-				return;
-			}
+					if (command == "num instruments")
+					{
+						ViSession rm = VI_NULL;
+						viOpenDefaultRM(&rm);
+						ViChar search[] = "PXI?*::INSTR";
+						ViFindList find = VI_NULL;
+						ViUInt32 count = 0;
+						ViChar rsrc[256];
 
-			if (command == "vertical")
-			{
-				if (req.payload.size() == 2)
-				{
-					auto offset_v = std::stod(req.payload[1]);
-					digitizer->set_channel_parameters(digitizer->channel_1, digitizer->full_scale_range_0_5v, offset_v);
-				}
+						ViStatus status = viFindRsrc(rm, search, &find, &count, rsrc);
+						viClose(rm);
 
-				req.send_response(ack);
-				return;
-			}
+						req.send_response(std::to_string(count));
+						return;
+					}
 
-			if (command == "trig class")
-			{
-				// TODO trig class
-				continue;
-			}
+					if (command == "info")
+					{
+						auto info = digitizer->get_info();
+						req.send_response("");
+					}
 
-			if (command == "trig source")
-			{
-				// TODO trig source
-				continue;
-			}
+					if (command == "firmware")
+					{
+						auto info = digitizer->get_info();
+						req.send_response(info.firmware_revision);
+					}
 
-			if (command == "mode")
-			{
-				// TODO mode
-				continue;
-			}
+					if (command == "serial")
+					{
+						auto info = digitizer->get_info();
+						req.send_response(info.serial_number);
+					}
 
-			if (command == "config digitizer")
-			{
-				// TODO config digitizer
-				continue;
-			}
+					if (command == "init")
+					{
+						digitizer->set_trigger_parameters(digitizer->trigger_external, 2.0, true, post_trigger_delay);
 
-			if (command == "post samples")
-			{
-				continue;
-			}
+						req.send_response(ack);
+						continue;
+					}
 
-			if (command == "pre samples")
-			{
-				continue;
-			}
+					if (command == "horizontal")
+					{
+						if (req.payload.size() == 2)
+						{
+							auto horizontal_resolution = std::stod(req.payload[1]);
+							sampling_rate = 1.0 / horizontal_resolution;
+							digitizer->set_sampling_rate(sampling_rate);
+						}
 
-			if (command == "setup array")
-			{
+						req.send_response(ack);
+						return;
+					}
 
-				req.send_response(ack);
-				return;
-			}
+					if (command == "vertical")
+					{
+						if (req.payload.size() == 2)
+						{
+							auto offset_v = std::stod(req.payload[1]);
+							digitizer->set_channel_parameters(digitizer->channel_1, digitizer->full_scale_range_0_5v, offset_v);
+						}
 
-			if (command == "acquire frame")
-			{
-				if (req.payload.size() == 2)
-				{
+						req.send_response(ack);
+						return;
+					}
+
+					if (command == "trig class")
+					{
+						// TODO trig class
+						continue;
+					}
+
+					if (command == "trig source")
+					{
+						// TODO trig source
+						continue;
+					}
+
+					if (command == "mode")
+					{
+						// TODO mode
+						continue;
+					}
+
+					if (command == "config digitizer")
+					{
+						// TODO config digitizer
+						continue;
+					}
+
+					if (command == "post samples")
+					{
+						continue;
+					}
+
+					if (command == "pre samples")
+					{
+						continue;
+					}
+
+					if (command == "setup array")
+					{
+
+						req.send_response(ack);
+						return;
+					}
+
+					if (command == "acquire frame")
+					{
+						if (req.payload.size() == 2)
+						{
 #if TIMING_INFORMATION
-					auto t_0 = std::chrono::high_resolution_clock::now();
+							auto t_0 = std::chrono::high_resolution_clock::now();
 #endif
-					std::string uimf_req_msg;
-					snappy::Uncompress(req.payload[1].data(), req.payload[1].size(), &uimf_req_msg);
-					auto uimf = UimfRequestMessage();
-					uimf.MergeFromString(uimf_req_msg);
+							std::string uimf_req_msg;
+							snappy::Uncompress(req.payload[1].data(), req.payload[1].size(), &uimf_req_msg);
+							auto uimf = UimfRequestMessage();
+							uimf.MergeFromString(uimf_req_msg);
 
-					// Set number of samples in record
-					uint64_t record_size = uimf.nbr_samples() - calculated_post_trigger_samples;
-					digitizer->set_record_size(record_size);
+							// Set number of samples in record
+							uint64_t record_size = uimf.nbr_samples() - calculated_post_trigger_samples;
+							digitizer->set_record_size(record_size);
 
-					auto data_pub = server->get_publisher("tcp://*:5554");
+							auto data_pub = server->get_publisher("tcp://*:5554");
 
 #if !REUSABLE_PUB_SUB
-					auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);
-					std::shared_ptr<ZmqAcquiredDataSubscriber> zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, uimf.nbr_samples());
+							auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);
+							std::shared_ptr<ZmqAcquiredDataSubscriber> zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, uimf.nbr_samples());
 #endif	
 
-					std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context);
+							std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context);
 
-					if (calculated_post_trigger_samples <= 0)
-					{
-						spdlog::error("Calculated post-trigger samples must be greater than 0. Post-trigger samples: " + std::to_string(calculated_post_trigger_samples));
-						break;
-					}
+							if (calculated_post_trigger_samples <= 0)
+							{
+								spdlog::error("Calculated post-trigger samples must be greater than 0. Post-trigger samples: " + std::to_string(calculated_post_trigger_samples));
+								break;
+							}
 
-					std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(uimf, data_pub, calculated_post_trigger_samples, avg_tof_period_samples);
-					double ts_period = 1.0 / digitizer->max_sample_rate;
+							std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(uimf, data_pub, calculated_post_trigger_samples, avg_tof_period_samples);
+							double ts_period = 1.0 / digitizer->max_sample_rate;
 
 #if REUSABLE_PUB_SUB
-					ps->Publisher<frame_ptr>::register_subscriber(frame_writer, SubscriberType::ACQUIRE_FRAME);
+							ps->Publisher<frame_ptr>::register_subscriber(frame_writer, SubscriberType::ACQUIRE_FRAME);
 #else
-					ps->Publisher<frame_ptr>::register_subscriber(std::make_shared<UimfFrameWriterSubscriber>(), SubscriberType::ACQUIRE_FRAME);
+							ps->Publisher<frame_ptr>::register_subscriber(std::make_shared<UimfFrameWriterSubscriber>(), SubscriberType::ACQUIRE_FRAME);
 #endif
 
-					ps->Publisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
-					p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
+							ps->Publisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
+							p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
 
 #if PRINT_RAW
-					std::shared_ptr<RawPrinterSubscriber> rps = std::make_shared<RawPrinterSubscriber>("timestamp_data_" + std::to_string(uimf.frame_number()));
-					std::shared_ptr<EncodedDataWriter> edw = std::make_shared<EncodedDataWriter>("encoded_data_" + std::to_string(uimf.frame_number()));
-					std::shared_ptr<UimfFrameDecompressorSubscriber> fws = std::make_shared<UimfFrameDecompressorSubscriber>("frame_data_" + std::to_string(uimf.frame_number()));
+							std::shared_ptr<RawPrinterSubscriber> rps = std::make_shared<RawPrinterSubscriber>("timestamp_data_" + std::to_string(uimf.frame_number()));
+							std::shared_ptr<EncodedDataWriter> edw = std::make_shared<EncodedDataWriter>("encoded_data_" + std::to_string(uimf.frame_number()));
+							std::shared_ptr<UimfFrameDecompressorSubscriber> fws = std::make_shared<UimfFrameDecompressorSubscriber>("frame_data_" + std::to_string(uimf.frame_number()));
 
-					p->Publisher<AcquiredData>::register_subscriber(rps, SubscriberType::ACQUIRE_FRAME);
-					ps->Publisher<segment_ptr>::register_subscriber(edw, SubscriberType::ACQUIRE_FRAME);
-					ps->Publisher<frame_ptr>::register_subscriber(fws, SubscriberType::ACQUIRE_FRAME);
+							p->Publisher<AcquiredData>::register_subscriber(rps, SubscriberType::ACQUIRE_FRAME);
+							ps->Publisher<segment_ptr>::register_subscriber(edw, SubscriberType::ACQUIRE_FRAME);
+							ps->Publisher<frame_ptr>::register_subscriber(fws, SubscriberType::ACQUIRE_FRAME);
 #endif
 
-					// Move active acquisition chain
-					controller = std::move(p);
+							// Move active acquisition chain
+							controller = std::move(p);
 
-					// Start acquire. Waits for external enabe signal.
-					controller->start(uimf);
+							// Start acquire. Waits for external enabe signal.
+							controller->start(uimf);
 
 #if TIMING_INFORMATION
-					auto t_1 = std::chrono::high_resolution_clock::now();
-					auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_1 - t_0);
-					std::cout << "time to setup acquire frame:" << diff.count() << "\n";
+							auto t_1 = std::chrono::high_resolution_clock::now();
+							auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_1 - t_0);
+							std::cout << "time to setup acquire frame:" << diff.count() << "\n";
 #endif
-				}
+						}
 
-				req.send_response(ack);
-				return;
-			}
+						req.send_response(ack);
+						return;
+					}
 
-			if (command == "acquire")
-			{
-				auto timing = AqirisDigitizer::get_timing_information(digitizer.get(), sampling_rate);
-				uint64_t record_size = timing.record_size;
-				uint64_t post_trigger_samples = timing.post_trigger_delay_samples;
-				uint64_t tof_width = timing.samples_per_trigger;		
-				spdlog::info("tof width: " + std::to_string(tof_width));
-				spdlog::info("samples per trigger: " + std::to_string(record_size + post_trigger_samples));
-				spdlog::info("record size: " + std::to_string(record_size));
-				spdlog::info("post trigger samples: " + std::to_string(post_trigger_samples));
-				digitizer->set_record_size(record_size);
-				avg_tof_period_samples = tof_width;
-				calculated_post_trigger_samples = post_trigger_samples;
+					if (command == "acquire")
+					{
+						auto timing = AqirisDigitizer::get_timing_information(digitizer.get(), sampling_rate);
+						uint64_t record_size = timing.record_size;
+						uint64_t post_trigger_samples = timing.post_trigger_delay_samples;
+						uint64_t tof_width = timing.samples_per_trigger;
+						spdlog::info("tof width: " + std::to_string(tof_width));
+						spdlog::info("samples per trigger: " + std::to_string(record_size + post_trigger_samples));
+						spdlog::info("record size: " + std::to_string(record_size));
+						spdlog::info("post trigger samples: " + std::to_string(post_trigger_samples));
+						digitizer->set_record_size(record_size);
+						avg_tof_period_samples = tof_width;
+						calculated_post_trigger_samples = post_trigger_samples;
 
-				auto data_pub = server->get_publisher("tcp://*:5554");
+						auto data_pub = server->get_publisher("tcp://*:5554");
 
 
 #if REUSABLE_PUB_SUB
-				context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);
-				zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
+						context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);
+						zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
 #else
-				auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);
-				auto zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
+						auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);
+						auto zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
 #endif	
-				std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context);
-				std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(post_trigger_samples, tof_width);
-				ps->Publisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
-				p->register_subscriber(ps, SubscriberType::ACQUIRE);
+						std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context);
+						std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(post_trigger_samples, tof_width);
+						ps->Publisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
+						p->register_subscriber(ps, SubscriberType::ACQUIRE);
 
-				controller = std::move(p);
-				controller->start();
+						controller = std::move(p);
+						controller->start();
 
-				vector<string> to_send(2);
+						vector<string> to_send(2);
 
-				TofWidthMessage tofMsg;
-				tofMsg.set_num_samples(record_size + post_trigger_samples);
+						TofWidthMessage tofMsg;
+						tofMsg.set_num_samples(record_size + post_trigger_samples);
 
-				//'tof_width / (2 * 16)' necessary to work with Falkor for the time being
-				tofMsg.set_pusher_pulse_width(tof_width / (2 * 16));				
-				to_send[0] = (tofMsg.SerializeAsString());
-				vector<uint8_t> hash(picosha2::k_digest_size);
-				picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
+						//'tof_width / (2 * 16)' necessary to work with Falkor for the time being
+						tofMsg.set_pusher_pulse_width(tof_width / (2 * 16));
+						to_send[0] = (tofMsg.SerializeAsString());
+						vector<uint8_t> hash(picosha2::k_digest_size);
+						picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
 
-				to_send[1] = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
-				req.send_responses(to_send);
+						to_send[1] = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
+						req.send_responses(to_send);
 
-				return;
-			}
+						return;
+					}
 
-			if (command == "tof width")
-			{
-				auto timing = AqirisDigitizer::get_timing_information(digitizer.get(), sampling_rate);
-				uint64_t record_size = timing.record_size;
-				uint64_t post_trigger_samples = timing.post_trigger_delay_samples;
-				uint64_t tof_width = timing.samples_per_trigger;
-				spdlog::info("samples per trigger: " + std::to_string(record_size + post_trigger_samples));
-				spdlog::info("record size: " + std::to_string(record_size));
-				spdlog::info("post trigger samples: " + std::to_string(post_trigger_samples));
-				digitizer->set_record_size(record_size);
-
-				vector<string> to_send(2);
-
-				TofWidthMessage tofMsg;
-				tofMsg.set_num_samples(record_size + post_trigger_samples);
-				tofMsg.set_pusher_pulse_width(tof_width / (2 * 16));
-				to_send[0] = (tofMsg.SerializeAsString());
-				vector<uint8_t> hash(picosha2::k_digest_size);
-				picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
-
-				to_send[1] = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
-				req.send_responses(to_send);
-
-				return;
-			}
-
-			if (command == "stop")
-			{
-				try
-				{
-					if (controller)
+					if (command == "tof width")
 					{
+						auto timing = AqirisDigitizer::get_timing_information(digitizer.get(), sampling_rate);
+						uint64_t record_size = timing.record_size;
+						uint64_t post_trigger_samples = timing.post_trigger_delay_samples;
+						uint64_t tof_width = timing.samples_per_trigger;
+						spdlog::info("samples per trigger: " + std::to_string(record_size + post_trigger_samples));
+						spdlog::info("record size: " + std::to_string(record_size));
+						spdlog::info("post trigger samples: " + std::to_string(post_trigger_samples));
+						digitizer->set_record_size(record_size);
+
+						vector<string> to_send(2);
+
+						TofWidthMessage tofMsg;
+						tofMsg.set_num_samples(record_size + post_trigger_samples);
+						tofMsg.set_pusher_pulse_width(tof_width / (2 * 16));
+						to_send[0] = (tofMsg.SerializeAsString());
+						vector<uint8_t> hash(picosha2::k_digest_size);
+						picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
+
+						to_send[1] = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
+						req.send_responses(to_send);
+
+						return;
+					}
+
+					if (command == "stop")
+					{
+						try
+						{
+							if (controller)
+							{
 #if TIMING_INFORMATION
-						auto t_0 = std::chrono::high_resolution_clock::now();
+								auto t_0 = std::chrono::high_resolution_clock::now();
 #endif
-						controller->stop();
+								controller->stop();
 #if TIMING_INFORMATION
-						auto t_1 = std::chrono::high_resolution_clock::now();
-						auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_1 - t_0);
-						std::cout << "time to stop:" << diff.count() << "\n";
+								auto t_1 = std::chrono::high_resolution_clock::now();
+								auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_1 - t_0);
+								std::cout << "time to stop:" << diff.count() << "\n";
 #endif
+							}
+						}
+						catch (...)
+						{
+							spdlog::error("Unable to stop acquisition loop");
+						}
+
+						req.send_response(ack);
+						return;
+					}
+
+					if (command == "invert")
+					{
+						if (req.payload.size() == 2)
+						{
+							bool invert = req.payload[1] == "true";
+							digitizer->set_channel_data_inversion(digitizer->channel_1, invert);
+						}
+						req.send_response(ack);
+						return;
+					}
+
+					if (command == "reset timestamps")
+					{
+						return;
+					}
+
+					if (command == "enable io port")
+					{
+						if (req.payload.size() == 2)
+						{
+							auto val = std::stoi(req.payload[1]);
+							digitizer->enable_io_port();
+						}
+
+						req.send_response(ack);
+						return;
+					}
+
+					if (command == "disable io port")
+					{
+						if (req.payload.size() == 2)
+						{
+							auto val = std::stoi(req.payload[1]);
+							digitizer->disable_io_port();
+						}
+
+						req.send_response(ack);
+						return;
 					}
 				}
-				catch (...)
-				{
-					spdlog::error("Unable to stop acquisition loop");
-				}
+			});
 
-				req.send_response(ack);
-				return;
-			}
+		server->run();
 
-			if (command == "invert")
-			{
-				if (req.payload.size() == 2)
-				{
-					bool invert = req.payload[1] == "true";
-					digitizer->set_channel_data_inversion(digitizer->channel_1, invert);
-				}
-				req.send_response(ack);
-				return;
-			}
+		return 0;
+	}
+	catch (...)
+	{
+		spdlog::critical(boost::current_exception_diagnostic_information());
+	}
 
-			if (command == "reset timestamps")
-			{
-				return;
-			}
-
-			if (command == "enable io port")
-			{
-				if (req.payload.size() == 2)
-				{
-					auto val = std::stoi(req.payload[1]);
-					digitizer->enable_io_port();
-				}
-
-				req.send_response(ack);
-				return;
-			}
-
-			if (command == "disable io port")
-			{
-				if (req.payload.size() == 2)
-				{
-					auto val = std::stoi(req.payload[1]);
-					digitizer->disable_io_port();
-				}
-
-				req.send_response(ack);
-				return;
-			}
-		}
-	});
-
-	server->run();
-
-	return 0;
+	return 1;
 }
 
 static AqirisDigitizer::TofTimingInformation AqirisDigitizer::get_timing_information(const SA220 * digitizer, double sample_rate)
