@@ -12,7 +12,7 @@ std::shared_ptr<std::vector<EncodedResult>> UimfFrame::append_and_return_excess(
 	auto last_index = (data.size() == 0) ? 0 : data.back()->back().scan;
 	auto diff = frame_length - 1 - last_index;
 
-	std::cout << "last_index: " << last_index << " -- frame_length: " << frame_length << " -- diff: " << diff << '\n';
+	//std::cout << "last_index: " << last_index << " -- frame_length: " << frame_length << " -- diff: " << diff << '\n';
 
 	if (results->size() <= diff)
 	{

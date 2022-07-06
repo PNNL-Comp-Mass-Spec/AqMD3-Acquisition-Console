@@ -8,6 +8,7 @@
 #include <sstream>
 #include <vector>
 #include <iostream>
+#include <stdexcept>
 using std::cerr;
 
 class Config
@@ -62,7 +63,7 @@ public:
 
 	std::string get_value(std::string key) const {
 		if (config_map.count(key) == 0) {
-			throw std::string("key " + key + " not found\n");
+			throw std::runtime_error("key " + key + " not found\n");
 		}
 
 		return std::get<1>(*(config_map.find(key)));

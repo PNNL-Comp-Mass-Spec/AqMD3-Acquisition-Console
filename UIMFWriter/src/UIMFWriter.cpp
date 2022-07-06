@@ -16,56 +16,48 @@ int UimfWriter::write_scan_data(const UimfFrame& frame)
 
 	const std::lock_guard<std::mutex> lock(sync);
 
-	try
-	{
-		int const extra = 128;
+	int const extra = 128;
 
-		SQLite::Statement sync_off(db, "PRAGMA synchronous=0");
-		sync_off.exec();
-		SQLite::Statement b_trans(db, "BEGIN TRANSACTION");
-		b_trans.exec();
+	SQLite::Statement sync_off(db, "PRAGMA synchronous=0");
+	sync_off.exec();
+	SQLite::Statement b_trans(db, "BEGIN TRANSACTION");
+	b_trans.exec();
 		
-		char *statement = new char[insert_scan_statement_size_bytes + extra];
+	char *statement = new char[insert_scan_statement_size_bytes + extra];
 
-		for (int i = 0; i < frame.get_data().size(); i++)
+	for (int i = 0; i < frame.get_data().size(); i++)
+	{
+		for (auto& er : *(frame.get_data()[i]))
 		{
-			for (auto& er : *(frame.get_data()[i]))
+			if (er.scan < frame.start_trigger)
+				continue;
+
+			if (er.encoded_spectra.size() > 1 || er.scan == 0)
 			{
-				if (er.scan < frame.start_trigger)
-					continue;
+				int count = sprintf(statement,
+					insert_scan_statement.c_str(),
+					frame.frame_number,
+					er.scan - frame.start_trigger,
+					er.non_zero_count,
+					er.bpi,
+					er.bpi_mz,
+					er.tic);
 
-				if (er.encoded_spectra.size() > 1 || er.scan == 0)
-				{
-					int count = sprintf(statement,
-						insert_scan_statement.c_str(),
-						frame.frame_number,
-						er.scan - frame.start_trigger,
-						er.non_zero_count,
-						er.bpi,
-						er.bpi_mz,
-						er.tic);
+				auto compressed = er.get_compressed_spectra();
 
-					auto compressed = er.get_compressed_spectra();
+				bytes += compressed.size + count;
 
-					bytes += compressed.size + count;
-
-					SQLite::Statement sql_statement(db, (const char *)statement);
-					sql_statement.bind(1, compressed.data, compressed.size);
-					sql_statement.exec();
-				}
+				SQLite::Statement sql_statement(db, (const char *)statement);
+				sql_statement.bind(1, compressed.data, compressed.size);
+				sql_statement.exec();
 			}
 		}
-
-		SQLite::Statement e_trans(db, "END TRANSACTION");
-		e_trans.exec();
-		SQLite::Statement sync_on(db, "PRAGMA synchronous=1");
-		sync_on.exec();
-
 	}
-	catch (std::exception& e)
-	{
-		std::cout << "exception: " << e.what() << std::endl;
-	}
+
+	SQLite::Statement e_trans(db, "END TRANSACTION");
+	e_trans.exec();
+	SQLite::Statement sync_on(db, "PRAGMA synchronous=1");
+	sync_on.exec();
 
 	return bytes;
 }

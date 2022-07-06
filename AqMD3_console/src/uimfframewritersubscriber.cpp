@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
+#include <spdlog/spdlog.h>
 
 void UimfFrameWriterSubscriber::on_notify()
 {
@@ -12,36 +13,27 @@ void UimfFrameWriterSubscriber::on_notify()
 	{
 		auto frame = items.front();
 		items.pop_front();
-
-#if TIMING_INFORMATION
-		auto t1_open = std::chrono::high_resolution_clock::now();
-#endif
-		UimfWriter writer(frame->file_name);
-#if TIMING_INFORMATION
-		auto t2_open = std::chrono::high_resolution_clock::now();
-		auto dur_open = std::chrono::duration_cast<std::chrono::milliseconds>(t2_open - t1_open);
-		std::cout << "TIME TO OPEN DB: " << dur_open.count() <<"\n";
-#endif
-
-#if TIMING_INFORMATION
-		auto t1 = std::chrono::high_resolution_clock::now();
-		std::cout << "START FRAME WRITE: " << timestamp_now() << std::endl;
-#endif
-		int b = 0;
 		try
 		{
-			b = writer.write_scan_data(*frame);
-		}
-		catch (...)
-		{
-			std::cerr << "there was an error writing the UIMF frame" << std::endl;
-			std::cerr << "\tframe number:" << frame->frame_number << "\n";
-		}
+#if TIMING_INFORMATION
+			auto t1_open = std::chrono::high_resolution_clock::now();
+#endif
+			UimfWriter writer(frame->file_name);
+#if TIMING_INFORMATION
+			auto t2_open = std::chrono::high_resolution_clock::now();
+			auto dur_open = std::chrono::duration_cast<std::chrono::milliseconds>(t2_open - t1_open);
+			std::cout << "TIME TO OPEN DB: " << dur_open.count() << "\n";
+#endif
 
-		// Optionally write timestamp information
-		if (write_timestamps)
-		{
-			try
+#if TIMING_INFORMATION
+			auto t1 = std::chrono::high_resolution_clock::now();
+			std::cout << "START FRAME WRITE: " << timestamp_now() << std::endl;
+#endif
+			int b = 0;
+			b = writer.write_scan_data(*frame);
+
+			// Optionally write timestamp information
+			if (write_timestamps)
 			{
 				std::fstream file;
 				const std::string ts_file = "timestamps.csv";
@@ -68,33 +60,37 @@ void UimfFrameWriterSubscriber::on_notify()
 				auto buf = new char[buf_len];
 				for (auto segments : frame->get_data())
 				{
-					for (auto &scan : *segments)
+					for (auto& scan : *segments)
 					{
 						auto size = snprintf(buf, buf_len, "%u,%d,%llu\n", frame->frame_number, scan.scan, scan.timestamp);
 						if (size <= 0 || size > buf_len)
 						{
-							std::cout << "returned size of snprintf() = " << size << std::endl;
+							spdlog::error("returned size of snprintf() = " + std::to_string(size));
 							continue;
 						}
 						file.write(buf, size);
 					}
 				}
 			}
-			catch (...)
-			{
-				std::cerr << "There was an error writing timestamp information." << std::endl;
-				std::cerr << "\tframe number:" << frame->frame_number << "\n";
-			}
-		}
 
 #if TIMING_INFORMATION
-		auto t2 = std::chrono::high_resolution_clock::now();
-		auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
-		std::cout << "END FRAME WRITE: " << timestamp_now() 
-			<< " -- DURATION (ms): " << dur.count() 
+			auto t2 = std::chrono::high_resolution_clock::now();
+			auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1);
+			std::cout << "END FRAME WRITE: " << timestamp_now()
+			<< " -- DURATION (ms): " << dur.count()
 			<< " -- TOTAL BYTES: " << b
 			<< std::endl;
 #endif
+		}
+		catch (std::exception& ex)
+		{
+			spdlog::error("Error processing UIMF data: " + std::string(ex.what()));
+			spdlog::error("Frame Number: " + std::to_string(frame->frame_number));
+		}
+		catch (...)
+		{
+			spdlog::error("Unknown error processing UIMF data");
+		}
 	}
 }
 

@@ -41,7 +41,9 @@ protected:
 	inline void notify_completed() 
 	{ 
 		if (completed_future.valid())
+		{
 			completed_signal.set_value();
+		}
 	}
 
 	inline void notify_completed_and_wait()
@@ -52,7 +54,9 @@ protected:
 		{
 			auto fut = std::get<2>(subscriber);
 			if (fut.valid())
+			{
 				fut.wait();
+			}
 		}
 	}
 

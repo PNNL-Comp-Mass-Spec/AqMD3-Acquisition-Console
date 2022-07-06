@@ -94,8 +94,8 @@ AcquiredData CstZs1Context::acquire(std::chrono::milliseconds timeoutMs)
 
 						if (end_block_index < start_block_index)
 						{
-							std::cout << "end_block_index < start_block_index\n";
-							std::cout << "end_block_index: " << end_block_index << " start_block_index: " << start_block_index << "\n";
+							//std::cout << "end_block_index < start_block_index\n";
+							//std::cout << "end_block_index: " << end_block_index << " start_block_index: " << start_block_index << "\n";
 						
 							// suggested in CPP_IVIC_StreamingZeroSuppress example project
 							end_block_index += uint64_t(std::numeric_limits<unsigned int>::max());

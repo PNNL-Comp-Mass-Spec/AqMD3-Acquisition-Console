@@ -6,6 +6,7 @@
 #undef min
 #undef max
 #include "../include/message.pb.h"
+#include <stdexcept>
 
 void ZmqAcquiredDataSubscriber::on_notify()
 {
@@ -36,7 +37,9 @@ void ZmqAcquiredDataSubscriber::on_notify()
 					index += (-1 * val);
 
 					if (index >= data_vector.size())
-						throw std::string("index oob error -> index: ") + std::to_string(index);
+					{
+						throw std::out_of_range("index oob error -> index: " + std::to_string(index));
+					}
 
 					continue;
 				}

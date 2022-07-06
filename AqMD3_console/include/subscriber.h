@@ -35,7 +35,7 @@ private:
 	std::promise<void> has_completed;
 	std::promise<void> reusable_notifier;
 	std::shared_future<void> is_reusable_stop;
-	bool is_running;
+	bool is_running; // TODO: make this atomic
 	bool reusable;
 	std::deque<T> protected_queue;
 	std::mutex queue_sync;
@@ -55,10 +55,14 @@ public:
 	virtual ~Subscriber()
 	{
 		if (reusable)
+		{
 			reusable_notifier.set_value();
+		}
 
-		if(worker_handle.valid())
+		if (worker_handle.valid())
+		{
 			worker_handle.wait();
+		}
 	};
 
 	std::shared_future<void> setup(std::shared_future<void> pub_stop)
@@ -84,25 +88,19 @@ public:
 							items.push_back(protected_queue.front());
 							protected_queue.pop_front();
 						}
-
 					}
 
-					try
-					{
-						on_notify();
-					}
-					catch (std::string ex)
-					{
-						std::cerr << ex << std::endl;
-					}
+					on_notify();
 				}
 
 				on_completed();
 				has_completed.set_value();
 			});
 
-			if(!reusable)
+			if (!reusable)
+			{
 				return std::shared_future<void>(has_completed.get_future());
+			}
 		}
 
 		auto promise = std::promise<void>();

@@ -34,6 +34,7 @@ using std::cerr;
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/daily_file_sink.h>
+#include <stdexcept>
 
 
 using namespace std;
@@ -68,13 +69,19 @@ void disable_quick_edit()
 	handle = GetStdHandle(STD_INPUT_HANDLE);
 
 	if (handle == INVALID_HANDLE_VALUE)
-		throw std::string("Error getting standard device handle\n");
+	{
+		throw std::runtime_error("Error getting standard device handle\n");
+	}
 
 	if (!GetConsoleMode(handle, &current_settings))
-		throw std::string("Error getting console mode");
+	{
+		throw std::runtime_error("Error getting console mode");
+	}
 
 	if (!SetConsoleMode(handle, ENABLE_EXTENDED_FLAGS | (current_settings & ~ENABLE_QUICK_EDIT_MODE)))
-		throw std::string("Error setting console mode");
+	{
+		throw std::runtime_error("Error setting console mode");
+	}
 }
 
 static char ack[] = "ack";
@@ -167,7 +174,7 @@ int main(int argc, char *argv[]) {
 			{
 				for (const auto& command : req.payload)
 				{
-					std::cout << "\t" << command << std::endl;
+					spdlog::debug("command: " + command);
 
 					if (command == "num instruments")
 					{
@@ -439,9 +446,13 @@ int main(int argc, char *argv[]) {
 #endif
 							}
 						}
+						catch (const std::exception& ex)
+						{
+							spdlog::error("Error when trying to stop acquisition loop: " + std::string(ex.what()));
+						}
 						catch (...)
 						{
-							spdlog::error("Unable to stop acquisition loop");
+							spdlog::error("Unknown error when trying to stop acquisition loop");
 						}
 
 						req.send_response(ack);
@@ -494,8 +505,14 @@ int main(int argc, char *argv[]) {
 
 		return 0;
 	}
+	catch (const std::exception& ex)
+	{
+		spdlog::critical("AqMD3 console application has encountered an error that it cannot recover from, application exiting");
+		spdlog::critical(ex.what());
+	}
 	catch (...)
 	{
+		spdlog::critical("AqMD3 console application has encountered an unknown error that it cannot recover from, application exiting");
 	}
 
 	return 1;
