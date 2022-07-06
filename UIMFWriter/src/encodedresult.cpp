@@ -1,5 +1,7 @@
 #include "../include/UIMFWriter/encodedresult.h"
 
+#include <stdexcept>
+
 extern "C" {
 #include "../include/lzf/lzf.h"
 }
@@ -26,7 +28,7 @@ EncodedResult::CompressedSpectra EncodedResult::get_compressed_spectra()
 	{
 		if (data_ptr[i] != out_buf[i])
 		{
-			throw "decompress fail";
+			throw std::runtime_error("decompress fail");
 		}
 	}
 #endif
