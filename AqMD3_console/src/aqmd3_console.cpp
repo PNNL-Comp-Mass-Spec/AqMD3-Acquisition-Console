@@ -34,7 +34,6 @@ using std::cerr;
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/daily_file_sink.h>
-#include <boost/exception/diagnostic_information.hpp> 
 
 
 using namespace std;
@@ -497,7 +496,6 @@ int main(int argc, char *argv[]) {
 	}
 	catch (...)
 	{
-		spdlog::critical(boost::current_exception_diagnostic_information());
 	}
 
 	return 1;

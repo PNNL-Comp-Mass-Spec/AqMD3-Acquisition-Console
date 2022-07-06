@@ -7,10 +7,18 @@ project (AqMD3_console)
 
 find_path(PICOSHA2_INCLUDE_DIRS "picosha2.h")
 
+#set(BOOST_STACKTRACE_USE_WINDBG)
+
 find_package(cppzmq CONFIG REQUIRED) 
 find_package(protobuf CONFIG REQUIRED)
 find_package(Snappy CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+#find_package(Boost REQUIRED COMPONENTS stacktrace_windbg exception)
+
+#if(Boost_FOUND)
+#    include_directories(${Boost_INCLUDE_DIRS})
+#    link_directories(${Boost_LIBRARY_DIRS})
+#endif()
 
 include_directories("C:/Program Files/IVI Foundation/IVI/Include")
 link_directories("C:/Program Files/IVI Foundation/IVI/Lib_x64/msc")
@@ -46,7 +54,7 @@ add_executable (AqMD3_console
 	include/definitions.h
 	include/util/timehelpers.h
 	include/util/config.h
-)
+ "include/util/except.h")
 target_include_directories(AqMD3_console PRIVATE ${PICOSHA2_INCLUDE_DIRS})
 
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)
@@ -60,5 +68,8 @@ target_link_libraries (AqMD3_console PUBLIC i::uimf)
 target_link_libraries (AqMD3_console PUBLIC i::digi)
 
 target_link_libraries(AqMD3_console PRIVATE spdlog::spdlog spdlog::spdlog_header_only)
+#message(STATUS "Boost: ${Boost_LIBRARIES}")
+#target_link_libraries(AqMD3_console PRIVATE ${Boost_LIBRARIES})
+#target_link_libraries(AqMD3_console PRIVATE Boost::boost Boost::exception Boost::stacktrace)
 
 add_custom_command(TARGET AqMD3_console PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/config.txt $<TARGET_FILE_DIR:AqMD3_console>)

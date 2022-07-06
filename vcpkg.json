@@ -9,8 +9,7 @@
     "sqlitecpp",
     "protobuf",
     "picosha2",
-    "spdlog",
-    "boost-exception"
+    "spdlog"
   ],
   "builtin-baseline": "30b217b1ede50f6c27b7234388114f4b0d60a3f7",
   "overrides": [
