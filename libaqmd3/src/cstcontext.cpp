@@ -3,6 +3,7 @@
 #include "../include/libaqmd3/digitizer.h"
 
 #include <iostream>
+#include <stdexcept>
 
 AcquiredData CstContext::acquire(std::chrono::milliseconds timeoutMs)
 {
@@ -22,8 +23,10 @@ AcquiredData CstContext::acquire(std::chrono::milliseconds timeoutMs)
 			markers_buffer.size(),
 			(ViInt32 *)markers_buffer.data(),
 			&available_elements_markers, &actual_elements_markers, &first_element_markers);
-		if (rc.second != Digitizer::None)
-			throw rc.first;
+		if (rc.second == Digitizer::Error)
+		{
+			throw std::runtime_error(rc.first);
+		}
 	} while (actual_elements_markers < markers_to_acquire);
 
 	std::vector<AcquiredData::TriggerData> stamps;
@@ -61,8 +64,10 @@ AcquiredData CstContext::acquire(std::chrono::milliseconds timeoutMs)
 			samples_buffer->get_size(),
 			(ViInt32 *)samples_buffer->get_raw_unaquired(),
 			&available_elements_samples, &actual_elements_samples, &first_element_samples);
-		if (rc.second != Digitizer::None)
-			throw rc.first;
+		if (rc.second == Digitizer::Error)
+		{
+			throw std::runtime_error(rc.first);
+		}
 	} while (actual_elements_samples < elements_to_acquire);
 
 	samples_buffer->advance_offset(first_element_samples);

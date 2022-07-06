@@ -1,19 +1,24 @@
 #include "../include/libaqmd3/streamingcontext.h"
 #include "../include/libaqmd3/digitizer.h"
 #include <iostream>
+#include <stdexcept>
 
 void StreamingContext::start()
 {
-	auto rc = digitizer.begin_acquisition();
-	if (rc.second != Digitizer::None)
-		throw rc.first;
+	auto result = digitizer.begin_acquisition();
+	if (result.second == Digitizer::None)
+	{
+		throw std::runtime_error(result.first);
+	}
 }
 
 void StreamingContext::stop()
 {
-	auto rc = digitizer.abort_acquisition();
-	if (rc.second != Digitizer::None)
-		throw rc.first;
+	auto result = digitizer.abort_acquisition();
+	if (result.second == Digitizer::None)
+	{
+		throw std::runtime_error(result.first);
+	}
 }
 
 int StreamingContext::get_available_buffers()
@@ -44,7 +49,7 @@ std::shared_ptr<AcquisitionBuffer> StreamingContext::get_buffer()
 
 	if (total == buffer_max_count)
 	{
-		throw std::string("buffer max count reached");
+		throw std::runtime_error("buffer max count reached");
 	}
 
 	samples_buffer_pool.push_back(std::make_shared<AcquisitionBuffer>(total, samples_buffer_size));
