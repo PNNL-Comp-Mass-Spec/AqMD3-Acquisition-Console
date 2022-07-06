@@ -14,6 +14,7 @@ add_subdirectory ("libaqmd3")
 add_subdirectory ("AqMD3_console")
 
 target_compile_options(AqMD3_console PRIVATE "$<$<CONFIG:Release>:/Zi>")
+target_compile_options(AqMD3_console PRIVATE "$<$<CONFIG:Release>:/EHa>")
 target_link_options(AqMD3_console PRIVATE "$<$<CONFIG:Release>:/DEBUG>")
 target_link_options(AqMD3_console PRIVATE "$<$<CONFIG:Release>:/OPT:REF>")
 target_link_options(AqMD3_console PRIVATE "$<$<CONFIG:Release>:/OPT:ICF>")
