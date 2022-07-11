@@ -3,6 +3,7 @@
 #include "../include/definitions.h"
 #include "../include/util//timehelpers.h"
 #include <numeric>
+#include <format>
 #include <spdlog/spdlog.h>
 
 static std::string finished = "finished";
@@ -85,7 +86,7 @@ void ProcessSubject::on_notify()
 					{
 						frames.push_back(frames.front()->clone());
 					
-						//std::cout << std::to_string(notify_on_scans_count) << " scans processed, notifying -- " << timestamp_now() << "\n";
+						spdlog::debug(std::format("{} scans processed, notifying-- {}", notify_on_scans_count, timestamp_now()));
 						Publisher<frame_ptr>::notify(frame, SubscriberType::BOTH);
 						frames.pop_front();
 
