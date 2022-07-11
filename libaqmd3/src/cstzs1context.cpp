@@ -164,7 +164,7 @@ AcquiredData CstZs1Context::acquire(std::chrono::milliseconds timeoutMs)
 						markers_buffer.get_size(),
 						(ViInt32 *)markers_buffer.get_raw_unaquired(),
 						&available_elements_markers, &actual_elements_markers, &first_element_markers);
-				if (rc.second == Digitizer::None)
+				if (rc.second == Digitizer::Error)
 				{
 					throw std::runtime_error(rc.first);
 				}
@@ -214,7 +214,7 @@ process:
 				samples_buffer->get_size(),
 				(ViInt32 *)samples_buffer->get_raw_unaquired(),
 				&available_elements_samples, &actual_elements_samples, &first_element_samples);
-		if (rc.second == Digitizer::None)
+		if (rc.second == Digitizer::Error)
 		{
 			throw std::runtime_error(rc.first);
 		}
