@@ -125,9 +125,11 @@ void ProcessSubject::on_notify()
 	catch (const std::exception& ex)
 	{
 		spdlog::error("Processing error: " + std::string(ex.what()));
+		spdlog::error("Processing subject unprocessed elements: " + std::to_string(items.size()));
 	}
 	catch (...)
 	{
 		spdlog::error("Unknown processing error");
+		spdlog::error("Processing subject unprocessed elements: " + std::to_string(items.size()));
 	}
 }
