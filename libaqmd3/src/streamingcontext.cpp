@@ -1,24 +1,18 @@
 #include "../include/libaqmd3/streamingcontext.h"
 #include "../include/libaqmd3/digitizer.h"
+#include "../include/libaqmd3/helpers.h"
+
 #include <iostream>
 #include <stdexcept>
 
 void StreamingContext::start()
 {
-	auto result = digitizer.begin_acquisition();
-	if (result.second == Digitizer::None)
-	{
-		throw std::runtime_error(result.first);
-	}
+	check_and_throw_on_error(digitizer.begin_acquisition());
 }
 
 void StreamingContext::stop()
 {
-	auto result = digitizer.abort_acquisition();
-	if (result.second == Digitizer::None)
-	{
-		throw std::runtime_error(result.first);
-	}
+	check_and_throw_on_error(digitizer.abort_acquisition());
 }
 
 int StreamingContext::get_available_buffers()
