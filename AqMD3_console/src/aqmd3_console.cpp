@@ -118,7 +118,7 @@ void configure_logger()
 		auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 		console_sink->set_level(spdlog::level::trace);
 
-		auto logger = std::make_shared<spdlog::logger>("Log", spdlog::sinks_init_list( { daily_sink, console_sink }));
+		auto logger = std::make_shared<spdlog::logger>("aqmd3", spdlog::sinks_init_list( { daily_sink, console_sink }));
 		spdlog::set_default_logger(logger);
 		spdlog::info("Logger initialized");
 	}
