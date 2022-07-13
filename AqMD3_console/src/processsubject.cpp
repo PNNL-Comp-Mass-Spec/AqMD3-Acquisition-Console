@@ -31,18 +31,21 @@ void ProcessSubject::on_notify()
 				avg_ts += (ad.stamps[i].timestamp - ad.stamps[i - 1].timestamp);
 				if ((ad.stamps[i].index - ad.stamps[i - 1].index) > 1)
 				{
-					spdlog::debug("ad.stamps[i].index: " + std::to_string(ad.stamps[i].index) + " --  ad.stamps[i - 1].index: " +  std::to_string(ad.stamps[i - 1].index));
-					spdlog::debug("i: " + std::to_string(i) + " --  ad.stamps().size(): " + std::to_string(ad.stamps.size()));
-					spdlog::debug("total_triggers_processed: " + std::to_string(total_triggers_processed));
+					spdlog::debug(std::format("ad.stamps[i].index: {} --  ad.stamps[i - 1].index: {}", ad.stamps[i].index, ad.stamps[i - 1].index));
+					spdlog::debug(std::format("i: {} --  ad.stamps().size(): {}", i, ad.stamps.size()));
+					spdlog::debug(std::format("total_triggers_processed: {}", total_triggers_processed));
 				}
 			}
 			avg_ts /= ad.stamps.size() - 1;
 
+			// Determine if the initially measured period (in samples) of the clock pulse, tof_avg_samples, differs by more than delta
+			// from the last group of measured scan data's averaged timestamps. Warn if it's the case since the record size was determined using the 
+			// initial value.
 			if (avg_ts > (tof_avg_samples + delta) || avg_ts < (tof_avg_samples - delta))
 			{
-				spdlog::warn("Successive recorded trigger event timestamps differ by more than " + std::to_string(delta));
-				spdlog::warn("Total timestamps:\t" +  std::to_string(ad.stamps.size()));
-				spdlog::warn("timestamps avg:\t" + std::to_string(avg_ts));
+				spdlog::warn(std::format("Successive recorded trigger event timestamps differ by more than {} samples", delta));
+				spdlog::warn(std::format("Last {} recorded timestamps avg (in samples):\t {}", ad.stamps.size(), avg_ts));
+				spdlog::warn(std::format("Expected avg (in samples):\t {} +/- {}", tof_avg_samples, delta));
 			}
 
 			if (!frames.empty())
@@ -125,12 +128,12 @@ void ProcessSubject::on_notify()
 	}
 	catch (const std::exception& ex)
 	{
-		spdlog::error("Processing error: " + std::string(ex.what()));
-		spdlog::error("Processing subject unprocessed elements: " + std::to_string(items.size()));
+		spdlog::error(std::format("Processing error: {}", ex.what()));
+		spdlog::error(std::format("Processing subject unprocessed elements: ", items.size()));
 	}
 	catch (...)
 	{
 		spdlog::error("Unknown processing error");
-		spdlog::error("Processing subject unprocessed elements: " + std::to_string(items.size()));
+		spdlog::error(std::format("Processing subject unprocessed elements: ", items.size()));
 	}
 }
