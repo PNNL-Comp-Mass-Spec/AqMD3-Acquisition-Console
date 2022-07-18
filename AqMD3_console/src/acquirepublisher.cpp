@@ -4,8 +4,7 @@
 #include <chrono>
 #include <iostream>
 #include <spdlog/spdlog.h>
-using std::cout;
-using std::cerr;
+#include <format>
 
 #define FREE_ON_BUFFER_COUNT 5
 
@@ -22,6 +21,7 @@ void AcquirePublisher::start(UimfRequestMessage uimf)
 				int triggers_acquired = 0;
 
 				state = State::ACQUIRING;
+				spdlog::info(std::format("Frame {} - Total Scan Count: {}", uimf.frame_number(), total_triggers));
 
 #if TIMING_INFORMATION
 				auto start = std::chrono::high_resolution_clock::now();
