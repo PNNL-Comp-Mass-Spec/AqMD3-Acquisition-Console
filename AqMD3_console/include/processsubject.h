@@ -21,7 +21,7 @@ class ProcessSubject : public Subscriber<AcquiredData>,
 	public Publisher<segment_ptr>,
 	public Publisher<frame_ptr> {
 private:
-	int total_triggers_processed;
+	uint64_t total_triggers_processed;
 	std::shared_ptr<Server::Publisher> publisher;
 	std::string subject;
 	std::chrono::milliseconds total_duration;

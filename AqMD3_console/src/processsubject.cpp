@@ -59,18 +59,12 @@ void ProcessSubject::on_notify()
 				}
 	#endif
 
-				auto frame = frames.front();
-
-				int total_triggers = frame->frame_length * frame->nbr_accumulations;
-
-				if (total_triggers_processed < total_triggers)
+				if (total_triggers_processed < frames.front()->frame_length)
 				{
 					// Use calculated offset_bins and not frame->offset_bins as the value in the UIMF frame request
 					// message might represent the 'TimeOffset' in ns (which is currently hardcoded to be 10000 in Falkor)
 					// and not the number of post-trigger samples to reject: 0.00001s -> 20000 samples @ 2GS/s.
-					auto results = ad.process(total_triggers_processed % frame->frame_length, offset_bins);
-				
-					total_triggers_processed += ad.stamps.size();
+					auto results = ad.process(total_triggers_processed % frames.front()->frame_length, offset_bins);
 
 					for (int i = 0; i < results->size(); i++)
 					{
@@ -78,28 +72,31 @@ void ProcessSubject::on_notify()
 					}
 
 					Publisher<segment_ptr>::notify(results, SubscriberType::BOTH);
-
-					auto excess = frame->append_and_return_excess(results);
-
-					auto notify_trigger_count = (int32_t(frame->frame_length) - total_triggers_processed) < (int32_t(frame->frame_length) % notify_on_scans_count)
-						? frame->frame_length % notify_on_scans_count
-						: notify_on_scans_count;
-
-					if(notify_trigger_count <= frame->get_encoded_results_count())
-					{
-						frames.push_back(frames.front()->clone());
 					
-						spdlog::debug(std::format("{} scans processed, notifying-- {}", notify_on_scans_count, timestamp_now()));
-						Publisher<frame_ptr>::notify(frame, SubscriberType::BOTH);
-						frames.pop_front();
+					while (results->size() > 0)
+					{
+						auto scans_needed_emit_count = (uint64_t)MIN(notify_on_scans_count, frames.front()->frame_length - total_triggers_processed);
+						auto current_frame_scans_needed_diff_count = scans_needed_emit_count - frames.front()->get_encoded_results_count();
 
-						if (excess->size() > 0 && !frames.empty())
+						if (results->size() < current_frame_scans_needed_diff_count)
 						{
-							frames.front()->append_and_return_excess(excess);
+							frames.front()->append_encoded_results(results);
+							total_triggers_processed += results->size();
+							results = std::make_shared<std::vector<EncodedResult>>();
+						}
+						else // results->size() >= current_frame_scans_needed_diff_count
+						{
+							frames.front()->append_encoded_results(std::make_shared<std::vector<EncodedResult>>(std::begin(*results), std::begin(*results) + current_frame_scans_needed_diff_count));
+							total_triggers_processed += current_frame_scans_needed_diff_count;
+							frames.push_back(frames.front()->clone());
+							spdlog::debug(std::format("{} scans processed, notifying-- {}", notify_on_scans_count, timestamp_now()));
+							Publisher<frame_ptr>::notify(frames.front(), SubscriberType::BOTH);
+							frames.pop_front();
+							results = std::make_shared<std::vector<EncodedResult>>(std::begin(*results) + current_frame_scans_needed_diff_count, std::end(*results));
 						}
 					}
 
-					if (total_triggers_processed >= total_triggers)
+					if (total_triggers_processed >= frames.front()->frame_length)
 					{
 						std::string finished = "finished";
 						zmq::message_t finished_msg(finished.size());
