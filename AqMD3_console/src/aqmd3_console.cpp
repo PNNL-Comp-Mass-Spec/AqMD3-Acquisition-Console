@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
 		int record_size_c = 0;
 		std::shared_ptr<StreamingContext> context;
 		std::shared_ptr<ZmqAcquiredDataSubscriber> zmq_publisher;
-		std::shared_ptr<UimfFrameWriterSubscriber> frame_writer = std::make_shared<UimfFrameWriterSubscriber>();
+		std::shared_ptr<UimfFrameWriterSubscriber> frame_writer = std::make_shared<UimfFrameWriterSubscriber>(false);
 #endif // reusable_pub_sub
 
 		server->register_handler([&](Server::ReceivedRequest req)

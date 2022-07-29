@@ -11,7 +11,7 @@ private:
 	bool write_timestamps;
 
 public:
-	UimfFrameWriterSubscriber(bool write_timestamps = true)
+	UimfFrameWriterSubscriber(bool write_timestamps)
 #if REUSABLE_PUB_SUB
 		: Subscriber(true)
 #endif
