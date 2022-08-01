@@ -75,24 +75,29 @@ void ProcessSubject::on_notify()
 					
 					while (results->size() > 0)
 					{
-						auto scans_needed_emit_count = (uint64_t)MIN(notify_on_scans_count, frames.front()->frame_length - total_triggers_processed);
-						auto current_frame_scans_needed_diff_count = scans_needed_emit_count - frames.front()->get_encoded_results_count();
+						auto scans_needed_emit_count = (uint64_t)MIN(notify_on_scans_count - frames.front()->get_encoded_results_count(), frames.front()->frame_length - total_triggers_processed);
 
-						if (results->size() < current_frame_scans_needed_diff_count)
+						if (results->size() < scans_needed_emit_count)
 						{
 							frames.front()->append_encoded_results(results);
 							total_triggers_processed += results->size();
 							results = std::make_shared<std::vector<EncodedResult>>();
 						}
-						else // results->size() >= current_frame_scans_needed_diff_count
+						else
 						{
-							frames.front()->append_encoded_results(std::make_shared<std::vector<EncodedResult>>(std::begin(*results), std::begin(*results) + current_frame_scans_needed_diff_count));
-							total_triggers_processed += current_frame_scans_needed_diff_count;
+							frames.front()->append_encoded_results(std::make_shared<std::vector<EncodedResult>>(std::begin(*results), std::begin(*results) + scans_needed_emit_count));
+							total_triggers_processed += scans_needed_emit_count;
 							frames.push_back(frames.front()->clone());
-							spdlog::debug(std::format("{} scans processed, notifying-- {}", notify_on_scans_count, timestamp_now()));
 							Publisher<frame_ptr>::notify(frames.front(), SubscriberType::BOTH);
 							frames.pop_front();
-							results = std::make_shared<std::vector<EncodedResult>>(std::begin(*results) + current_frame_scans_needed_diff_count, std::end(*results));
+							if (total_triggers_processed < frames.front()->frame_length)
+							{
+								results = std::make_shared<std::vector<EncodedResult>>(std::begin(*results) + scans_needed_emit_count, std::end(*results));
+							}
+							else
+							{
+								results = std::make_shared<std::vector<EncodedResult>>();
+							}
 						}
 					}
 
