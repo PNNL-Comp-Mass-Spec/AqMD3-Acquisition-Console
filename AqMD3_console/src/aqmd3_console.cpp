@@ -315,7 +315,7 @@ int main(int argc, char *argv[]) {
 								break;
 							}
 
-							std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(uimf, data_pub, calculated_post_trigger_samples, avg_tof_period_samples);
+							std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(uimf, data_pub, calculated_post_trigger_samples, avg_tof_period_samples, notify_on_scans_count);
 							double ts_period = 1.0 / digitizer->max_sample_rate;
 
 #if REUSABLE_PUB_SUB

@@ -32,7 +32,7 @@ private:
 	uint64_t notify_on_scans_count;
 
 public:
-	ProcessSubject(UimfRequestMessage uimf, std::shared_ptr<Server::Publisher> publisher, uint32_t offset_bins, uint64_t tof_avg_samples, uint64_t notify_on_scans_count = 500)
+	ProcessSubject(UimfRequestMessage uimf, std::shared_ptr<Server::Publisher> publisher, uint32_t offset_bins, uint64_t tof_avg_samples, uint64_t notify_on_scans_count)
 		: total_triggers_processed(0)
 		, publisher(publisher)
 		, subject("status")
@@ -71,6 +71,7 @@ public:
 		, total_duration(0)
 		, offset_bins(offset_bins)
 		, tof_avg_samples(tof_avg_samples)
+		, notify_on_scans_count(0)
 	{}
 
 private:
