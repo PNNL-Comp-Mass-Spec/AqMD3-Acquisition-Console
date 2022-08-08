@@ -12,9 +12,7 @@ private:
 
 public:
 	UimfFrameWriterSubscriber(bool write_timestamps)
-#if REUSABLE_PUB_SUB
 		: Subscriber(true)
-#endif
 	{}
 
 private:
