@@ -6,7 +6,9 @@
 #include <spdlog/spdlog.h>
 #include <format>
 
+// TODO: move to config
 #define FREE_ON_BUFFER_COUNT 5
+#define WARN_ON_BUFFER_COUNT 3
 
 void AcquirePublisher::start(UimfRequestMessage uimf)
 {
@@ -32,6 +34,12 @@ void AcquirePublisher::start(UimfRequestMessage uimf)
 				{
 					try
 					{
+						auto available = context->get_available_buffers();
+						if (available <= WARN_ON_BUFFER_COUNT)
+						{
+							spdlog::warn("Available buffer count {}", available);
+						}
+
 						auto data = context->acquire(std::chrono::milliseconds::zero());
 						triggers_acquired += data.stamps.size();
 						notify(data, SubscriberType::BOTH);
