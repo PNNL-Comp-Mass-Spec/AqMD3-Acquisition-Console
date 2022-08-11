@@ -17,7 +17,7 @@ void AcquirePublisher::start(UimfRequestMessage uimf)
 
 		worker_handle = std::thread([&, uimf]()
 			{
-				int total_triggers = uimf.frame_length() * uimf.nbr_accumulations();
+				int total_triggers = uimf.frame_length();
 				int triggers_acquired = 0;
 
 				state = State::ACQUIRING;
