@@ -21,7 +21,7 @@ void AcquirePublisher::start(UimfRequestMessage uimf)
 				int triggers_acquired = 0;
 
 				state = State::ACQUIRING;
-				spdlog::info(std::format("Frame {} - Total Scan Count: {}", uimf.frame_number(), total_triggers));
+				spdlog::info(std::format("Frame {} - Total scan count to acquire: {}", uimf.frame_number(), total_triggers));
 
 #if TIMING_INFORMATION
 				auto start = std::chrono::high_resolution_clock::now();
