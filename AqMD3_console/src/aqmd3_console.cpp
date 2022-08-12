@@ -5,6 +5,7 @@
 #include "../include/zmqacquireddatasubscriber.h"
 #include "../include/processsubject.h"
 #include "../include/definitions.h"
+#include "include/app.h"
 
 #include <libaqmd3/digitizer.h>
 #include <libaqmd3/acquireddata.h>

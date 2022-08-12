@@ -69,4 +69,9 @@ target_link_libraries(AqMD3_console PRIVATE spdlog::spdlog spdlog::spdlog_header
 #target_link_libraries(AqMD3_console PRIVATE ${Boost_LIBRARIES})
 #target_link_libraries(AqMD3_console PRIVATE Boost::boost Boost::exception Boost::stacktrace)
 
-add_custom_command(TARGET AqMD3_console PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/config.txt $<TARGET_FILE_DIR:AqMD3_console>)
+add_custom_command(TARGET AqMD3_console PRE_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/config.txt $<TARGET_FILE_DIR:AqMD3_console>
+)
+add_custom_command(TARGET AqMD3_console POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/include/app.h $<TARGET_FILE_DIR:AqMD3_console>
+)

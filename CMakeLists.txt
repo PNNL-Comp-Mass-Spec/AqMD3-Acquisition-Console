@@ -5,8 +5,7 @@ cmake_minimum_required (VERSION 3.12)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++20")
 set (VCPKG_FEATURE_FLAGS "versions")
-project ("AqMD3_console")
-
+project (AqMD3_console VERSION 1.1.0)
 
 # Include sub-projects.
 add_subdirectory ("UIMFWriter")
@@ -18,3 +17,6 @@ target_compile_options(AqMD3_console PRIVATE "$<$<CONFIG:Release>:/EHa>")
 target_link_options(AqMD3_console PRIVATE "$<$<CONFIG:Release>:/DEBUG>")
 target_link_options(AqMD3_console PRIVATE "$<$<CONFIG:Release>:/OPT:REF>")
 target_link_options(AqMD3_console PRIVATE "$<$<CONFIG:Release>:/OPT:ICF>")
+
+configure_file(templates/app.h.in include/app.h)
+target_include_directories(AqMD3_console PUBLIC "${PROJECT_BINARY_DIR}")
