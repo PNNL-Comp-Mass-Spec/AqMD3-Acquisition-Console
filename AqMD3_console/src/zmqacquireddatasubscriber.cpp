@@ -61,7 +61,7 @@ void ZmqAcquiredDataSubscriber::on_notify()
 			zmq::message_t to_send(compressed_msg_s.size());
 			memcpy((void*)to_send.data(), compressed_msg_s.c_str(), compressed_msg_s.size());
 
-			publisher->send(to_send, subject);
+			publisher->send(to_send, subject, std::chrono::milliseconds(100));
 
 			processed++;
 		}

@@ -9,6 +9,7 @@
 #include <memory>
 #include <map>
 #include <functional>
+#include <chrono>
 
 class Server {
 public:
@@ -34,7 +35,7 @@ public:
 	private:
 		std::string connection;
 		zmq::socket_t publisher_socket;
-		std::mutex mut;
+		std::timed_mutex mut;
 
 	public:
 		Publisher(zmq::socket_t publisher_socket, std::string connection)
@@ -42,15 +43,23 @@ public:
 			, connection(connection)
 		{}
 
-		void send(zmq::message_t& message, const std::string& subject)
+		bool send(zmq::message_t& message, const std::string& subject, std::chrono::milliseconds timeout)
 		{
-			std::lock_guard<std::mutex> guard(mut);
+			bool r = true;
 
-			zmq::message_t msg(subject.size());
-			memcpy((void *)msg.data(), subject.data(), subject.size());
+			std::unique_lock<std::timed_mutex> guard(mut, std::defer_lock);
+			bool acquired = guard.try_lock_for(timeout);
+			
+			if (acquired)
+			{
+				zmq::message_t msg(subject.size());
+				memcpy((void*)msg.data(), subject.data(), subject.size());
 
-			publisher_socket.send(msg, ZMQ_SNDMORE);
-			publisher_socket.send(message, 0);
+				publisher_socket.send(msg, ZMQ_SNDMORE);
+				publisher_socket.send(message, 0);
+			}
+
+			return r;
 		}
 		
 	};

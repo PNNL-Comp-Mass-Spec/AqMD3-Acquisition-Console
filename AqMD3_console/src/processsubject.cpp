@@ -50,15 +50,6 @@ void ProcessSubject::on_notify()
 
 			if (!frames.empty())
 			{
-	#if TIMING_INFORMATION
-				if (first)
-				{
-					start = std::chrono::high_resolution_clock::now();
-					std::cout << "START PROCESS: " << timestamp_now() << std::endl;
-					first = false;
-				}
-	#endif
-
 				if (total_triggers_processed < frames.front()->frame_length)
 				{
 					// Use calculated offset_bins and not frame->offset_bins as the value in the UIMF frame request
@@ -107,14 +98,12 @@ void ProcessSubject::on_notify()
 						zmq::message_t finished_msg(finished.size());
 						memcpy((void *)finished_msg.data(), finished.c_str(), finished.size());
 
-						publisher->send(finished_msg, subject);
-
-	#if TIMING_INFORMATION
+						spdlog::info("Notifying processing complete");
+						auto start = std::chrono::high_resolution_clock::now();
+						publisher->send(finished_msg, subject, std::chrono::milliseconds::max());
 						auto stop = std::chrono::high_resolution_clock::now();
-						auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-						std::cout << "END PROCESS: " << timestamp_now() << " -- DURATION (ms): " << dur.count() << "  -- TOTAL SAMPLES: " << total_elements_processed << std::endl;
-						first = true;
-	#endif
+						auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+						spdlog::info("Total time to notify: {} ms", duration.count());
 					}
 				}
 			}
