@@ -3,3 +3,8 @@
 #define AqMD3_console_VERSION_PATCH @AqMD3_console_VERSION_PATCH@
 #define AqMD3_console_VERSION @AqMD3_console_VERSION@
 #define PROJECT_NAME @PROJECT_NAME@
+#define AqMD3_console_VERSION_MAJOR_S "@AqMD3_console_VERSION_MAJOR@"
+#define AqMD3_console_VERSION_MINOR_S "@AqMD3_console_VERSION_MINOR@"
+#define AqMD3_console_VERSION_PATCH_S "@AqMD3_console_VERSION_PATCH@"
+#define AqMD3_console_VERSION_S "@AqMD3_console_VERSION@"
+#define PROJECT_NAME_S "@PROJECT_NAME@"
