@@ -6,6 +6,7 @@
 class SA220 : private Digitizer {
 public:
 	 typedef struct Info{
+		std::string instrument_model;
 		std::string firmware_revision;
 		std::string serial_number;
 	} Info;
@@ -49,11 +50,15 @@ private:
 		Digitizer::get_instrument_serial_number(serial_num);
 		serial_num.resize(strlen(serial_num.c_str()));
 
-		return Info{ firmware_rev, serial_num };
+		std::string model(256, (char)0);
+		Digitizer::get_instrument_model(model);
+		serial_num.resize(strlen(model.c_str()));
+
+		return Info{ model, firmware_rev, serial_num };
 	}
 
 public:
-	SA220(std::string device, std::string options) : Digitizer(device, options)
+	SA220(std::string device_handle, std::string options) : Digitizer(device_handle, options)
 		, channel_1("Channel1")
 		, channel_2("Channel2")
 		, samples_channel_1("StreamCh1")
