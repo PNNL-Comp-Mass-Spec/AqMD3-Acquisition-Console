@@ -29,18 +29,18 @@ void AcquirePublisher::start(UimfRequestMessage uimf)
 				auto start = std::chrono::high_resolution_clock::now();
 				std::cout << "START ACQUIRE FRAME: " << timestamp_now() << std::endl;
 #endif
-				context->start();
+				digitizer->start();
 				while (triggers_acquired < total_triggers && !should_stop)
 				{
 					try
 					{
-						auto available = context->get_available_buffers();
+						auto available = digitizer->get_available_buffers();
 						if (available <= WARN_ON_BUFFER_COUNT)
 						{
 							spdlog::warn("Available buffer count {}", available);
 						}
 
-						auto data = context->acquire(std::chrono::milliseconds::zero());
+						auto data = digitizer->acquire(std::chrono::milliseconds::zero());
 						triggers_acquired += data.stamps.size();
 						notify(data, SubscriberType::BOTH);
 					}
@@ -55,8 +55,7 @@ void AcquirePublisher::start(UimfRequestMessage uimf)
 				}
 
 				stop_signal.set_value(State::STOPPED);
-			stop:
-				context->stop();
+				digitizer->stop();
 
 #if TIMING_INFORMATION
 				auto stop = std::chrono::high_resolution_clock::now();
@@ -90,11 +89,11 @@ void AcquirePublisher::start()
 
 			try
 			{
-				context->start();
+				digitizer->start();
 				while (!should_stop)
 				{
-					auto data = context->acquire(std::chrono::milliseconds::zero());
-					auto available = context->get_available_buffers();
+					auto data = digitizer->acquire(std::chrono::milliseconds::zero());
+					auto available = digitizer->get_available_buffers();
 
 					// App may become unrecoverable if we run out of memory, this guard attempts to stop that from happening
 					// TODO: revist this number and check
@@ -119,7 +118,7 @@ void AcquirePublisher::start()
 					}
 				}
 
-				context->stop();
+				digitizer->stop();
 				stop_signal.set_value(State::STOPPED);
 				return;
 			}

@@ -11,15 +11,15 @@
 class AcquirePublisher : public AcquisitionControl, public Publisher<AcquiredData> {
 private:
 	std::thread worker_handle;
-	std::shared_ptr<StreamingContext> context;
+	std::shared_ptr<StreamingContext> digitizer;
 	std::atomic_bool should_stop;
 
 	std::promise<State> stop_signal;
 
 public:
-	AcquirePublisher(std::shared_ptr<StreamingContext> context)
+	AcquirePublisher(std::shared_ptr<StreamingContext> digitizer)
 		: worker_handle()
-		, context(context)
+		, digitizer(digitizer)
 		, should_stop(false)
 	{}
 	virtual ~AcquirePublisher() = default;
