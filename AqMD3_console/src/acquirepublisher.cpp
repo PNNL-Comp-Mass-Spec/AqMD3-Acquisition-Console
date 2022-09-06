@@ -21,17 +21,19 @@ void AcquirePublisher::start(UimfRequestMessage uimf)
 			{
 				int total_triggers = uimf.frame_length();
 				int triggers_acquired = 0;
+				bool has_errored = false;
 
 				state = State::ACQUIRING;
 				spdlog::info(std::format("Frame {} - Total scan count to acquire: {}", uimf.frame_number(), total_triggers));
 
-#if TIMING_INFORMATION
-				auto start = std::chrono::high_resolution_clock::now();
-				std::cout << "START ACQUIRE FRAME: " << timestamp_now() << std::endl;
-#endif
 				digitizer->start();
-				while (triggers_acquired < total_triggers && !should_stop)
+				while (triggers_acquired < total_triggers)
 				{
+					if (has_errored || should_stop.load())
+					{
+						break;
+					}
+
 					try
 					{
 						auto available = digitizer->get_available_buffers();
@@ -47,24 +49,18 @@ void AcquirePublisher::start(UimfRequestMessage uimf)
 					catch (const std::exception& ex)
 					{
 						spdlog::error("Error when acquiring UIMF data: " + std::string(ex.what()));
+						has_errored = true;
 					}
 					catch (...)
 					{
 						spdlog::error("Unknown error when acquiring UIMF data");
+						has_errored = true;
 					}
 				}
 
 				stop_signal.set_value(State::STOPPED);
 				digitizer->stop();
-
-#if TIMING_INFORMATION
-				auto stop = std::chrono::high_resolution_clock::now();
-				auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-				auto file_name = uimf.file_name();
-				auto frame_num = uint32_t(uimf.frame_number());
-				auto countMs = ms.count();
-				std::cout << "END ACQUIRE FRAME: " << timestamp_now() << " -- DURATION (ms): " << countMs << std::endl;
-#endif
+				spdlog::info(std::format("Scans acquired: {}", triggers_acquired));
 
 			});
 	}
