@@ -138,22 +138,28 @@ void AcquirePublisher::stop()
 {
 	try
 	{
-		if (should_stop)
-			return;
+		spdlog::info("Stopping");
+		auto start = std::chrono::high_resolution_clock::now();
 
-		auto fut = stop_signal.get_future();
-		should_stop = true;
-			
-		fut.wait();			
-		state = fut.get();
-		if (state != State::STOPPED)
+		if (!should_stop)
 		{
-			spdlog::warn("state != State::STOPPED");
+			auto fut = stop_signal.get_future();
+			should_stop = true;
+
+			fut.wait();
+			state = fut.get();
+			if (state != State::STOPPED)
+			{
+				spdlog::warn("state != State::STOPPED");
+			}
+
+			notify_completed_and_wait();
+			worker_handle.join();
 		}
 
-		notify_completed_and_wait();
-		worker_handle.join();
-
+		auto end = std::chrono::high_resolution_clock::now();
+		auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+		spdlog::info(std::format("Time to stop: {} ms", ms));
 	}
 	catch (const std::exception& ex)
 	{
