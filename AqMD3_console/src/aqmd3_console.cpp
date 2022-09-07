@@ -120,7 +120,9 @@ void configure_logger()
 		console_sink->set_level(spdlog::level::trace);
 
 		auto logger = std::make_shared<spdlog::logger>("aqmd3", spdlog::sinks_init_list( { daily_sink, console_sink }));
+		logger->set_level(spdlog::level::trace);
 		spdlog::set_default_logger(logger);
+
 		spdlog::info("Logger initialized");
 	}
 	catch (const spdlog::spdlog_ex& ex)
