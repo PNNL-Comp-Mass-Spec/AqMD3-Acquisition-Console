@@ -104,6 +104,15 @@ void ProcessSubject::on_notify()
 						auto stop = std::chrono::high_resolution_clock::now();
 						auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 						spdlog::info("Total time to notify: {} ms", duration.count());
+						spdlog::info("Total scans processed: {}", total_triggers_processed);
+
+						spdlog::debug(std::format("unprocessed buffers count: {}", items.size()));
+						spdlog::debug(std::format("unprocessed partial frames count: {}", frames.size()));
+						spdlog::debug(std::format("unprocessed segments count: {}", results->size()));
+
+						items.clear();
+						frames.clear();
+						results->clear();
 					}
 				}
 			}
