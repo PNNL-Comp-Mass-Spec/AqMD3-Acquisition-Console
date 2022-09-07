@@ -42,7 +42,7 @@ void AcquirePublisher::start(UimfRequestMessage uimf)
 							spdlog::warn("Available buffer count {}", available);
 						}
 
-						auto data = digitizer->acquire(std::chrono::milliseconds::zero());
+						auto data = digitizer->acquire(std::chrono::milliseconds(this->timeout));
 						triggers_acquired += data.stamps.size();
 						notify(data, SubscriberType::BOTH);
 					}

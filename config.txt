@@ -19,3 +19,6 @@ ResourceName=PXI1::0::0::INSTR
 # The number of scans written to the data file at a time during acquisition. Decreasing this number results in data being written
 # to disk more often. 
 NotifyOnScansCount=1000
+
+# Acquisition timeout in milliseconds.
+AcquisitionTimeoutMs=100

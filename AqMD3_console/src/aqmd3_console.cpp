@@ -94,6 +94,8 @@ static double post_trigger_delay = 0.00001; // Default post trigger delay in 10u
 static double estimated_trigger_rearm_time = 0.000002048; // Default allowed trigger rearm time is 2us
 uint64_t notify_on_scans_count = 500;
 std::string resource_name = "PXI0::0::0::INSTR";
+int64_t acquisition_timeout_ms = 100;
+
 
 static void print_config_value(const std::string& key, const std::string &value, bool is_found) {
 	std::string msg = "Config value \"" + key;
@@ -151,6 +153,9 @@ void configure_settings()
 
 	notify_on_scans_count = config.has_key("NotifyOnScansCount") ? std::stod(config.get_value("NotifyOnScansCount")) : notify_on_scans_count;
 	print_config_value("NotifyOnScansCount", std::to_string(notify_on_scans_count), config.has_key("NotifyOnScansCount"));
+
+	acquisition_timeout_ms = config.has_key("AcquisitionTimeoutMs") ? std::stod(config.get_value("AcquisitionTimeoutMs")) : acquisition_timeout_ms;
+	print_config_value("AcquisitionTimeoutMs", std::to_string(acquisition_timeout_ms), config.has_key("AcquisitionTimeoutMs"));
 }
 
 int main(int argc, char *argv[]) {
@@ -310,7 +315,7 @@ int main(int argc, char *argv[]) {
 							std::shared_ptr<ZmqAcquiredDataSubscriber> zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, uimf.nbr_samples());
 #endif	
 
-							std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context);
+							std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context, acquisition_timeout_ms);
 
 							if (calculated_post_trigger_samples <= 0)
 							{
@@ -381,7 +386,7 @@ int main(int argc, char *argv[]) {
 						auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);
 						auto zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
 #endif	
-						std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context);
+						std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context, acquisition_timeout_ms);
 						std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(post_trigger_samples, tof_width);
 						ps->Publisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
 						p->register_subscriber(ps, SubscriberType::ACQUIRE);

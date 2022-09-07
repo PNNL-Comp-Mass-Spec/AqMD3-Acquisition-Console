@@ -16,11 +16,14 @@ private:
 
 	std::promise<State> stop_signal;
 
+	int64_t timeout;
+
 public:
-	AcquirePublisher(std::shared_ptr<StreamingContext> digitizer)
+	AcquirePublisher(std::shared_ptr<StreamingContext> digitizer, int64_t timeout)
 		: worker_handle()
 		, digitizer(digitizer)
 		, should_stop(false)
+		, timeout(timeout)
 	{}
 	virtual ~AcquirePublisher() = default;
 
