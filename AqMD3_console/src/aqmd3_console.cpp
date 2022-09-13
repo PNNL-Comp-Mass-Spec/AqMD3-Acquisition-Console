@@ -5,17 +5,21 @@
 #include "../include/zmqacquireddatasubscriber.h"
 #include "../include/processsubject.h"
 #include "../include/definitions.h"
+#include "../include/util/config.h"
+#include "../include/message.pb.h"
 #include "include/app.h"
 
 #include <libaqmd3/digitizer.h>
 #include <libaqmd3/acquireddata.h>
 #include <libaqmd3/sa220.h>
 
-
-
-#include "../include/util/config.h"
-
 #include <UIMFWriter/uimfwriter.h>
+
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/sinks/daily_file_sink.h>
+
+#include <stdexcept>
 #include <picosha2.h>
 #include <visa.h>
 #include <snappy.h>
@@ -30,15 +34,6 @@ using std::cerr;
 #define NOMINMAX 
 #undef min
 #undef max
-#include "../include/message.pb.h"
-
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-#include <spdlog/sinks/daily_file_sink.h>
-#include <stdexcept>
-
-
-using namespace std;
 
 namespace AqirisDigitizer
 {
@@ -203,7 +198,13 @@ int main(int argc, char *argv[]) {
 					if (command == "info")
 					{
 						auto info = digitizer->get_info();
-						req.send_response("");
+						auto info_str = std::format("Model: {} / Digitizer Serial No.: {} / Firmware Version: {} / App: {} / App Version: {}",
+							info.instrument_model,
+							info.serial_number,
+							info.firmware_revision,
+							PROJECT_NAME_S,
+							AqMD3_console_VERSION_S);
+						req.send_response(info_str);
 					}
 
 					if (command == "firmware")
@@ -394,7 +395,7 @@ int main(int argc, char *argv[]) {
 						controller = std::move(p);
 						controller->start();
 
-						vector<string> to_send(2);
+						std::vector<std::string> to_send(2);
 
 						TofWidthMessage tofMsg;
 						tofMsg.set_num_samples(record_size + post_trigger_samples);
@@ -402,7 +403,7 @@ int main(int argc, char *argv[]) {
 						//'tof_width / (2 * 16)' necessary to work with Falkor for the time being
 						tofMsg.set_pusher_pulse_width(tof_width / (2 * 16));
 						to_send[0] = (tofMsg.SerializeAsString());
-						vector<uint8_t> hash(picosha2::k_digest_size);
+						std::vector<uint8_t> hash(picosha2::k_digest_size);
 						picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
 
 						to_send[1] = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
@@ -422,13 +423,13 @@ int main(int argc, char *argv[]) {
 						spdlog::info("post trigger samples: " + std::to_string(post_trigger_samples));
 						digitizer->set_record_size(record_size);
 
-						vector<string> to_send(2);
+						std::vector<std::string> to_send(2);
 
 						TofWidthMessage tofMsg;
 						tofMsg.set_num_samples(record_size + post_trigger_samples);
 						tofMsg.set_pusher_pulse_width(tof_width / (2 * 16));
 						to_send[0] = (tofMsg.SerializeAsString());
-						vector<uint8_t> hash(picosha2::k_digest_size);
+						std::vector<uint8_t> hash(picosha2::k_digest_size);
 						picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
 
 						to_send[1] = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
