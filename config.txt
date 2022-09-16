@@ -11,7 +11,7 @@
 PostTriggerDelay=0.00001
 
 # The time in seconds that the acquisition software allows the digitizer to rearm.
-TriggerRearmDeadTime=0.00001
+TriggerRearmDeadTime=0.000002048
 
 # The handle for the digitizer, can be found in the MD3 SFP
 ResourceName=PXI1::0::0::INSTR
