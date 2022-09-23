@@ -198,12 +198,13 @@ int main(int argc, char *argv[]) {
 					if (command == "info")
 					{
 						auto info = digitizer->get_info();
-						auto info_str = std::format("Model: {} / Digitizer Serial No.: {} / Firmware Version: {} / App: {} / App Version: {}",
+						auto info_str = std::format("Digitizer Model: {} / Digitizer Serial No.: {} / Digitizer Firmware Version: {} / App: {} / App Version: {}-{}",
 							info.instrument_model,
 							info.serial_number,
 							info.firmware_revision,
 							PROJECT_NAME_S,
-							AqMD3_console_VERSION_S);
+							AqMD3_console_VERSION_S,
+							GIT_COMMIT_HASH);
 						req.send_response(info_str);
 					}
 
