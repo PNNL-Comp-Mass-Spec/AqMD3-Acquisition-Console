@@ -69,7 +69,7 @@ std::shared_ptr<StreamingContext> SA220::configure_cst(std::string channel, uint
 		check_and_throw_on_error(self_calibrate());
 	}
 
-	return std::make_shared<CstContext>(dynamic_cast<const Digitizer&>(*this), channel, record_size * 64, preallocated_buffers, record_size, triggers);
+	return std::make_shared<CstContext>(dynamic_cast<const Digitizer&>(*this), channel, preallocated_buffers, record_size, triggers);
 }
 
 std::shared_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, uint32_t triggers, uint64_t record_size, ZeroSuppressParameters parameters, uint32_t preallocated_buffers) const
@@ -87,5 +87,5 @@ std::shared_ptr<StreamingContext> SA220::configure_cst_zs1(std::string channel, 
 		check_and_throw_on_error(self_calibrate());
 	}
 
-	return std::make_shared<CstZs1Context>(dynamic_cast<const Digitizer&>(*this), channel, record_size * 256, preallocated_buffers, record_size, triggers);
+	return std::make_shared<CstZs1Context>(dynamic_cast<const Digitizer&>(*this), channel, preallocated_buffers, record_size, triggers);
 }

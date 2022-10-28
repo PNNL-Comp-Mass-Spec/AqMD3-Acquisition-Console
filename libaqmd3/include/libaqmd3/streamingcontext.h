@@ -32,7 +32,6 @@ protected:
 public:
 	StreamingContext(const Digitizer& digitizer,
 		std::string channel,
-		int64_t samples_buffer_size,
 		int32_t initial_samples_buffer_count,
 		uint64_t samples_per_trigger,
 		int32_t triggers_per_read)
@@ -42,7 +41,7 @@ public:
 		, triggers_per_read(triggers_per_read)
 		, buffer_takes(0)
 		, samples_buffer_pool()
-		, samples_buffer_size(samples_buffer_size)
+		, samples_buffer_size(samples_per_trigger * triggers_per_read)
 		, should_stop(false)
 		, digitizer(digitizer)
 	{
