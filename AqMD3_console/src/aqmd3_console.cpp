@@ -90,6 +90,9 @@ static double estimated_trigger_rearm_time = 0.000002048; // Default allowed tri
 uint64_t notify_on_scans_count = 500;
 std::string resource_name = "PXI0::0::0::INSTR";
 int64_t acquisition_timeout_ms = 100;
+int32_t acquisition_buffer_count = 40;
+int32_t trigger_events_per_read_count = 100;
+
 
 
 static void print_config_value(const std::string& key, const std::string &value, bool is_found) {
@@ -151,6 +154,12 @@ void configure_settings()
 
 	acquisition_timeout_ms = config.has_key("AcquisitionTimeoutMs") ? std::stod(config.get_value("AcquisitionTimeoutMs")) : acquisition_timeout_ms;
 	print_config_value("AcquisitionTimeoutMs", std::to_string(acquisition_timeout_ms), config.has_key("AcquisitionTimeoutMs"));
+
+	acquisition_buffer_count = config.has_key("AcquisitionBufferCount") ? std::stod(config.get_value("AcquisitionBufferCount")) : acquisition_buffer_count;
+	print_config_value("AcquisitionBufferCount", std::to_string(acquisition_buffer_count), config.has_key("AcquisitionBufferCount"));
+
+	trigger_events_per_read_count = config.has_key("TriggerEventsPerReadCount") ? std::stod(config.get_value("TriggerEventsPerReadCount")) : trigger_events_per_read_count;
+	print_config_value("TriggerEventsPerReadCount", std::to_string(trigger_events_per_read_count), config.has_key("TriggerEventsPerReadCount"));
 }
 
 int main(int argc, char *argv[]) {
@@ -382,7 +391,7 @@ int main(int argc, char *argv[]) {
 
 
 #if REUSABLE_PUB_SUB
-						context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);
+						context = digitizer->configure_cst_zs1(digitizer->channel_1, trigger_events_per_read_count, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), acquisition_buffer_count);
 						zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
 #else
 						auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);

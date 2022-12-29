@@ -22,3 +22,7 @@ NotifyOnScansCount=1000
 
 # Acquisition timeout in milliseconds.
 AcquisitionTimeoutMs=100
+
+TriggerEventsPerReadCount=100
+
+AcquisitionBufferCount=40
