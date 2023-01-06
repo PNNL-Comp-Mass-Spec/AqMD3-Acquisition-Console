@@ -12,6 +12,7 @@ add_library (libaqmd3
 	src/cstzs1context.cpp
 	src/cstcontext.cpp
 	src/sa220.cpp
+	src/acquisitionbufferpool.cpp
 	include/libaqmd3/digitizer.h
 	include/libaqmd3/acquisitionbuffer.h
 	include/libaqmd3/streamingcontext.h
@@ -19,6 +20,7 @@ add_library (libaqmd3
 	include/libaqmd3/cstcontext.h
 	include/libaqmd3/acquireddata.h
 	include/libaqmd3/sa220.h
+	include/acquisitionbufferpool.h
  "include/libaqmd3/helpers.h"  "src/helpers.cpp")
 add_library(i::digi ALIAS libaqmd3)
 
