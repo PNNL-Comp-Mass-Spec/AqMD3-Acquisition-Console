@@ -1,10 +1,5 @@
 #include "../include/libaqmd3/acquisitionbuffer.h"
 
-int AcquisitionBuffer::get_size()
-{
-	return data.size();
-}
-
 int AcquisitionBuffer::get_available()
 {
 	return data.size() - acquired_index - offset;

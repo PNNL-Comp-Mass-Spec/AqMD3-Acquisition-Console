@@ -11,16 +11,20 @@ private:
 	int processed_index;
 	int offset;
 
+	uint64_t triggers_per_read;
+	uint64_t samples_per_trigger;
+
 public:
-	AcquisitionBuffer(size_t size) 
-		: data(size)
+	AcquisitionBuffer(uint64_t triggers_per_read, uint64_t samples_per_trigger)
+		: data(triggers_per_read * samples_per_trigger)
 		, acquired_index(0)
 		, processed_index(0)
 		, offset(0)
+		, triggers_per_read(triggers_per_read)
+		, samples_per_trigger(samples_per_trigger)
 	{}
 
-	int get_size();
-	int get_id();
+	size_t get_size() { return samples_per_trigger * triggers_per_read; };
 	int get_available();
 	int get_unprocessed();
 	int get_processed();
@@ -32,6 +36,9 @@ public:
 	void advance_processed(int num);
 	void advance_acquired(int num);
 	void reset();
+
+	uint64_t get_triggers_per_read() { return triggers_per_read; }
+	uint64_t get_samples_per_trigger() { return samples_per_trigger; }
 };
 
 #endif // !ACQUISITION_BUFFER_H
