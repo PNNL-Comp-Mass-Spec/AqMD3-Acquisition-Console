@@ -5,11 +5,6 @@ int AcquisitionBuffer::get_size()
 	return data.size();
 }
 
-int AcquisitionBuffer::get_id()
-{
-	return id;
-}
-
 int AcquisitionBuffer::get_available()
 {
 	return data.size() - acquired_index - offset;

@@ -7,15 +7,13 @@
 class AcquisitionBuffer {
 private:
 	std::vector<int32_t> data;
-	int id;
 	int acquired_index;
 	int processed_index;
 	int offset;
 
 public:
-	AcquisitionBuffer(int id, size_t size) 
-		: id(id)
-		, data(size)
+	AcquisitionBuffer(size_t size) 
+		: data(size)
 		, acquired_index(0)
 		, processed_index(0)
 		, offset(0)
