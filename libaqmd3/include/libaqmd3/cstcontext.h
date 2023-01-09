@@ -7,10 +7,8 @@ class CstContext : public StreamingContext {
 private:
 
 public:
-	CstContext(const Digitizer& digitizer, std::string channel, int32_t samples_buffer_count,
-		uint64_t samples_per_trigger,
-		uint32_t triggers_per_read)
-		: StreamingContext(digitizer, channel, samples_buffer_count, samples_per_trigger, triggers_per_read)
+	CstContext(const Digitizer& digitizer, std::string channel, std::shared_ptr<AcquisitionBufferPool> buffer_pool)
+		: StreamingContext(digitizer, channel, buffer_pool)
 	{}
 
 	AcquiredData acquire(std::chrono::milliseconds timeoutMs) override;

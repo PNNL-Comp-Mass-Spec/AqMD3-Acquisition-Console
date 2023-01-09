@@ -25,7 +25,7 @@ public:
 	{
 		for (int i = 0; i < buffer_initial_count; i++)
 		{
-			samples_buffer_pool.push_back(std::make_shared<AcquisitionBuffer>(i, triggers_per_read, samples_per_trigger));
+			samples_buffer_pool.push_back(std::make_shared<AcquisitionBuffer>(triggers_per_read, samples_per_trigger));
 		}
 	}
 

@@ -30,11 +30,12 @@ AcquiredData CstZs1Context::acquire(std::chrono::milliseconds timeoutMs)
 	uint64_t to_acquire = 0;
 	std::vector<AcquiredData::TriggerData> stamps;
 
-	std::shared_ptr<AcquisitionBuffer> samples_buffer = get_buffer();
+	std::shared_ptr<AcquisitionBuffer> samples_buffer = buffer_pool->get_buffer();
 
 	ViInt64 first_element_markers;
 	ViInt64 available_elements_markers = 0;
 	ViInt64 actual_elements_markers = markers_buffer.get_unprocessed();
+	uint64_t triggers_per_read = samples_buffer->get_triggers_per_read();
 
 	bool use_timeout = (timeoutMs == std::chrono::milliseconds::zero()) ? false : true;
 
@@ -223,6 +224,6 @@ process:
 		samples_buffer->advance_acquired(actual_elements_samples);
 	} while (samples_buffer->get_acquired() < to_acquire);
 
-	return AcquiredData(stamps, samples_buffer, samples_per_trigger);
+	return AcquiredData(stamps, samples_buffer, samples_buffer->get_samples_per_trigger());
 
 }

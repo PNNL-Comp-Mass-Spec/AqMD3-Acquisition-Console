@@ -9,26 +9,23 @@
 
 class CstZs1Context : public StreamingContext {
 private:
-	int const gate_acquisition_multiplier = 2;
-	int const markers_hunk_size = 16;
-	int const min_target_records;
+	uint64_t const gate_acquisition_multiplier = 2;
+	uint64_t const markers_hunk_size = 16;
+	uint64_t const min_target_records;
 
 	int active_multiplier;
 
 	int const multiplier_min = 1;
 	int const multiplier_max = 8;
 
+	//TODO use array or vector
 	AcquisitionBuffer markers_buffer;
 
 public:
-	CstZs1Context(const Digitizer& digitizer,
-		std::string channel,
-		uint32_t samples_buffer_count,
-		uint64_t samples_per_trigger,
-		uint32_t triggers_per_read)
-		: StreamingContext(digitizer, channel, samples_buffer_count, samples_per_trigger, triggers_per_read)
+	CstZs1Context(const Digitizer& digitizer, std::string channel, uint64_t triggers_per_read, std::shared_ptr<AcquisitionBufferPool> buffer_pool)
+		: StreamingContext(digitizer, channel, buffer_pool)
 		, min_target_records(triggers_per_read * markers_hunk_size)
-		, markers_buffer(0, (triggers_per_read * markers_hunk_size * multiplier_max) + 15)
+		, markers_buffer((size_t)(triggers_per_read * markers_hunk_size * multiplier_max) + 15)
 		, active_multiplier(1)
 	{}
 

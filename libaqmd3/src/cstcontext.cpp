@@ -7,9 +7,11 @@
 
 AcquiredData CstContext::acquire(std::chrono::milliseconds timeoutMs)
 {
-	int markers_to_acquire = triggers_per_read * 16;
+	std::shared_ptr<AcquisitionBuffer> samples_buffer = buffer_pool->get_buffer();
+	auto triggers_per_read = samples_buffer->get_triggers_per_read();
+	auto samples_per_trigger = samples_buffer->get_samples_per_trigger();
+	auto markers_to_acquire = triggers_per_read * 16;
 	std::vector<int32_t> markers_buffer(markers_to_acquire * 16);
-	std::shared_ptr<AcquisitionBuffer> samples_buffer = get_buffer();
 
 	ViInt64 first_element_markers;
 	ViInt64 available_elements_markers = 0;
