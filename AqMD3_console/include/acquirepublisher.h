@@ -18,12 +18,15 @@ private:
 
 	int64_t timeout;
 
+	std::shared_ptr<AcquisitionBufferPool> buffer_pool;
+
 public:
-	AcquirePublisher(std::shared_ptr<StreamingContext> digitizer, int64_t timeout)
+	AcquirePublisher(std::shared_ptr<StreamingContext> digitizer, int64_t timeout, std::shared_ptr<AcquisitionBufferPool> buffer_pool)
 		: worker_handle()
 		, digitizer(digitizer)
 		, should_stop(false)
 		, timeout(timeout)
+		, buffer_pool(buffer_pool)
 	{}
 	virtual ~AcquirePublisher() = default;
 

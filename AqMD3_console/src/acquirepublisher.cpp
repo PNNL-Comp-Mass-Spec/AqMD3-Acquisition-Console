@@ -36,7 +36,7 @@ void AcquirePublisher::start(UimfRequestMessage uimf)
 
 					try
 					{
-						auto available = digitizer->get_available_buffers();
+						auto available = buffer_pool->get_available_buffers();
 						if (available <= WARN_ON_BUFFER_COUNT)
 						{
 							spdlog::warn("Available buffer count {}", available);
@@ -89,7 +89,7 @@ void AcquirePublisher::start()
 				while (!should_stop)
 				{
 					auto data = digitizer->acquire(std::chrono::milliseconds::zero());
-					auto available = digitizer->get_available_buffers();
+					auto available = buffer_pool->get_available_buffers();
 
 					// App may become unrecoverable if we run out of memory, this guard attempts to stop that from happening
 					// TODO: revist this number and check
