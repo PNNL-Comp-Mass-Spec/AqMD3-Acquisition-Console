@@ -12,11 +12,16 @@ private:
 	uint64_t buffer_max_count;
 	uint64_t buffer_initial_count;
 
+	uint64_t triggers_per_read;
+	uint64_t samples_per_trigger;
+
 public:
 	AcquisitionBufferPool(uint64_t triggers_per_read, uint64_t samples_per_trigger, uint64_t buffer_initial_count, uint64_t buffer_max_count)
 		: buffer_takes(0)
 		, buffer_max_count(buffer_max_count)
 		, buffer_initial_count(buffer_initial_count)
+		, triggers_per_read(triggers_per_read)
+		, samples_per_trigger(samples_per_trigger)
 	{
 		for (int i = 0; i < buffer_initial_count; i++)
 		{
