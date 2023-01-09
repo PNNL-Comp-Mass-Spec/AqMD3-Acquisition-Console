@@ -20,7 +20,7 @@ add_library (libaqmd3
 	include/libaqmd3/cstcontext.h
 	include/libaqmd3/acquireddata.h
 	include/libaqmd3/sa220.h
-	include/acquisitionbufferpool.h
+	include/libaqmd3/acquisitionbufferpool.h
  "include/libaqmd3/helpers.h"  "src/helpers.cpp")
 add_library(i::digi ALIAS libaqmd3)
 
