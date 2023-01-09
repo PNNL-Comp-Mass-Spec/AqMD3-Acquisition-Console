@@ -24,6 +24,15 @@ public:
 		, samples_per_trigger(samples_per_trigger)
 	{}
 
+	AcquisitionBuffer(size_t size)
+		: data(size)
+		, acquired_index(0)
+		, processed_index(0)
+		, offset(0)
+		, triggers_per_read(0)
+		, samples_per_trigger(0)
+	{}
+
 	size_t get_size() { return samples_per_trigger * triggers_per_read; };
 	int get_available();
 	int get_unprocessed();
