@@ -25,8 +25,6 @@ public:
 	}
 
 	size_t get_available_buffers();
-
-protected:
 	std::shared_ptr<AcquisitionBuffer> get_buffer();
 
 };
