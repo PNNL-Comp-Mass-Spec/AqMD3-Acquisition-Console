@@ -90,9 +90,10 @@ static double estimated_trigger_rearm_time = 0.000002048; // Default allowed tri
 uint64_t notify_on_scans_count = 500;
 std::string resource_name = "PXI0::0::0::INSTR";
 int64_t acquisition_timeout_ms = 100;
-int32_t acquisition_buffer_count = 40;
+uint64_t acquisition_initial_buffer_count = 40;
+uint64_t acquisition_max_buffer_count = 100;
 int32_t trigger_events_per_read_count = 100;
-
+uint64_t acquisition_buffer_reserve_elements_count = 2048;
 
 
 static void print_config_value(const std::string& key, const std::string &value, bool is_found) {
@@ -155,11 +156,17 @@ void configure_settings()
 	acquisition_timeout_ms = config.has_key("AcquisitionTimeoutMs") ? std::stod(config.get_value("AcquisitionTimeoutMs")) : acquisition_timeout_ms;
 	print_config_value("AcquisitionTimeoutMs", std::to_string(acquisition_timeout_ms), config.has_key("AcquisitionTimeoutMs"));
 
-	acquisition_buffer_count = config.has_key("AcquisitionBufferCount") ? std::stod(config.get_value("AcquisitionBufferCount")) : acquisition_buffer_count;
-	print_config_value("AcquisitionBufferCount", std::to_string(acquisition_buffer_count), config.has_key("AcquisitionBufferCount"));
+	acquisition_initial_buffer_count = config.has_key("AcquisitionInitialBufferCount") ? std::stod(config.get_value("AcquisitionInitialBufferCount")) : acquisition_initial_buffer_count;
+	print_config_value("AcquisitionInitialBufferCount", std::to_string(acquisition_initial_buffer_count), config.has_key("AcquisitionInitialBufferCount"));
+
+	acquisition_max_buffer_count = config.has_key("AcquisitionMaxBufferCount") ? std::stod(config.get_value("AcquisitionMaxBufferCount")) : acquisition_max_buffer_count;
+	print_config_value("AcquisitionMaxBufferCount", std::to_string(acquisition_max_buffer_count), config.has_key("AcquisitionMaxBufferCount"));
 
 	trigger_events_per_read_count = config.has_key("TriggerEventsPerReadCount") ? std::stod(config.get_value("TriggerEventsPerReadCount")) : trigger_events_per_read_count;
 	print_config_value("TriggerEventsPerReadCount", std::to_string(trigger_events_per_read_count), config.has_key("TriggerEventsPerReadCount"));
+
+	acquisition_buffer_reserve_elements_count = config.has_key("AcquisitionBufferReserveElementsCount") ? std::stod(config.get_value("AcquisitionBufferReserveElementsCount")) : acquisition_buffer_reserve_elements_count;
+	print_config_value("AcquisitionBufferReserveElementsCount", std::to_string(acquisition_buffer_reserve_elements_count), config.has_key("AcquisitionBufferReserveElementsCount"));
 }
 
 int main(int argc, char *argv[]) {

@@ -25,4 +25,8 @@ AcquisitionTimeoutMs=100
 
 TriggerEventsPerReadCount=100
 
-AcquisitionBufferCount=40
+AcquisitionInitialBufferCount=40
+
+AcquisitionMaxBufferCount=100
+
+AcquisitionBufferReserveElementsCount=2048
