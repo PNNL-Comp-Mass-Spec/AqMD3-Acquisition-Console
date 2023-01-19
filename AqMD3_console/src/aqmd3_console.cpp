@@ -51,6 +51,8 @@ namespace AqirisDigitizer
 			, samples_per_trigger(samples_per_trigger)
 			, trigger_rearm_samples(trigger_rearm_samples)
 		{}
+
+		TofTimingInformation() = default;
 	};
 
 	static TofTimingInformation get_timing_information(const SA220 *digitizer, double sample_rate);
