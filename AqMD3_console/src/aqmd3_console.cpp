@@ -423,9 +423,7 @@ int main(int argc, char *argv[]) {
 
 						TofWidthMessage tofMsg;
 						tofMsg.set_num_samples(record_size + post_trigger_samples);
-
-						//'tof_width / (2 * 16)' necessary to work with Falkor for the time being
-						tofMsg.set_pusher_pulse_width(tof_width / (2 * 16));
+						tofMsg.set_pusher_pulse_width(tof_width);
 						to_send[0] = (tofMsg.SerializeAsString());
 						std::vector<uint8_t> hash(picosha2::k_digest_size);
 						picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
@@ -451,7 +449,7 @@ int main(int argc, char *argv[]) {
 
 						TofWidthMessage tofMsg;
 						tofMsg.set_num_samples(record_size + post_trigger_samples);
-						tofMsg.set_pusher_pulse_width(tof_width / (2 * 16));
+						tofMsg.set_pusher_pulse_width(tof_width);
 						to_send[0] = (tofMsg.SerializeAsString());
 						std::vector<uint8_t> hash(picosha2::k_digest_size);
 						picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
