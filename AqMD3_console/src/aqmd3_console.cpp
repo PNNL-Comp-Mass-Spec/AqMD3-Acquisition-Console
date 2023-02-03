@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
 		configure_logger();
 		configure_settings();
 
-		std::unique_ptr<SA220> digitizer = std::make_unique<SA220>(resource_name, "Simulate=false, DriverSetup= Model=SA220P");
+		std::unique_ptr<SA220> digitizer = std::make_unique<SA220>(resource_name, false);
 		auto server = new Server("tcp://*:5555");
 		double sampling_rate = 0.0;
 		std::unique_ptr<AcquisitionControl> controller;

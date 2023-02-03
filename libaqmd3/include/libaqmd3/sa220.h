@@ -58,7 +58,7 @@ private:
 	}
 
 public:
-	SA220(std::string device_handle, std::string options) : Digitizer(device_handle, options)
+	SA220(std::string device_handle, bool simulate_device) : Digitizer(device_handle, simulate_device, "SA220P")
 		, channel_1("Channel1")
 		, channel_2("Channel2")
 		, samples_channel_1("StreamCh1")

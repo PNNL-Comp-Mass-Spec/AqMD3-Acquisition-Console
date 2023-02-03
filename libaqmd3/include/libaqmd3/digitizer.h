@@ -8,6 +8,8 @@
 #include <memory>
 #include <chrono>
 #include <string>
+#include <format>
+#include <string>
 
 class Digitizer {
 public:
@@ -35,9 +37,10 @@ protected:
 	ViSession session;
 
 public: 
-	Digitizer(std::string resource, std::string options) 
+	Digitizer(std::string resource, bool simulate_device, std::string device_type) 
 		: session(VI_NULL)
 	{
+		std::string options = std::format("Simulate={}, DriverSetup= Model={}", simulate_device ? "true" : "false", device_type);
 		AqMD3_InitWithOptions((ViChar *)resource.c_str(), VI_FALSE, VI_FALSE, options.c_str(), &session);
 	}
 	~Digitizer()
