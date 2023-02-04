@@ -44,9 +44,7 @@ add_executable (AqMD3_console
 	include/acquisitioncontrol.h
 	include/processsubject.h
 	include/zmqacquireddatasubscriber.h
-	include/diagnostic/rawprintersubscriber.h
-	include/diagnostic/uimfframedecompressorsubscriber.h
-	include/diagnostic/encodeddatawriter.h
+	include/diagnostic/datageneratorcontext.h
 	include/uimfframewritersubscriber.h
 	include/definitions.h
 	include/util/timehelpers.h
