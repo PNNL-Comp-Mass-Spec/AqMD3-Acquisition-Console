@@ -82,16 +82,22 @@ void UimfFrameWriterSubscriber::on_notify()
 			<< std::endl;
 #endif
 		}
-		catch (std::exception& ex)
+		catch (SQLite::Exception& ex)
 		{
 			spdlog::error("Error processing UIMF data: " + std::string(ex.what()));
 			spdlog::error("Frame Number: " + std::to_string(frame->frame_number));
-			spdlog::error("UIMF unprocessed elements: " + std::to_string(items.size()));
+			if (items.size() > 0)
+			{
+				spdlog::error("UIMF unprocessed elements: " + std::to_string(items.size()));
+			}
 		}
 		catch (...)
 		{
 			spdlog::error("Unknown error processing UIMF data");
-			spdlog::error("UIMF unprocessed elements: " + std::to_string(items.size()));
+			if (items.size() > 0)
+			{
+				spdlog::error("UIMF unprocessed elements: " + std::to_string(items.size()));
+			}
 		}
 	}
 }
