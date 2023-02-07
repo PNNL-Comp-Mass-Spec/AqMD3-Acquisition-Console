@@ -5,6 +5,24 @@
 #include <stdexcept>
 #include <cstring>
 
+const std::string SA220::channel_1 = "Channel1";
+const std::string SA220::channel_2 = "Channel2";
+const std::string SA220::samples_channel_1 = "StreamCh1";
+const std::string SA220::samples_channel_2 = "StreamCh2";
+const std::string SA220::markers_channel_1 = "MarkersCh1";
+const std::string SA220::markers_channel_2 = "MarkersCh2";
+const std::string SA220::trigger_internal_1 = "Internal1";
+const std::string SA220::trigger_internal_2 = "Internal2";
+const std::string SA220::trigger_external = "External1";
+const std::string SA220::trigger_software = "Software";
+const std::string SA220::trigger_self = "SelfTrigger";
+const std::string SA220::control_io_1 = "ControlIO1";
+const std::string SA220::control_io_2 = "ControlIO2";
+const std::string SA220::control_io_3 = "ControlIO3";
+const double SA220::full_scale_range_0_5v = 0.5;
+const double SA220::full_scale_range_2_5v = 2.5;
+const double SA220::max_sample_rate = 2000000000.0;
+
 void SA220::set_sampling_rate(double rate) const
 {
 	check_and_throw_on_error(configure_sample_rate(rate));
