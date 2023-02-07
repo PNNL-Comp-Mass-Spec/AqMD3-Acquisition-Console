@@ -71,8 +71,8 @@ public:
 
 	Info get_info() const { return digitizer_info; };
 
-	void enable_io_port() const;
-	void disable_io_port() const;
+	void enable_io_port(const std::string& io_port) const;
+	void disable_io_port(const std::string& io_port) const;
 
 	bool get_is_idle() const;
 

@@ -54,16 +54,16 @@ void SA220::set_channel_data_inversion(std::string channel, bool enable) const
 }
 
 
-void SA220::enable_io_port() const
+void SA220::enable_io_port(const std::string& io_port) const
 {
 	std::string enable_string("In-TriggerEnable");
-	check_and_throw_on_error(configure_io_port(control_io_2.c_str(), enable_string.c_str()));
+	check_and_throw_on_error(configure_io_port(io_port.c_str(), enable_string.c_str()));
 }
 
-void SA220::disable_io_port() const
+void SA220::disable_io_port(const std::string& io_port) const
 {
 	std::string disable_string("Disabled");
-	check_and_throw_on_error(configure_io_port(control_io_2.c_str(), disable_string.c_str()));
+	check_and_throw_on_error(configure_io_port(io_port.c_str(), disable_string.c_str()));
 }
 
 bool SA220::get_is_idle() const

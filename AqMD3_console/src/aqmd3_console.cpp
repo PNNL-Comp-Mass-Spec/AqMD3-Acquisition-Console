@@ -511,7 +511,7 @@ int main(int argc, char *argv[]) {
 						if (req.payload.size() == 2)
 						{
 							auto val = std::stoi(req.payload[1]);
-							digitizer->enable_io_port();
+							digitizer->enable_io_port(SA220::control_io_2);
 						}
 
 						req.send_response(ack);
@@ -523,7 +523,7 @@ int main(int argc, char *argv[]) {
 						if (req.payload.size() == 2)
 						{
 							auto val = std::stoi(req.payload[1]);
-							digitizer->disable_io_port();
+							digitizer->disable_io_port(SA220::control_io_2);
 						}
 
 						req.send_response(ack);
