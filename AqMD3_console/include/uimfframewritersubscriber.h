@@ -7,12 +7,12 @@
 class UimfFrameWriterSubscriber : public Subscriber<std::shared_ptr<UimfFrame>> {
 private:
 	std::deque<std::shared_ptr<UimfFrame>> frames;
-	bool append_excess;
 	bool write_timestamps;
 
 public:
 	UimfFrameWriterSubscriber(bool write_timestamps)
 		: Subscriber(true)
+		, write_timestamps(write_timestamps)
 	{}
 
 private:
