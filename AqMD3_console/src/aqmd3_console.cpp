@@ -152,22 +152,22 @@ void configure_settings()
 	resource_name = config.has_key("ResourceName") ? config.get_value("ResourceName") : resource_name;
 	print_config_value("ResourceName", resource_name, config.has_key("ResourceName"));
 
-	notify_on_scans_count = config.has_key("NotifyOnScansCount") ? std::stod(config.get_value("NotifyOnScansCount")) : notify_on_scans_count;
+	notify_on_scans_count = config.has_key("NotifyOnScansCount") ? std::stoull(config.get_value("NotifyOnScansCount")) : notify_on_scans_count;
 	print_config_value("NotifyOnScansCount", std::to_string(notify_on_scans_count), config.has_key("NotifyOnScansCount"));
 
-	acquisition_timeout_ms = config.has_key("AcquisitionTimeoutMs") ? std::stod(config.get_value("AcquisitionTimeoutMs")) : acquisition_timeout_ms;
+	acquisition_timeout_ms = config.has_key("AcquisitionTimeoutMs") ? std::stoll(config.get_value("AcquisitionTimeoutMs")) : acquisition_timeout_ms;
 	print_config_value("AcquisitionTimeoutMs", std::to_string(acquisition_timeout_ms), config.has_key("AcquisitionTimeoutMs"));
 
-	acquisition_initial_buffer_count = config.has_key("AcquisitionInitialBufferCount") ? std::stod(config.get_value("AcquisitionInitialBufferCount")) : acquisition_initial_buffer_count;
+	acquisition_initial_buffer_count = config.has_key("AcquisitionInitialBufferCount") ? std::stoull(config.get_value("AcquisitionInitialBufferCount")) : acquisition_initial_buffer_count;
 	print_config_value("AcquisitionInitialBufferCount", std::to_string(acquisition_initial_buffer_count), config.has_key("AcquisitionInitialBufferCount"));
 
-	acquisition_max_buffer_count = config.has_key("AcquisitionMaxBufferCount") ? std::stod(config.get_value("AcquisitionMaxBufferCount")) : acquisition_max_buffer_count;
+	acquisition_max_buffer_count = config.has_key("AcquisitionMaxBufferCount") ? std::stoull(config.get_value("AcquisitionMaxBufferCount")) : acquisition_max_buffer_count;
 	print_config_value("AcquisitionMaxBufferCount", std::to_string(acquisition_max_buffer_count), config.has_key("AcquisitionMaxBufferCount"));
 
-	trigger_events_per_read_count = config.has_key("TriggerEventsPerReadCount") ? std::stod(config.get_value("TriggerEventsPerReadCount")) : trigger_events_per_read_count;
+	trigger_events_per_read_count = config.has_key("TriggerEventsPerReadCount") ? std::stoi(config.get_value("TriggerEventsPerReadCount")) : trigger_events_per_read_count;
 	print_config_value("TriggerEventsPerReadCount", std::to_string(trigger_events_per_read_count), config.has_key("TriggerEventsPerReadCount"));
 
-	acquisition_buffer_reserve_elements_count = config.has_key("AcquisitionBufferReserveElementsCount") ? std::stod(config.get_value("AcquisitionBufferReserveElementsCount")) : acquisition_buffer_reserve_elements_count;
+	acquisition_buffer_reserve_elements_count = config.has_key("AcquisitionBufferReserveElementsCount") ? std::stoull(config.get_value("AcquisitionBufferReserveElementsCount")) : acquisition_buffer_reserve_elements_count;
 	print_config_value("AcquisitionBufferReserveElementsCount", std::to_string(acquisition_buffer_reserve_elements_count), config.has_key("AcquisitionBufferReserveElementsCount"));
 }
 
