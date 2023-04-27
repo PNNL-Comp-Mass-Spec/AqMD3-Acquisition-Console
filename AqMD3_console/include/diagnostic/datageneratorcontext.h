@@ -23,14 +23,22 @@ public:
 		, triggers_per_read(triggers_per_read)
 	{}
 
+	void start()
+	{
+	}
+
+	void stop()
+	{
+	}
+
 	AcquiredData acquire(std::chrono::milliseconds timeoutMs) override
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
+		std::vector<AcquiredData::TriggerData> trigger_data;
+		
 		for (int i = 0; i < triggers_per_read; i++)
 		{
-			std::vector<AcquiredData::TriggerData> trigger_data;
-			trigger_data.push_back(acq_count++ * tof_width, acq_count, 0.0);
+			trigger_data.emplace_back(acq_count++ * tof_width, acq_count, 0.0);
 			trigger_data.back().gate_data.emplace_back(5000, 0, 5000, 4, 4);
 		}
 
