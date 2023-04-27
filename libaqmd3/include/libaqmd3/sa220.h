@@ -3,7 +3,7 @@
 
 #include "digitizer.h"
 
-class SA220 : private Digitizer {
+class SA220 : public Digitizer {
 public:
 	 typedef struct Info{
 		std::string instrument_model;
@@ -80,4 +80,4 @@ public:
 	std::shared_ptr<StreamingContext> configure_cst(std::string channel, std::shared_ptr<AcquisitionBufferPool>, uint64_t triggers_per_read, ZeroSuppressParameters parameters) const override;
 };
 
-#endif // !SA220P
+#endif // !SA220_H
