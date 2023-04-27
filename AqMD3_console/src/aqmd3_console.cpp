@@ -30,6 +30,7 @@
 #include <iostream>
 using std::cerr;
 #include <windows.h>
+#include "../include/diagnostic/datageneratorcontext.h"
 
 #define NOMINMAX 
 #undef min
@@ -179,7 +180,12 @@ int main(int argc, char *argv[]) {
 		configure_logger();
 		configure_settings();
 
+#if TEST_ACQUIRE
+		std::unique_ptr<SA220> digitizer = std::make_unique<SA220>(resource_name, true);
+#else
 		std::unique_ptr<SA220> digitizer = std::make_unique<SA220>(resource_name, false);
+#endif
+
 		auto server = new Server("tcp://*:5555");
 		double sampling_rate = 0.0;
 		std::unique_ptr<AcquisitionControl> controller;
@@ -331,11 +337,6 @@ int main(int argc, char *argv[]) {
 
 							auto data_pub = server->get_publisher("tcp://*:5554");
 
-#if !REUSABLE_PUB_SUB
-							auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);
-							std::shared_ptr<ZmqAcquiredDataSubscriber> zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, uimf.nbr_samples());
-#endif	
-
 							std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context, acquisition_timeout_ms, buffer_pool);
 
 							if (calculated_post_trigger_samples <= 0)
@@ -347,24 +348,9 @@ int main(int argc, char *argv[]) {
 							std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(uimf, data_pub, calculated_post_trigger_samples, avg_tof_period_samples, notify_on_scans_count);
 							double ts_period = 1.0 / digitizer->max_sample_rate;
 
-#if REUSABLE_PUB_SUB
 							ps->Publisher<frame_ptr>::register_subscriber(frame_writer, SubscriberType::ACQUIRE_FRAME);
-#else
-							ps->Publisher<frame_ptr>::register_subscriber(std::make_shared<UimfFrameWriterSubscriber>(), SubscriberType::ACQUIRE_FRAME);
-#endif
-
 							ps->Publisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
 							p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
-
-#if PRINT_RAW
-							std::shared_ptr<RawPrinterSubscriber> rps = std::make_shared<RawPrinterSubscriber>("timestamp_data_" + std::to_string(uimf.frame_number()));
-							std::shared_ptr<EncodedDataWriter> edw = std::make_shared<EncodedDataWriter>("encoded_data_" + std::to_string(uimf.frame_number()));
-							std::shared_ptr<UimfFrameDecompressorSubscriber> fws = std::make_shared<UimfFrameDecompressorSubscriber>("frame_data_" + std::to_string(uimf.frame_number()));
-
-							p->Publisher<AcquiredData>::register_subscriber(rps, SubscriberType::ACQUIRE_FRAME);
-							ps->Publisher<segment_ptr>::register_subscriber(edw, SubscriberType::ACQUIRE_FRAME);
-							ps->Publisher<frame_ptr>::register_subscriber(fws, SubscriberType::ACQUIRE_FRAME);
-#endif
 
 							// Move active acquisition chain
 							controller = std::move(p);
@@ -385,7 +371,11 @@ int main(int argc, char *argv[]) {
 
 					if (command == "acquire")
 					{
+#if TEST_ACQUIRE
+						auto timing = AqirisDigitizer::TofTimingInformation(200000, 200000 - 20000 - 20000, 20000, 20000);
+#else
 						auto timing = AqirisDigitizer::get_timing_information(digitizer.get(), sampling_rate);
+#endif
 						uint64_t record_size = timing.record_size;
 						uint64_t post_trigger_samples = timing.post_trigger_delay_samples;
 						uint64_t tof_width = timing.samples_per_trigger;
@@ -403,14 +393,13 @@ int main(int argc, char *argv[]) {
 						{
 							buffer_pool = std::make_shared<AcquisitionBufferPool>(trigger_events_per_read_count, avg_tof_period_samples, acquisition_initial_buffer_count, acquisition_max_buffer_count);
 						}
-
-#if REUSABLE_PUB_SUB
-						context = digitizer->configure_cst(digitizer->channel_1, buffer_pool, trigger_events_per_read_count, Digitizer::ZeroSuppressParameters(-32667, 100));
-						zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
+#if TEST_ACQUIRE
+						context = std::make_shared<DataGeneratorContext>(dynamic_cast<const Digitizer&>(*digitizer), digitizer->channel_1, trigger_events_per_read_count, buffer_pool);
 #else
-						auto context = digitizer->configure_cst_zs1(digitizer->channel_1, 100, record_size, Digitizer::ZeroSuppressParameters(-32667, 100), 80);
-						auto zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
-#endif	
+						context = digitizer->configure_cst(digitizer->channel_1, buffer_pool, trigger_events_per_read_count, Digitizer::ZeroSuppressParameters(-32667, 100));
+#endif
+						zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
+
 						std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context, acquisition_timeout_ms, buffer_pool);
 						std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(post_trigger_samples, tof_width);
 						ps->Publisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
