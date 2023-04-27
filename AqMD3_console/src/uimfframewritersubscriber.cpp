@@ -6,6 +6,7 @@
 #include <string>
 #include <algorithm>
 #include <spdlog/spdlog.h>
+#include <format>
 
 void UimfFrameWriterSubscriber::on_notify()
 {
@@ -15,15 +16,15 @@ void UimfFrameWriterSubscriber::on_notify()
 		items.pop_front();
 		try
 		{
-#if TIMING_INFORMATION
+			spdlog::info(std::format("UIMF Write frame: {}", frame->frame_number));
+			spdlog::info(std::format("UIMF Write file: {}", frame->file_name));
+			spdlog::info(std::format("UIMF Write scan count: {}", frame->data.size()));
+
 			auto t1_open = std::chrono::high_resolution_clock::now();
-#endif
 			UimfWriter writer(frame->file_name);
-#if TIMING_INFORMATION
 			auto t2_open = std::chrono::high_resolution_clock::now();
 			auto dur_open = std::chrono::duration_cast<std::chrono::milliseconds>(t2_open - t1_open);
-			std::cout << "TIME TO OPEN DB: " << dur_open.count() << "\n";
-#endif
+			spdlog::info(std::format("Time to write (ms): {}", dur_open.count()));
 
 #if TIMING_INFORMATION
 			auto t1 = std::chrono::high_resolution_clock::now();
@@ -85,7 +86,6 @@ void UimfFrameWriterSubscriber::on_notify()
 		catch (SQLite::Exception& ex)
 		{
 			spdlog::error("Error processing UIMF data: " + std::string(ex.what()));
-			spdlog::error("Frame Number: " + std::to_string(frame->frame_number));
 			if (items.size() > 0)
 			{
 				spdlog::error("UIMF unprocessed elements: " + std::to_string(items.size()));
