@@ -30,9 +30,9 @@ public:
 
 	virtual ~AcquisitionControl() = default;
 
-	virtual void start(UimfRequestMessage uimf) = 0;
-	virtual void start() = 0;
-	virtual void stop() = 0;
+	virtual void start(UimfFrameParameters parameters) = 0;
+	//virtual void start() = 0;
+	virtual void stop(bool stop_acquisition_chain) = 0;
 
 	inline bool is_acquiring() { return state == State::ACQUIRING; }
 

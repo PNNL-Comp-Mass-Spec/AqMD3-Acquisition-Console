@@ -25,19 +25,19 @@ int UimfWriter::write_scan_data(const UimfFrame& frame)
 		
 	char *statement = new char[insert_scan_statement_size_bytes + extra];
 
-	for (int i = 0; i < frame.get_data().size(); i++)
-	{
-		for (auto& er : *(frame.get_data()[i]))
+	//for (int i = 0; i < frame.data().size(); i++)
+	//{
+		for (auto& er : frame.data())
 		{
-			if (er.scan < frame.start_trigger)
+			if (er.scan < frame.parameters().start_trigger)
 				continue;
 
 			if (er.encoded_spectra.size() > 1 || er.scan == 0)
 			{
 				int count = sprintf(statement,
 					insert_scan_statement.c_str(),
-					frame.frame_number,
-					er.scan - frame.start_trigger,
+					frame.parameters().frame_number,
+					er.scan - frame.parameters().start_trigger,
 					er.non_zero_count,
 					er.bpi,
 					er.bpi_mz,
@@ -52,7 +52,7 @@ int UimfWriter::write_scan_data(const UimfFrame& frame)
 				sql_statement.exec();
 			}
 		}
-	}
+	//}
 
 	SQLite::Statement e_trans(db, "END TRANSACTION");
 	e_trans.exec();
@@ -73,7 +73,7 @@ void UimfWriter::update_timing_information(const UimfFrame& frame, double timest
 	{
 		auto frame_duration_seconds = frame.get_frame_duration_seconds(timestamp_sample_period_s);
 		statement.bind(1, std::to_string(frame_duration_seconds));
-		statement.bind(2, std::to_string(frame.frame_number));
+		statement.bind(2, std::to_string(frame.parameters().frame_number));
 		statement.bind(3, std::to_string(FrameParamKeyType::DurationSeconds));
 
 		statement.exec();

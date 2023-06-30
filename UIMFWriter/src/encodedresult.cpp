@@ -6,7 +6,7 @@ extern "C" {
 #include "../include/lzf/lzf.h"
 }
 
-EncodedResult::CompressedSpectra EncodedResult::get_compressed_spectra()
+EncodedResult::CompressedSpectra EncodedResult::get_compressed_spectra() const
 {
 	int encoded_size = encoded_spectra.size() * sizeof(int32_t);
 	int processing_buffer_size = encoded_size * 2;

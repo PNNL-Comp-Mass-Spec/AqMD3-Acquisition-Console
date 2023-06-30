@@ -11,7 +11,7 @@ private:
 
 public:
 	UimfFrameWriterSubscriber(bool write_timestamps)
-		: Subscriber(true)
+		: Subscriber()
 		, write_timestamps(write_timestamps)
 	{}
 

@@ -34,7 +34,7 @@ private:
 	std::future<void> worker_handle;
 	std::promise<void> has_completed;
 	std::promise<void> reusable_notifier;
-	std::shared_future<void> is_reusable_stop;
+	std::shared_future<void> stop_fut;
 	bool is_running; // TODO: make this atomic
 	bool reusable;
 	std::deque<T> protected_queue;
@@ -44,11 +44,9 @@ protected:
 	std::deque<T> items;
 
 public:
-	Subscriber(bool reusable = false)
+	Subscriber()
 		: items()
 		, worker_handle()
-		, reusable(reusable)
-		, is_reusable_stop(reusable_notifier.get_future())
 		, is_running(false)
 	{}
 
@@ -67,14 +65,15 @@ public:
 
 	std::shared_future<void> setup(std::shared_future<void> pub_stop)
 	{
+		// For now just set the last publishers shared_future, adding a race condition
+		this->stop_fut = pub_stop;
+
 		if (!is_running)
 		{
-			auto stop = reusable ? is_reusable_stop : pub_stop;
-
-			worker_handle = std::async(std::launch::async, [&, stop]()
+			worker_handle = std::async(std::launch::async, [&]()
 			{
 				is_running = true;
-				while (stop.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+				while (stop_fut.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
 				{
 					{
 						std::unique_lock<std::mutex> lock(sig_sync);
@@ -96,16 +95,8 @@ public:
 				on_completed();
 				has_completed.set_value();
 			});
-
-			if (!reusable)
-			{
-				return std::shared_future<void>(has_completed.get_future());
-			}
 		}
-
-		auto promise = std::promise<void>();
-		promise.set_value();
-		return std::shared_future<void>(promise.get_future());
+		return std::shared_future<void>(has_completed.get_future());
 	}
 
 	inline void update(T item)

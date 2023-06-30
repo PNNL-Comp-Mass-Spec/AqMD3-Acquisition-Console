@@ -90,7 +90,7 @@ std::shared_ptr<StreamingContext> SA220::configure_cst(std::string channel, std:
 	return std::make_shared<CstContext>(dynamic_cast<const Digitizer&>(*this), channel, buffer_pool);
 }
 
-std::shared_ptr<StreamingContext> SA220::configure_cst(std::string channel, std::shared_ptr<AcquisitionBufferPool> buffer_pool, uint64_t triggers_per_read, ZeroSuppressParameters parameters) const
+std::shared_ptr<StreamingContext> SA220::configure_cst(std::string channel, std::shared_ptr<AcquisitionBufferPool> buffer_pool, ZeroSuppressParameters parameters) const
 {
 	check_and_throw_on_error(configure_streaming_mode(AQMD3_VAL_STREAMING_MODE_TRIGGERED));
 	check_and_throw_on_error(configure_data_reduction(AQMD3_VAL_ACQUISITION_DATA_REDUCTION_MODE_ZERO_SUPPRESS));
@@ -105,5 +105,5 @@ std::shared_ptr<StreamingContext> SA220::configure_cst(std::string channel, std:
 		check_and_throw_on_error(self_calibrate());
 	}
 
-	return std::make_shared<CstZs1Context>(dynamic_cast<const Digitizer&>(*this), channel, triggers_per_read, buffer_pool);
+	return std::make_shared<CstZs1Context>(dynamic_cast<const Digitizer&>(*this), channel, buffer_pool);
 }

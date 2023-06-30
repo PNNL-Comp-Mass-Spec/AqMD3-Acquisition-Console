@@ -24,7 +24,7 @@ void ZmqAcquiredDataSubscriber::on_notify()
 
 			std::fill(data_vector.begin(), data_vector.end(), 0);
 
-			for (auto& er : *ad)
+			for (const auto& const er : ad.get()->data())
 			{
 				msg.add_tic(er.tic);
 				msg.add_time_stamps(er.timestamp);

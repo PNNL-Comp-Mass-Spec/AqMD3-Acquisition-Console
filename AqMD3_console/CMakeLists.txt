@@ -48,7 +48,9 @@ add_executable (AqMD3_console
 	include/uimfframewritersubscriber.h
 	include/definitions.h
 	include/util/timehelpers.h
-	include/util/config.h)
+	include/util/config.h  
+	 
+	"include/uimfacquisitionrecord.h" "src/uimfacquisitionrecord.cpp" "include/util/uimfhelpers.h")
 target_include_directories(AqMD3_console PRIVATE ${PICOSHA2_INCLUDE_DIRS})
 
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)

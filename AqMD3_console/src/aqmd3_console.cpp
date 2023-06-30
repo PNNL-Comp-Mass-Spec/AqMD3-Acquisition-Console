@@ -6,6 +6,7 @@
 #include "../include/processsubject.h"
 #include "../include/definitions.h"
 #include "../include/util/config.h"
+#include "../include/util/uimfhelpers.h"
 #include "../include/message.pb.h"
 #include "include/app.h"
 
@@ -95,7 +96,7 @@ std::string resource_name = "PXI0::0::0::INSTR";
 int64_t acquisition_timeout_ms = 100;
 uint64_t acquisition_initial_buffer_count = 40;
 uint64_t acquisition_max_buffer_count = 100;
-int32_t trigger_events_per_read_count = 100;
+//int32_t trigger_events_per_read_count = 100;
 uint64_t acquisition_buffer_reserve_elements_count = 2048;
 
 
@@ -165,8 +166,8 @@ void configure_settings()
 	acquisition_max_buffer_count = config.has_key("AcquisitionMaxBufferCount") ? std::stoull(config.get_value("AcquisitionMaxBufferCount")) : acquisition_max_buffer_count;
 	print_config_value("AcquisitionMaxBufferCount", std::to_string(acquisition_max_buffer_count), config.has_key("AcquisitionMaxBufferCount"));
 
-	trigger_events_per_read_count = config.has_key("TriggerEventsPerReadCount") ? std::stoi(config.get_value("TriggerEventsPerReadCount")) : trigger_events_per_read_count;
-	print_config_value("TriggerEventsPerReadCount", std::to_string(trigger_events_per_read_count), config.has_key("TriggerEventsPerReadCount"));
+	//trigger_events_per_read_count = config.has_key("TriggerEventsPerReadCount") ? std::stoi(config.get_value("TriggerEventsPerReadCount")) : trigger_events_per_read_count;
+	//print_config_value("TriggerEventsPerReadCount", std::to_string(trigger_events_per_read_count), config.has_key("TriggerEventsPerReadCount"));
 
 	acquisition_buffer_reserve_elements_count = config.has_key("AcquisitionBufferReserveElementsCount") ? std::stoull(config.get_value("AcquisitionBufferReserveElementsCount")) : acquisition_buffer_reserve_elements_count;
 	print_config_value("AcquisitionBufferReserveElementsCount", std::to_string(acquisition_buffer_reserve_elements_count), config.has_key("AcquisitionBufferReserveElementsCount"));
@@ -216,7 +217,8 @@ int main(int argc, char *argv[]) {
 						ViStatus status = viFindRsrc(rm, search, &find, &count, rsrc);
 						viClose(rm);
 
-						req.send_response(std::to_string(count));
+						//req.send_response(std::to_string(count));
+						req.send_response(std::to_string(1));
 						return;
 					}
 
@@ -331,32 +333,32 @@ int main(int argc, char *argv[]) {
 							auto uimf = UimfRequestMessage();
 							uimf.MergeFromString(uimf_req_msg);
 
-							// Set number of samples in record
-							uint64_t record_size = uimf.nbr_samples() - calculated_post_trigger_samples;
-							digitizer->set_record_size(record_size);
+							//// Set number of samples in record
+							//uint64_t record_size = uimf.nbr_samples() - calculated_post_trigger_samples;
+							//digitizer->set_record_size(record_size);
 
-							auto data_pub = server->get_publisher("tcp://*:5554");
+							//auto data_pub = server->get_publisher("tcp://*:5554");
 
-							std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context, acquisition_timeout_ms, buffer_pool);
+							//std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context, acquisition_timeout_ms, buffer_pool, notify_on_scans_count, data_pub);
 
-							if (calculated_post_trigger_samples <= 0)
-							{
-								spdlog::error("Calculated post-trigger samples must be greater than 0. Post-trigger samples: " + std::to_string(calculated_post_trigger_samples));
-								break;
-							}
+							//if (calculated_post_trigger_samples <= 0)
+							//{
+							//	spdlog::error("Calculated post-trigger samples must be greater than 0. Post-trigger samples: " + std::to_string(calculated_post_trigger_samples));
+							//	break;
+							//}
 
-							std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(uimf, data_pub, calculated_post_trigger_samples, avg_tof_period_samples, notify_on_scans_count);
-							double ts_period = 1.0 / digitizer->max_sample_rate;
+							//std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(avg_tof_period_samples);
+							//double ts_period = 1.0 / digitizer->max_sample_rate;
 
-							ps->Publisher<frame_ptr>::register_subscriber(frame_writer, SubscriberType::ACQUIRE_FRAME);
-							ps->Publisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
-							p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
+							//ps->Publisher<frame_ptr>::register_subscriber(frame_writer, SubscriberType::ACQUIRE_FRAME);
+							//ps->Publisher<frame_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
+							//p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
 
-							// Move active acquisition chain
-							controller = std::move(p);
+							//// Move active acquisition chain
+							//controller = std::move(p);
 
 							// Start acquire. Waits for external enabe signal.
-							controller->start(uimf);
+							controller->start(UIMFHelpers::uimf_message_to_parameters(uimf));
 
 #if TIMING_INFORMATION
 							auto t_1 = std::chrono::high_resolution_clock::now();
@@ -372,7 +374,8 @@ int main(int argc, char *argv[]) {
 					if (command == "acquire")
 					{
 #if TEST_ACQUIRE
-						auto timing = AqirisDigitizer::TofTimingInformation(200000, 200000 - 20000 - 20000, 20000, 20000);
+						//auto timing = AqirisDigitizer::TofTimingInformation(200000, 200000 - 20000 - 20000, 20000, 20000);
+						auto timing = AqirisDigitizer::TofTimingInformation(100000, 100000 - 10000 - 10000, 10000, 10000);
 #else
 						auto timing = AqirisDigitizer::get_timing_information(digitizer.get(), sampling_rate);
 #endif
@@ -391,22 +394,25 @@ int main(int argc, char *argv[]) {
 
 						if (buffer_pool == nullptr)
 						{
-							buffer_pool = std::make_shared<AcquisitionBufferPool>(trigger_events_per_read_count, avg_tof_period_samples, acquisition_initial_buffer_count, acquisition_max_buffer_count);
+							buffer_pool = std::make_shared<AcquisitionBufferPool>(notify_on_scans_count, avg_tof_period_samples, acquisition_initial_buffer_count, acquisition_max_buffer_count);
 						}
 #if TEST_ACQUIRE
-						context = std::make_shared<DataGeneratorContext>(dynamic_cast<const Digitizer&>(*digitizer), digitizer->channel_1, trigger_events_per_read_count, buffer_pool);
+						context = std::make_shared<DataGeneratorContext>(dynamic_cast<const Digitizer&>(*digitizer), digitizer->channel_1, notify_on_scans_count, buffer_pool);
 #else
-						context = digitizer->configure_cst(digitizer->channel_1, buffer_pool, trigger_events_per_read_count, Digitizer::ZeroSuppressParameters(-32667, 100));
+						context = digitizer->configure_cst(digitizer->channel_1, buffer_pool, Digitizer::ZeroSuppressParameters(-32667, 100));
 #endif
-						zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
+						//zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
 
-						std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context, acquisition_timeout_ms, buffer_pool);
-						std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(post_trigger_samples, tof_width);
-						ps->Publisher<segment_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
-						p->register_subscriber(ps, SubscriberType::ACQUIRE);
+						std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context, acquisition_timeout_ms, buffer_pool, notify_on_scans_count, data_pub);
+						std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(tof_width);
+						std::shared_ptr<UimfFrameWriterSubscriber> fw = std::make_shared<UimfFrameWriterSubscriber>(false);
+						std::shared_ptr<ZmqAcquiredDataSubscriber> zmq = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
+						ps->Publisher<frame_ptr>::register_subscriber(zmq, SubscriberType::ACQUIRE);
+						ps->Publisher<frame_ptr>::register_subscriber(fw, SubscriberType::ACQUIRE_FRAME);
+						p->register_subscriber(ps, SubscriberType::BOTH);
 
 						controller = std::move(p);
-						controller->start();
+						controller->start(UIMFHelpers::create_inf_params());
 
 						std::vector<std::string> to_send(2);
 
@@ -415,6 +421,7 @@ int main(int argc, char *argv[]) {
 						tofMsg.set_pusher_pulse_width(tof_width);
 						to_send[0] = (tofMsg.SerializeAsString());
 						std::vector<uint8_t> hash(picosha2::k_digest_size);
+
 						picosha2::hash256(to_send[0].begin(), to_send[0].end(), hash.begin(), hash.end());
 
 						to_send[1] = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
@@ -451,6 +458,11 @@ int main(int argc, char *argv[]) {
 
 					if (command == "stop")
 					{
+						if (req.payload.size() != 2)
+						{
+							return;
+						}
+
 						try
 						{
 							if (controller)
@@ -458,7 +470,7 @@ int main(int argc, char *argv[]) {
 #if TIMING_INFORMATION
 								auto t_0 = std::chrono::high_resolution_clock::now();
 #endif
-								controller->stop();
+								controller->stop(!req.payload[1].empty());
 #if TIMING_INFORMATION
 								auto t_1 = std::chrono::high_resolution_clock::now();
 								auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_1 - t_0);
@@ -553,7 +565,7 @@ static uint64_t AqirisDigitizer::get_trigger_time_stamp_average(const SA220 *dig
 	auto dig_context = digitizer->configure_cst(digitizer->channel_1, std::make_shared<AcquisitionBufferPool>(triggers, record_size, 10, 10));
 
 	dig_context->start();
-	AcquiredData result = dig_context->acquire(std::chrono::milliseconds(80));
+	AcquiredData result = dig_context->acquire(triggers, std::chrono::milliseconds(80));
 	dig_context->stop();
 
 	uint64_t total = 0;

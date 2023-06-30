@@ -25,7 +25,9 @@ public:
 		: db(file, SQLite::OPEN_READWRITE)
 	{}
 	~UimfWriter()
-	{}
+	{
+		//db.exec("PRAGMA journal_mode=WAL;");
+	}
 
 	int write_scan_data(const UimfFrame& frame);
 	void update_timing_information(const UimfFrame& frame, double timestamp_sample_period_s);

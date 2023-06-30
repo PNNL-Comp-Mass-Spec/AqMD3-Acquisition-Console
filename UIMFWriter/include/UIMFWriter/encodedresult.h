@@ -41,7 +41,7 @@ public:
 		, timestamp(timestamp)
 	{}
 
-	CompressedSpectra get_compressed_spectra();
+	CompressedSpectra get_compressed_spectra() const;
 };
 
 #endif // !ENCODED_RESULT_H

@@ -20,9 +20,9 @@ void CstZs1Context::stop()
 	markers_buffer.reset();
 }
 
-AcquiredData CstZs1Context::acquire(std::chrono::milliseconds timeoutMs)
+AcquiredData CstZs1Context::acquire(uint64_t triggers_to_read, std::chrono::milliseconds timeoutMs)
 {
-	int markers_to_acquire = min_target_records;
+	int markers_to_acquire = triggers_to_read * markers_hunk_size;
 	int active_multiplier = 1;
 
 	int trig_count = 0;
@@ -35,7 +35,6 @@ AcquiredData CstZs1Context::acquire(std::chrono::milliseconds timeoutMs)
 	ViInt64 first_element_markers;
 	ViInt64 available_elements_markers = 0;
 	ViInt64 actual_elements_markers = markers_buffer.get_unprocessed();
-	uint64_t triggers_per_read = samples_buffer->get_triggers_per_read();
 
 	bool use_timeout = (timeoutMs == std::chrono::milliseconds::zero()) ? false : true;
 
@@ -46,7 +45,7 @@ AcquiredData CstZs1Context::acquire(std::chrono::milliseconds timeoutMs)
 	}
 
 	auto finish = std::chrono::high_resolution_clock::now() + timeoutMs;
-	while (trig_count <= triggers_per_read)
+	while (trig_count <= triggers_to_read)
 	{
 
 		for (int i = 0; i < actual_elements_markers / 16; i++)
@@ -59,7 +58,7 @@ AcquiredData CstZs1Context::acquire(std::chrono::milliseconds timeoutMs)
 			case 0x01:
 			{
 				++trig_count;
-				if (trig_count >= triggers_per_read + 1)
+				if (trig_count >= triggers_to_read + 1)
 					goto process;
 
 				uint64_t low = seg[1];
@@ -145,7 +144,7 @@ AcquiredData CstZs1Context::acquire(std::chrono::milliseconds timeoutMs)
 			}
 		}
 
-		if (trig_count <= triggers_per_read)
+		if (trig_count <= triggers_to_read)
 		{
 			markers_buffer.reset();
 
@@ -189,7 +188,7 @@ AcquiredData CstZs1Context::acquire(std::chrono::milliseconds timeoutMs)
 #ifdef variable_m_t_a
 			if (available_elements_markers > markers_to_acquire && active_multiplier < multiplier_max)
 			{
-				markers_to_acquire = min_target_records * ++active_multiplier;
+				markers_to_acquire = triggers_to_read * ++active_multiplier;
 			}
 #endif
 

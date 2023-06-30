@@ -19,7 +19,7 @@ include/UIMFWriter/uimfwriter.h
 include/UIMFWriter/uimfframe.h
 include/lzf/lzf.h
 include/lzf/lzfP.h
-)
+ "include/UIMFWriter/uimfframeparameters.h")
 add_library(i::uimf ALIAS UIMFWriter)
     
 target_link_libraries(UIMFWriter PRIVATE SQLiteCpp)

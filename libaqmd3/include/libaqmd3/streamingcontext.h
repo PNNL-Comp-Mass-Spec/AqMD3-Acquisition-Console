@@ -28,7 +28,7 @@ public:
 		, buffer_pool(buffer_pool)
 	{}
 
-	virtual AcquiredData acquire(std::chrono::milliseconds timeoutMs) = 0;
+	virtual AcquiredData acquire(uint64_t triggers_to_read, std::chrono::milliseconds timeoutMs) = 0;
 
 	virtual void start();
 	virtual void stop();
