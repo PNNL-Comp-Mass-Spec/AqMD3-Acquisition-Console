@@ -1,10 +1,13 @@
-# _____________________________________________________________________________________________
-#        / POST TRIGGER /            ACQUIRING TOF              / TRIGGER REARM /   
-# ______/____DELAY_____/________________SIGNAL_________________/____DEAD TIME__/___...REPEAT...
-#       <-------------- RISING EDGE TRIGGERED, ONE SCAN ---------------------->
-#        ____                                                                   ____
-#       ^    |                                                                 ^    |
-# ______|    |___________________________CLOCK_________________________________|    |_________ <TRG IN>
+# __________________________________________________________________________________________________
+#             / POST TRIGGER /            ACQUIRING TOF              / TRIGGER REARM /   
+# ___________/____DELAY_____/________________SIGNAL_________________/____DEAD TIME__/___...REPEAT... <IN 1>
+#            <-------------- RISING EDGE TRIGGERED, ONE SCAN ---------------------->
+#             ____                                                                   ____
+#            ^    |                                                                 ^    |
+# ___________|    |_________________________TOF CLK_________________________________|    |__________ <TRG IN>
+#        ___________________________________________________________________________________________
+#       ^    
+# ______|  									ENABLE													 <I/O 2>
 
 # The time in seconds after a trigger is detected that the acquisition firmware
 # waits before a sample can be detected.
@@ -16,17 +19,23 @@ TriggerRearmDeadTime=0.000002048
 # The handle for the digitizer, can be found in the MD3 SFP
 ResourceName=PXI1::0::0::INSTR
 
-# The number of scans written to the data file at a time during acquisition. Decreasing this number results in data being written
-# to disk more often. 
+# The number of scans written to the data file at a time during acquisition. 
+#   - NOTE: Decreasing this number results in data being written to disk more often. 
 NotifyOnScansCount=500
 
 # Acquisition timeout in milliseconds.
 AcquisitionTimeoutMs=100
 
+# The number of trigger events to wait before reading signal data from the digitizer. 
 #TriggerEventsPerReadCount=100
 
+# The number of buffers established when acquisition is first initiated. 
 AcquisitionInitialBufferCount=10
 
+# The maximum allowable number of buffers that can be created. When acquiring, and if all
+# buffers are being utilized, the acquisition software will attempt to create more buffers
+# until the total number of buffers equals this amount.
 AcquisitionMaxBufferCount=20
 
+# The reserve space for samples in a single buffer.
 AcquisitionBufferReserveElementsCount=2048
