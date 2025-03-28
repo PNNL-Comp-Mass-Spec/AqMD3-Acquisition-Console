@@ -33,7 +33,7 @@ public:
 		, samples_per_trigger(0)
 	{}
 
-	size_t get_size() { return samples_per_trigger * max_triggers_per_read; };
+	size_t get_size() { return data.capacity(); };
 	int get_available();
 	int get_unprocessed();
 	int get_processed();
