@@ -112,6 +112,7 @@ public:
 	std::tuple<std::string, ErrorType, ViBoolean> get_calibration_required() const;
 
 	std::tuple<std::string, ErrorType, ViInt32> get_is_idle() const;
+	std::tuple<std::string, ErrorType, ViInt32> get_is_measuring() const;
 };
 
 #endif // ! DIGITIZER_H

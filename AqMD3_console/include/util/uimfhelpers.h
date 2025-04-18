@@ -5,6 +5,7 @@
 #include "../message.pb.h"
 #include <climits>
 #include <string>
+#include <spdlog/spdlog.h>
 
 namespace UIMFHelpers
 {
@@ -32,6 +33,17 @@ namespace UIMFHelpers
 			20000,
 			""
 		);
+	}
+
+	static void log_info_uimf_frame_params(const UimfFrameParameters& message)
+	{
+		spdlog::info("UimfFrameParameters.frame_number: " + std::to_string(message.frame_number));
+		spdlog::info("UimfFrameParameters.frame_length: " + std::to_string(message.frame_length));
+		spdlog::info("UimfFrameParameters.nbr_accumulations: " + std::to_string(message.nbr_accumulations));
+		spdlog::info("UimfFrameParameters.nbr_samples: " + std::to_string(message.nbr_samples));
+		spdlog::info("UimfFrameParameters.offset_bins: " + std::to_string(message.offset_bins));
+		spdlog::info("UimfFrameParameters.start_trigger: " + std::to_string(message.start_trigger));
+		spdlog::info("UimfFrameParameters.file_name: " + message.file_name);
 	}
 }
 

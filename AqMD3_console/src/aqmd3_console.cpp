@@ -358,7 +358,9 @@ int main(int argc, char *argv[]) {
 							//controller = std::move(p);
 
 							// Start acquire. Waits for external enabe signal.
-							controller->start(UIMFHelpers::uimf_message_to_parameters(uimf));
+							auto uimf_frame_params = UIMFHelpers::uimf_message_to_parameters(uimf);
+							UIMFHelpers::log_info_uimf_frame_params(uimf_frame_params);
+							controller->start(uimf_frame_params);
 
 #if TIMING_INFORMATION
 							auto t_1 = std::chrono::high_resolution_clock::now();
@@ -412,7 +414,10 @@ int main(int argc, char *argv[]) {
 						p->register_subscriber(ps, SubscriberType::BOTH);
 
 						controller = std::move(p);
-						controller->start(UIMFHelpers::create_inf_params());
+
+						auto uimf_frame_params = UIMFHelpers::create_inf_params();
+						UIMFHelpers::log_info_uimf_frame_params(uimf_frame_params);
+						controller->start(uimf_frame_params);
 
 						std::vector<std::string> to_send(2);
 
@@ -458,6 +463,7 @@ int main(int argc, char *argv[]) {
 
 					if (command == "stop")
 					{
+						spdlog::debug(std::format("stop payload size: {}", req.payload.size()));
 						if (req.payload.size() != 2)
 						{
 							return;
@@ -470,7 +476,8 @@ int main(int argc, char *argv[]) {
 #if TIMING_INFORMATION
 								auto t_0 = std::chrono::high_resolution_clock::now();
 #endif
-								controller->stop(!req.payload[1].empty());
+								auto stop_acquire = req.payload[1] == "acquire";
+								controller->stop(stop_acquire);
 #if TIMING_INFORMATION
 								auto t_1 = std::chrono::high_resolution_clock::now();
 								auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(t_1 - t_0);

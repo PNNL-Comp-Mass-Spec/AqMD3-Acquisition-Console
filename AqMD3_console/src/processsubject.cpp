@@ -126,9 +126,14 @@ void ProcessSubject::on_notify()
 			//	Publisher<segment_ptr>::notify(results, SubscriberType::BOTH);
 			//}
 
+			auto start = std::chrono::high_resolution_clock::now();
 			auto result = ad.to_frame();
 			auto notify_type = result->parameters().file_name.empty() ? SubscriberType::ACQUIRE : SubscriberType::BOTH;
 			Publisher<frame_ptr>::notify(result, notify_type);
+			auto stop = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+			spdlog::info("Total time to notify: {} ms", duration.count());
+			spdlog::info("Total scans processed: {}", total_triggers_processed);
 		}
 	}
 	catch (const std::exception& ex)

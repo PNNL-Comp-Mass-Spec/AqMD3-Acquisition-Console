@@ -29,46 +29,53 @@ void AcquirePublisher::start(UimfFrameParameters parameters)
 				bool has_errored = false;
 
 				state = State::ACQUIRING;
-				spdlog::info(std::format("Frame {} - Total scan count to acquire: {}", parameters.frame_number, scans_total_count));
+				/*spdlog::info(std::format("Frame {} - Total scan count to acquire: {}", parameters.frame_number, scans_total_count));*/
 
-				digitizer->start();
-				while (scans_acquired_count < scans_total_count)
+				if (digitizer->get_is_acquiring())
 				{
-					if (has_errored || should_stop.load())
+					spdlog::warn("Error when trying to acquire frame while digitizer is already acquiring.");
+				}
+				else
+				{
+					digitizer->start();
+					while (scans_acquired_count < scans_total_count)
 					{
-						break;
-					}
-
-					try
-					{
-						auto available = buffer_pool->get_available_buffers();
-						if (available <= WARN_ON_BUFFER_COUNT)
+						if (has_errored || should_stop.load())
 						{
-							spdlog::warn("Available buffer count {}", available);
-						}
-						
-						uint64_t to_acquire_count = segment_size;
-						auto scans_left_count = parameters.frame_length - scans_acquired_count;
-						if (scans_left_count > parameters.frame_length || scans_left_count < segment_size)
-						{
-							to_acquire_count = parameters.frame_length % segment_size;
+							break;
 						}
 
-						auto data = digitizer->acquire(to_acquire_count, std::chrono::milliseconds(this->timeout));
+						try
+						{
+							auto available = buffer_pool->get_available_buffers();
+							if (available <= WARN_ON_BUFFER_COUNT)
+							{
+								spdlog::warn("Available buffer count {}", available);
+							}
 
-						notify(UimfAcquisitionRecord(parameters, data, scans_acquired_count), SubscriberType::BOTH);
+							uint64_t to_acquire_count = (scans_total_count - scans_acquired_count) < segment_size
+								? (scans_total_count - scans_acquired_count)
+								: segment_size;
 
-						scans_acquired_count += data.stamps.size();
-					}
-					catch (const std::exception& ex)
-					{
-						spdlog::error("Error when acquiring UIMF data: " + std::string(ex.what()));
-						has_errored = true;
-					}
-					catch (...)
-					{
-						spdlog::error("Unknown error when acquiring UIMF data");
-						has_errored = true;
+
+							spdlog::debug("to_acquire_count: " + std::to_string(to_acquire_count));
+
+							auto data = digitizer->acquire(to_acquire_count, std::chrono::milliseconds(this->timeout));
+
+							notify(UimfAcquisitionRecord(parameters, data, scans_acquired_count), SubscriberType::BOTH);
+
+							scans_acquired_count += data.stamps.size();
+						}
+						catch (const std::exception& ex)
+						{
+							spdlog::error("Error when acquiring UIMF data: " + std::string(ex.what()));
+							has_errored = true;
+						}
+						catch (...)
+						{
+							spdlog::error("Unknown error when acquiring UIMF data");
+							has_errored = true;
+						}
 					}
 				}
 
@@ -80,7 +87,7 @@ void AcquirePublisher::start(UimfFrameParameters parameters)
 
 				//stop_signal.set_value(State::STOPPED);
 				digitizer->stop();
-				spdlog::info(std::format("Scans acquired: {}", scans_total_count));
+				spdlog::info(std::format("Scans acquired: {}", scans_acquired_count));
 
 				return;
 			});
@@ -174,6 +181,7 @@ void AcquirePublisher::stop(bool terminate_acquisition_chain)
 
 			if (terminate_acquisition_chain)
 			{
+				spdlog::debug("NOTIFYING COMPLETED AND WAITING");
 				notify_completed_and_wait();
 			}
 			worker_handle->join();
