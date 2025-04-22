@@ -20,7 +20,7 @@ void AcquirePublisher::start(UimfFrameParameters parameters)
 			return;
 		}
 
-		should_stop = false;
+		should_stop.store(false);
 		stop_signal = std::promise<State>();
 		auto handle = std::make_unique<std::thread>([&, parameters]()
 			{
@@ -29,7 +29,6 @@ void AcquirePublisher::start(UimfFrameParameters parameters)
 				bool has_errored = false;
 
 				state = State::ACQUIRING;
-				/*spdlog::info(std::format("Frame {} - Total scan count to acquire: {}", parameters.frame_number, scans_total_count));*/
 
 				if (digitizer->get_is_acquiring())
 				{
@@ -40,7 +39,7 @@ void AcquirePublisher::start(UimfFrameParameters parameters)
 					digitizer->start();
 					while (scans_acquired_count < scans_total_count)
 					{
-						if (has_errored || should_stop.load())
+						if (has_errored || should_stop.load(std::memory_order_relaxed))
 						{
 							break;
 						}
@@ -79,15 +78,15 @@ void AcquirePublisher::start(UimfFrameParameters parameters)
 					}
 				}
 
+				state = State::STOPPED;
+				//stop_signal.set_value(State::STOPPED);
+				digitizer->stop();
+				spdlog::info(std::format("Scans acquired: {}", scans_acquired_count));
+
 				std::string finished = "finished";
 				zmq::message_t finished_msg(finished.size());
 				memcpy((void *)finished_msg.data(), finished.c_str(), finished.size());
 				publisher->send(finished_msg, subject, std::chrono::milliseconds::max());
-				state = State::STOPPED;
-
-				//stop_signal.set_value(State::STOPPED);
-				digitizer->stop();
-				spdlog::info(std::format("Scans acquired: {}", scans_acquired_count));
 
 				return;
 			});
@@ -104,92 +103,34 @@ void AcquirePublisher::start(UimfFrameParameters parameters)
 	}
 }
 
-//void AcquirePublisher::start()
-//{
-//	if (should_stop)
-//		return;
-//
-//	worker_handle = std::thread([&]()
-//		{
-//			state = State::ACQUIRING;
-//
-//			try
-//			{
-//				digitizer->start();
-//				while (!should_stop)
-//				{
-//					auto data = digitizer->acquire(std::chrono::milliseconds::zero());
-//					auto available = buffer_pool->get_available_buffers();
-//
-//					// App may become unrecoverable if we run out of memory, this guard attempts to stop that from happening
-//					// TODO: revist this number and check
-//					if (available > FREE_ON_BUFFER_COUNT)
-//					{
-//						try
-//						{
-//							notify(data, SubscriberType::ACQUIRE);
-//						}
-//						catch (const std::exception& ex)
-//						{
-//							spdlog::error("Error during data acquisition: " + std::string(ex.what()));
-//						}
-//						catch (...)
-//						{
-//							spdlog::error("Uknown error during data acquisition");
-//						}
-//					}
-//					else
-//					{
-//						spdlog::warn("bufs: " + std::to_string(available) + " -- dropping " + std::to_string(data.stamps.size()) + " scans");
-//					}
-//				}
-//
-//				digitizer->stop();
-//				stop_signal.set_value(State::STOPPED);
-//				return;
-//			}
-//			catch (const std::exception& ex)
-//			{
-//				spdlog::error("Error when attempting to control digitizer: " + std::string(ex.what()));
-//			}
-//			catch (...)
-//			{
-//				spdlog::error("Unknown error occured when attampting to control the digitizer");
-//			}
-//			stop_signal.set_value(State::ERRORED);
-//	});
-//}
-
 void AcquirePublisher::stop(bool terminate_acquisition_chain)
 {
 	try
 	{
-		spdlog::info("Stopping");
+		spdlog::debug(std::format("AcquirePublisher::stop({})", terminate_acquisition_chain));
 		auto start = std::chrono::high_resolution_clock::now();
 
-		if (!should_stop)
+		spdlog::debug("Stopping publisher");
+
+		should_stop.store(true);
+
+		if (terminate_acquisition_chain)
 		{
-			//auto fut = stop_signal.get_future();
-			should_stop = true;
+			//Should invalidate this class and make it so it can't be used again
+			notify_completed_and_wait();
+			std::string finished = "finished acquire";
+			zmq::message_t finished_msg(finished.size());
+			memcpy((void*)finished_msg.data(), finished.c_str(), finished.size());
+			publisher->send(finished_msg, subject, std::chrono::seconds(30));
+		}
 
-			//fut.wait();
-			//state = fut.get();
-			//if (state != State::STOPPED)
-			//{
-			//	spdlog::warn("state != State::STOPPED");
-			//}
-
-			if (terminate_acquisition_chain)
-			{
-				spdlog::debug("NOTIFYING COMPLETED AND WAITING");
-				notify_completed_and_wait();
-			}
+		if (worker_handle && worker_handle->joinable()) {
 			worker_handle->join();
 		}
 
 		auto end = std::chrono::high_resolution_clock::now();
 		auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-		spdlog::info(std::format("Time to stop: {} ms", ms));
+		spdlog::debug(std::format("Time to stop: {} ms", ms));
 	}
 	catch (const std::exception& ex)
 	{
