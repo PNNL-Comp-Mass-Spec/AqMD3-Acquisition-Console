@@ -127,8 +127,7 @@ void ProcessSubject::on_notify(UimfAcquisitionRecord& item)
 		Publisher<frame_ptr>::notify(result, notify_type);
 		auto stop = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-		spdlog::info("Total time to notify: {} ms", duration.count());
-		spdlog::info("Total scans processed: {}", total_triggers_processed);
+		spdlog::debug("Total time to notify: {} ms", duration.count());
 	}
 	catch (const std::exception& ex)
 	{

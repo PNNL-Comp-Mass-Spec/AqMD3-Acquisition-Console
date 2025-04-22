@@ -217,8 +217,7 @@ int main(int argc, char *argv[]) {
 						ViStatus status = viFindRsrc(rm, search, &find, &count, rsrc);
 						viClose(rm);
 
-						//req.send_response(std::to_string(count));
-						req.send_response(std::to_string(1));
+						req.send_response(std::to_string(count));
 						return;
 					}
 
@@ -333,30 +332,6 @@ int main(int argc, char *argv[]) {
 							auto uimf = UimfRequestMessage();
 							uimf.MergeFromString(uimf_req_msg);
 
-							//// Set number of samples in record
-							//uint64_t record_size = uimf.nbr_samples() - calculated_post_trigger_samples;
-							//digitizer->set_record_size(record_size);
-
-							//auto data_pub = server->get_publisher("tcp://*:5554");
-
-							//std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context, acquisition_timeout_ms, buffer_pool, notify_on_scans_count, data_pub);
-
-							//if (calculated_post_trigger_samples <= 0)
-							//{
-							//	spdlog::error("Calculated post-trigger samples must be greater than 0. Post-trigger samples: " + std::to_string(calculated_post_trigger_samples));
-							//	break;
-							//}
-
-							//std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(avg_tof_period_samples);
-							//double ts_period = 1.0 / digitizer->max_sample_rate;
-
-							//ps->Publisher<frame_ptr>::register_subscriber(frame_writer, SubscriberType::ACQUIRE_FRAME);
-							//ps->Publisher<frame_ptr>::register_subscriber(zmq_publisher, SubscriberType::ACQUIRE);
-							//p->register_subscriber(ps, SubscriberType::ACQUIRE_FRAME);
-
-							//// Move active acquisition chain
-							//controller = std::move(p);
-
 							// Start acquire. Waits for external enabe signal.
 							auto uimf_frame_params = UIMFHelpers::uimf_message_to_parameters(uimf);
 							UIMFHelpers::log_info_uimf_frame_params(uimf_frame_params);
@@ -376,8 +351,7 @@ int main(int argc, char *argv[]) {
 					if (command == "acquire")
 					{
 #if TEST_ACQUIRE
-						//auto timing = AqirisDigitizer::TofTimingInformation(200000, 200000 - 20000 - 20000, 20000, 20000);
-						auto timing = AqirisDigitizer::TofTimingInformation(100000, 100000 - 10000 - 10000, 10000, 10000);
+						auto timing = AqirisDigitizer::TofTimingInformation(200000, 200000 - 20000 - 20000, 20000, 20000);
 #else
 						auto timing = AqirisDigitizer::get_timing_information(digitizer.get(), sampling_rate);
 #endif
@@ -403,7 +377,6 @@ int main(int argc, char *argv[]) {
 #else
 						context = digitizer->configure_cst(digitizer->channel_1, buffer_pool, Digitizer::ZeroSuppressParameters(-32667, 100));
 #endif
-						//zmq_publisher = std::make_shared<ZmqAcquiredDataSubscriber>(data_pub, record_size + post_trigger_samples);
 
 						std::unique_ptr<AcquirePublisher> p = std::make_unique<AcquirePublisher>(context, acquisition_timeout_ms, buffer_pool, notify_on_scans_count, data_pub);
 						std::shared_ptr<ProcessSubject> ps = std::make_shared<ProcessSubject>(tof_width);
