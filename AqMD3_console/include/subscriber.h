@@ -5,7 +5,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <future>
-
+#include <spdlog/spdlog.h>
 #include <iostream>
 using std::cerr;
 
@@ -31,12 +31,10 @@ class Subscriber {
 private:
 	std::condition_variable sig;
 	std::mutex sig_sync;
-	std::future<void> worker_handle;
+	std::unique_ptr<std::thread> worker_handle;
 	std::promise<void> has_completed;
-	std::promise<void> reusable_notifier;
 	std::shared_future<void> stop_fut;
 	bool is_running; // TODO: make this atomic
-	bool reusable;
 	std::deque<T> protected_queue;
 	std::mutex queue_sync;
 
@@ -52,14 +50,8 @@ public:
 
 	virtual ~Subscriber()
 	{
-		if (reusable)
-		{
-			reusable_notifier.set_value();
-		}
-
-		if (worker_handle.valid())
-		{
-			worker_handle.wait();
+		if (worker_handle && worker_handle->joinable()) {
+			worker_handle->join();
 		}
 	};
 
@@ -70,10 +62,10 @@ public:
 
 		if (!is_running)
 		{
-			worker_handle = std::async(std::launch::async, [&]()
+			worker_handle = std::make_unique<std::thread>([&]()
 			{
 				is_running = true;
-				while (stop_fut.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+				while (stop_fut.wait_for(std::chrono::seconds(0)) != std::future_status::ready || !items.empty() || !protected_queue.empty())
 				{
 					{
 						std::unique_lock<std::mutex> lock(sig_sync);
@@ -114,7 +106,6 @@ public:
 private:
 	virtual inline void on_notify(T& item) {};
 	virtual inline void on_completed() {};
-	// virtual inline void on_error() = 0;
 };
 
 #endif // !FRAME_SUBSCRIBER_H
