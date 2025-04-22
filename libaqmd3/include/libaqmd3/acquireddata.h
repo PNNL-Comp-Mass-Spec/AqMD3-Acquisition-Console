@@ -71,26 +71,22 @@ public:
 		{}
 	};
 
-private:
+public:
 	std::shared_ptr<AcquisitionBuffer> samples_buffer;
-	
+	std::vector<TriggerData> const stamps;
+	uint64_t const samples_count;
 	// Used to bring data into the unsigned int16 range. [-2^15, 2^15 - 1] + 2^15 -> [0, 2^16 - 1]
 	int32_t const range_shift_constant = 32768;
 
-public:
-	std::vector<TriggerData> const stamps;
-	uint64_t const samples_count;
-
-public:
 	AcquiredData(std::vector<TriggerData> stamps, std::shared_ptr<AcquisitionBuffer> samples_buffer, uint64_t samples_count)
 		: samples_buffer(samples_buffer)
 		, stamps(stamps)
 		, samples_count(samples_count)
 	{}
 
-	// Processes the raw sample data and returns a vector of processed results equivalent to a row of scan data in a .uimf file. 
-	// Should not be called if the data was acquired without data-reduction enabled.
-	std::shared_ptr<std::vector<EncodedResult>> process(int processing_scan_start_number, uint32_t post_trigger_samples) const;
+	//// Processes the raw sample data and returns a vector of processed results equivalent to a row of scan data in a .uimf file. 
+	//// Should not be called if the data was acquired without data-reduction enabled.
+	//std::shared_ptr<std::vector<EncodedResult>> process(int processing_scan_start_number, uint32_t post_trigger_samples) const;
 
 };
 

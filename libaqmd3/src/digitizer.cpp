@@ -108,6 +108,15 @@ std::tuple<std::string, Digitizer::ErrorType, ViInt32> Digitizer::get_is_idle() 
 	return std::make_tuple(std::get<0>(err), std::get<1>(err), idle_status);;
 }
 
+std::tuple<std::string, Digitizer::ErrorType, ViInt32> Digitizer::get_is_measuring() const
+{
+	ViInt32 measuring_status;
+	ViStatus status = AqMD3_IsMeasuring(session, &measuring_status);
+	auto err = check_error(status);
+
+	return std::make_tuple(std::get<0>(err), std::get<1>(err), measuring_status);;
+}
+
 std::pair<std::string, Digitizer::ErrorType> Digitizer::configure_sample_rate(ViReal64 rate) const
 {
 	ViStatus status = AqMD3_SetAttributeViReal64(session, "", AQMD3_ATTR_SAMPLE_RATE, rate);

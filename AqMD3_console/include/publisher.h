@@ -26,6 +26,18 @@ public:
 		subscribers.emplace_back(type, subscriber, sub_finished);
 	}
 
+	inline void unregister_subscriber(const std::shared_ptr<Subscriber<T>>& subscriber)
+	{
+		auto it = std::find_if(subscribers.begin(), subscribers.end(), [&subscriber](const auto& item) {
+			return std::get<1>(item) == subscriber;
+		});
+
+		if (it != subscribers.end())
+		{
+			subscribers.erase(it);
+		}
+	}
+
 protected:
 	inline void notify(T item, SubscriberType type)
 	{

@@ -113,6 +113,7 @@ namespace AqMD3ServerTest
 
             while (true)
             {
+                Console.WriteLine("Sending 'Acquire'");
                 TofWidthMessage tofWidthMessage = null;
                 using (var reqClient = new RequestSocket("tcp://localhost:5555"))
                 {
@@ -136,9 +137,10 @@ namespace AqMD3ServerTest
                         }
                 }
 
-                Console.WriteLine($"{tofWidthMessage.NumSamples}");
+                Console.WriteLine($"NumSamples: {tofWidthMessage.NumSamples}");
                 var key = Console.ReadKey().Key;
 
+                Console.WriteLine($"Sending 'stop'");
                 using (var client = new RequestSocket("tcp://localhost:5555"))
                 {
                     var r = false;

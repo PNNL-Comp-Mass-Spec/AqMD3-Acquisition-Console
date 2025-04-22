@@ -1,6 +1,6 @@
 {
   "name": "aqmd3-acquisition-console",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "dependencies": [
     "snappy",
     "zeromq",
@@ -11,7 +11,7 @@
     "picosha2",
     "spdlog"
   ],
-  "builtin-baseline": "30b217b1ede50f6c27b7234388114f4b0d60a3f7",
+  "builtin-baseline": "9b9928a957d2dbe705773615684091fd958c64c1",
   "overrides": [
     {
       "name": "snappy",

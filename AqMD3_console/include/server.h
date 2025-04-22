@@ -2,7 +2,6 @@
 #define SERVER_H
 
 #include <zmq.hpp>
-
 #include <mutex>
 #include <tuple>
 #include <string>
@@ -10,6 +9,7 @@
 #include <map>
 #include <functional>
 #include <chrono>
+
 
 class Server {
 public:
@@ -27,8 +27,15 @@ public:
 
 		std::vector<std::string> const payload;
 
-		void send_response(const std::string& response) { server.respond(sender_id, response); }
-		void send_responses(const std::vector<std::string>& responses) { server.respond_more(sender_id, responses); }
+		void send_response(const std::string& response) 
+		{ 
+			server.respond(sender_id, response); 
+		}
+
+		void send_responses(const std::vector<std::string>& responses) 
+		{ 
+			server.respond_more(sender_id, responses); 
+		}
 	};
 
 	class Publisher {

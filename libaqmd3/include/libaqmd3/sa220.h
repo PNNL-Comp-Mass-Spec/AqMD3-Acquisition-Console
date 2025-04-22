@@ -77,7 +77,7 @@ public:
 	bool get_is_idle() const;
 
 	std::shared_ptr<StreamingContext> configure_cst(std::string channel, std::shared_ptr<AcquisitionBufferPool> buffer_pool) const override;
-	std::shared_ptr<StreamingContext> configure_cst(std::string channel, std::shared_ptr<AcquisitionBufferPool>, uint64_t triggers_per_read, ZeroSuppressParameters parameters) const override;
+	std::shared_ptr<StreamingContext> configure_cst(std::string channel, std::shared_ptr<AcquisitionBufferPool>, ZeroSuppressParameters parameters) const override;
 };
 
 #endif // !SA220_H

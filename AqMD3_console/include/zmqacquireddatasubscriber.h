@@ -3,13 +3,14 @@
 
 #include "subscriber.h"
 #include <libaqmd3/acquireddata.h>
+#include <UIMFWriter/uimfframe.h>
 #include "server.h"
 #include <string>
 #include <zmq.hpp>
 
 #include <iostream>
 
-class ZmqAcquiredDataSubscriber : public Subscriber<std::shared_ptr<std::vector<EncodedResult>>> {
+class ZmqAcquiredDataSubscriber : public Subscriber<std::shared_ptr<UimfFrame>> {
 private:
 	std::shared_ptr<Server::Publisher> publisher;
 	std::string subject;
@@ -18,7 +19,7 @@ private:
 
 public:
 	ZmqAcquiredDataSubscriber(std::shared_ptr<Server::Publisher> publisher, uint32_t sample_count)
-		: Subscriber(true)
+		: Subscriber()
 		, data_vector(sample_count)
 		, publisher(publisher)
 		, subject("data")
@@ -26,10 +27,8 @@ public:
 	{}
 
 private:
-	void on_notify() override;
-	void on_completed() override
-	{
-	}
+	void on_notify(std::shared_ptr<UimfFrame>& item) override;
+	void on_completed() override;
 };
 
 #endif // ZMQ_ACQUIRED_DATA_SUBSCRIBER_H

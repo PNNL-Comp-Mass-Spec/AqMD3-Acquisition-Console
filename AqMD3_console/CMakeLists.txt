@@ -35,6 +35,7 @@ add_executable (AqMD3_console
 	src/processsubject.cpp
 	src/zmqacquireddatasubscriber.cpp
 	src/uimfframewritersubscriber.cpp
+	src/uimfacquisitionrecord.cpp
 	include/server.h
 	include/server.h
 	include/message.pb.h
@@ -48,7 +49,9 @@ add_executable (AqMD3_console
 	include/uimfframewritersubscriber.h
 	include/definitions.h
 	include/util/timehelpers.h
-	include/util/config.h)
+	include/util/config.h  
+	include/uimfacquisitionrecord.h 
+	include/util/uimfhelpers.h)
 target_include_directories(AqMD3_console PRIVATE ${PICOSHA2_INCLUDE_DIRS})
 
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)

@@ -27,7 +27,7 @@ std::shared_ptr<AcquisitionBuffer> AcquisitionBufferPool::get_buffer()
 		}
 	}
 
-	samples_buffer_pool.push_back(std::make_shared<AcquisitionBuffer>(triggers_per_read, samples_per_trigger));
+	samples_buffer_pool.push_back(std::make_shared<AcquisitionBuffer>(max_triggers_per_read, samples_per_trigger));
 	buffer_takes++;
 	return samples_buffer_pool[total];
 }

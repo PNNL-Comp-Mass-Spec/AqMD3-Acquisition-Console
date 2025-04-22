@@ -49,7 +49,7 @@ public:
 	}
 
 	virtual std::shared_ptr<StreamingContext> configure_cst(std::string channel, std::shared_ptr<AcquisitionBufferPool> buffer_pool) const = 0;
-	virtual std::shared_ptr<StreamingContext> configure_cst(std::string channel, std::shared_ptr<AcquisitionBufferPool> buffer_pool, uint64_t triggers_per_read, ZeroSuppressParameters parameters) const = 0;
+	virtual std::shared_ptr<StreamingContext> configure_cst(std::string channel, std::shared_ptr<AcquisitionBufferPool> buffer_pool, ZeroSuppressParameters parameters) const = 0;
 
 private:
 	std::pair<std::string, ErrorType> check_error(ViStatus status) const 
@@ -112,6 +112,7 @@ public:
 	std::tuple<std::string, ErrorType, ViBoolean> get_calibration_required() const;
 
 	std::tuple<std::string, ErrorType, ViInt32> get_is_idle() const;
+	std::tuple<std::string, ErrorType, ViInt32> get_is_measuring() const;
 };
 
 #endif // ! DIGITIZER_H

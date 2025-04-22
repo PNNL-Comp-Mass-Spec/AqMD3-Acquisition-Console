@@ -1,12 +1,13 @@
 #include "UIMFWriter/UIMFWriter.h"
-
 #include <SQLiteCpp/SQLiteCpp.h>
-#include <sqlite3.h>
-
 #include <iostream>
 #include <fstream>
 
 const std::string UimfWriter::frames_table_name = "Frame_Params";
+
+UimfWriter::UimfWriter(std::string file)
+	: db(file, SQLite::OPEN_READWRITE)
+{}
 
 int UimfWriter::write_scan_data(const UimfFrame& frame)
 {
@@ -25,32 +26,29 @@ int UimfWriter::write_scan_data(const UimfFrame& frame)
 		
 	char *statement = new char[insert_scan_statement_size_bytes + extra];
 
-	for (int i = 0; i < frame.get_data().size(); i++)
+	for (auto& er : frame.data())
 	{
-		for (auto& er : *(frame.get_data()[i]))
+		if (er.scan < frame.parameters().start_trigger)
+			continue;
+
+		if (er.encoded_spectra.size() > 1 || er.scan == 0)
 		{
-			if (er.scan < frame.start_trigger)
-				continue;
+			int count = sprintf(statement,
+				insert_scan_statement.c_str(),
+				frame.parameters().frame_number,
+				er.scan - frame.parameters().start_trigger,
+				er.non_zero_count,
+				er.bpi,
+				er.bpi_mz,
+				er.tic);
 
-			if (er.encoded_spectra.size() > 1 || er.scan == 0)
-			{
-				int count = sprintf(statement,
-					insert_scan_statement.c_str(),
-					frame.frame_number,
-					er.scan - frame.start_trigger,
-					er.non_zero_count,
-					er.bpi,
-					er.bpi_mz,
-					er.tic);
+			auto compressed = er.get_compressed_spectra();
 
-				auto compressed = er.get_compressed_spectra();
+			bytes += compressed.size + count;
 
-				bytes += compressed.size + count;
-
-				SQLite::Statement sql_statement(db, (const char *)statement);
-				sql_statement.bind(1, compressed.data, compressed.size);
-				sql_statement.exec();
-			}
+			SQLite::Statement sql_statement(db, (const char *)statement);
+			sql_statement.bind(1, compressed.data, compressed.size);
+			sql_statement.exec();
 		}
 	}
 
@@ -73,7 +71,7 @@ void UimfWriter::update_timing_information(const UimfFrame& frame, double timest
 	{
 		auto frame_duration_seconds = frame.get_frame_duration_seconds(timestamp_sample_period_s);
 		statement.bind(1, std::to_string(frame_duration_seconds));
-		statement.bind(2, std::to_string(frame.frame_number));
+		statement.bind(2, std::to_string(frame.parameters().frame_number));
 		statement.bind(3, std::to_string(FrameParamKeyType::DurationSeconds));
 
 		statement.exec();

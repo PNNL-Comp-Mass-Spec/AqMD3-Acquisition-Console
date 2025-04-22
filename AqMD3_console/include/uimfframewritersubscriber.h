@@ -11,12 +11,12 @@ private:
 
 public:
 	UimfFrameWriterSubscriber(bool write_timestamps)
-		: Subscriber(true)
+		: Subscriber()
 		, write_timestamps(write_timestamps)
 	{}
 
 private:
-	void on_notify() override;
+	void on_notify(std::shared_ptr<UimfFrame>& item) override;
 	void on_completed() override;
 };
 

@@ -5,7 +5,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <future>
-
+#include <spdlog/spdlog.h>
 #include <iostream>
 using std::cerr;
 
@@ -31,12 +31,10 @@ class Subscriber {
 private:
 	std::condition_variable sig;
 	std::mutex sig_sync;
-	std::future<void> worker_handle;
+	std::unique_ptr<std::thread> worker_handle;
 	std::promise<void> has_completed;
-	std::promise<void> reusable_notifier;
-	std::shared_future<void> is_reusable_stop;
+	std::shared_future<void> stop_fut;
 	bool is_running; // TODO: make this atomic
-	bool reusable;
 	std::deque<T> protected_queue;
 	std::mutex queue_sync;
 
@@ -44,37 +42,30 @@ protected:
 	std::deque<T> items;
 
 public:
-	Subscriber(bool reusable = false)
+	Subscriber()
 		: items()
 		, worker_handle()
-		, reusable(reusable)
-		, is_reusable_stop(reusable_notifier.get_future())
 		, is_running(false)
 	{}
 
 	virtual ~Subscriber()
 	{
-		if (reusable)
-		{
-			reusable_notifier.set_value();
-		}
-
-		if (worker_handle.valid())
-		{
-			worker_handle.wait();
+		if (worker_handle && worker_handle->joinable()) {
+			worker_handle->join();
 		}
 	};
 
 	std::shared_future<void> setup(std::shared_future<void> pub_stop)
 	{
+		// For now just set the last publishers shared_future, adding a race condition
+		this->stop_fut = pub_stop;
+
 		if (!is_running)
 		{
-			auto stop = reusable ? is_reusable_stop : pub_stop;
-
-			worker_handle = std::async(std::launch::async, [&, stop]()
+			worker_handle = std::make_unique<std::thread>([&]()
 			{
 				is_running = true;
-				while (stop.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+				while (stop_fut.wait_for(std::chrono::seconds(0)) != std::future_status::ready || !items.empty() || !protected_queue.empty())
 				{
 					{
 						std::unique_lock<std::mutex> lock(sig_sync);
@@ -90,22 +81,19 @@ public:
 						}
 					}
 
-					on_notify();
+					while (!items.empty())
+					{
+						T item = items.front();
+						items.pop_front();
+						on_notify(item);
+					}
 				}
 
 				on_completed();
 				has_completed.set_value();
 			});
-
-			if (!reusable)
-			{
-				return std::shared_future<void>(has_completed.get_future());
-			}
 		}
-
-		auto promise = std::promise<void>();
-		promise.set_value();
-		return std::shared_future<void>(promise.get_future());
+		return std::shared_future<void>(has_completed.get_future());
 	}
 
 	inline void update(T item)
@@ -116,9 +104,8 @@ public:
 	}
 
 private:
-	virtual inline void on_notify() {};
+	virtual inline void on_notify(T& item) {};
 	virtual inline void on_completed() {};
-	// virtual inline void on_error() = 0;
 };
 
 #endif // !FRAME_SUBSCRIBER_H

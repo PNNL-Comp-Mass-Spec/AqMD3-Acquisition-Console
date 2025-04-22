@@ -11,7 +11,7 @@ public:
 		: StreamingContext(digitizer, channel, buffer_pool)
 	{}
 
-	AcquiredData acquire(std::chrono::milliseconds timeoutMs) override;
+	AcquiredData acquire(uint64_t triggers_to_read, std::chrono::milliseconds timeoutMs) override;
 };
 
 #endif // !CST_CONTEXT_H

@@ -15,3 +15,12 @@ void StreamingContext::stop()
 	check_and_throw_on_error(digitizer.abort_acquisition());
 }
 
+bool StreamingContext::get_is_acquiring()
+{
+	auto result = digitizer.get_is_measuring();
+	check_and_throw_on_error(result);
+	auto status = std::get<2>(result);
+
+	return status == AQMD3_VAL_ACQUISITION_STATUS_RESULT_TRUE;
+}
+

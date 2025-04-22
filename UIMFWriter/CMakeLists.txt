@@ -4,7 +4,6 @@
 
 project (UIMFWriter)
 
-find_package(unofficial-sqlite3 CONFIG REQUIRED)
 find_package(SQLiteCpp CONFIG REQUIRED)
 
 add_library (UIMFWriter 
@@ -19,11 +18,10 @@ include/UIMFWriter/uimfwriter.h
 include/UIMFWriter/uimfframe.h
 include/lzf/lzf.h
 include/lzf/lzfP.h
-)
+ "include/UIMFWriter/uimfframeparameters.h")
 add_library(i::uimf ALIAS UIMFWriter)
     
 target_link_libraries(UIMFWriter PRIVATE SQLiteCpp)
-target_link_libraries(UIMFWriter PRIVATE unofficial::sqlite3::sqlite3)
 
 target_include_directories ( UIMFWriter
 	PUBLIC ${PROJECT_SOURCE_DIR}/include
