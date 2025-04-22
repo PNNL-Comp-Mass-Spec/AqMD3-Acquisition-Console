@@ -16,7 +16,7 @@ public:
 	{}
 
 private:
-	void on_notify() override;
+	void on_notify(std::shared_ptr<UimfFrame>& item) override;
 	void on_completed() override;
 };
 

@@ -9,62 +9,54 @@
 #include <stdexcept>
 #include <spdlog/spdlog.h>
 
-void ZmqAcquiredDataSubscriber::on_notify()
+void ZmqAcquiredDataSubscriber::on_notify(std::shared_ptr<UimfFrame>& item)
 {
 	try
 	{
-		while (!items.empty())
+		Message msg;
+
+		std::fill(data_vector.begin(), data_vector.end(), 0);
+
+		for (const auto& const er : item.get()->data())
 		{
-			//std::cout << "VectorZmqWriterSubscriber unprocessed elements: " << items.size() << std::endl;
+			msg.add_tic(er.tic);
+			msg.add_time_stamps(er.timestamp);
 
-			auto ad = items.front();
-			items.pop_front();
+			auto begin = std::begin(er.encoded_spectra);
+			auto end = std::end(er.encoded_spectra);
 
-			Message msg;
-
-			std::fill(data_vector.begin(), data_vector.end(), 0);
-
-			for (const auto& const er : ad.get()->data())
+			int index = 0;
+			for (auto val : er.encoded_spectra)
 			{
-				msg.add_tic(er.tic);
-				msg.add_time_stamps(er.timestamp);
-
-				auto begin = std::begin(er.encoded_spectra);
-				auto end = std::end(er.encoded_spectra);
-
-				int index = 0;
-				for (auto val : er.encoded_spectra)
+				if (val < 0)
 				{
-					if (val < 0)
+					index += (-1 * val);
+
+					if (index >= data_vector.size())
 					{
-						index += (-1 * val);
-
-						if (index >= data_vector.size())
-						{
-							throw std::out_of_range("index oob error -> index: " + std::to_string(index));
-						}
-
-						continue;
+						throw std::out_of_range("index oob error -> index: " + std::to_string(index));
 					}
-					data_vector[index++] += val;
+
+					continue;
 				}
+				data_vector[index++] += val;
 			}
-
-			*msg.mutable_mz() = { data_vector.begin(), data_vector.end() };
-
-			std::string msg_s;
-			msg.SerializeToString(&msg_s);
-
-			std::string compressed_msg_s;
-			snappy::Compress(msg_s.data(), msg_s.size(), &compressed_msg_s);
-
-			zmq::message_t to_send(compressed_msg_s.size());
-			memcpy((void*)to_send.data(), compressed_msg_s.c_str(), compressed_msg_s.size());
-
-			publisher->send(to_send, subject, std::chrono::milliseconds(100));
-
-			processed++;
 		}
+
+		*msg.mutable_mz() = { data_vector.begin(), data_vector.end() };
+
+		std::string msg_s;
+		msg.SerializeToString(&msg_s);
+
+		std::string compressed_msg_s;
+		snappy::Compress(msg_s.data(), msg_s.size(), &compressed_msg_s);
+
+		zmq::message_t to_send(compressed_msg_s.size());
+		memcpy((void*)to_send.data(), compressed_msg_s.c_str(), compressed_msg_s.size());
+
+		publisher->send(to_send, subject, std::chrono::milliseconds(100));
+
+		processed++;
 	}
 	catch (const std::exception& ex)
 	{
@@ -76,4 +68,9 @@ void ZmqAcquiredDataSubscriber::on_notify()
 		spdlog::error("Unknown error occured when processing ZMQ data");
 		spdlog::error("ZMQ unprocessed elements: " + std::to_string(items.size()));
 	}
+}
+
+void ZmqAcquiredDataSubscriber::on_completed()
+{
+	spdlog::info("ZMQ subscriber completed");
 }

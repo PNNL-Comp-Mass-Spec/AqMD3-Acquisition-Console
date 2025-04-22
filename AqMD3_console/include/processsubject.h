@@ -9,6 +9,7 @@
 #include "server.h"
 #include <zmq.hpp>
 #include "uimfacquisitionrecord.h"
+#include <spdlog/spdlog.h>
 
 #define NOMINMAX 
 #undef min
@@ -78,11 +79,12 @@ public:
 	//{}
 
 private:
-	void on_notify() override;
+	void on_notify(UimfAcquisitionRecord& item) override;
 
 	void on_completed() override
 	{
 		//Publisher<segment_ptr>::notify_completed_and_wait();
+		spdlog::debug("Publisher<frame_ptr>::notify_completed_and_wait()");
 		Publisher<frame_ptr>::notify_completed_and_wait();
 	}
 };

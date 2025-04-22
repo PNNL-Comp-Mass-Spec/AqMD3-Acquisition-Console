@@ -89,7 +89,12 @@ public:
 						}
 					}
 
-					on_notify();
+					while (!items.empty())
+					{
+						T item = items.front();
+						items.pop_front();
+						on_notify(item);
+					}
 				}
 
 				on_completed();
@@ -107,7 +112,7 @@ public:
 	}
 
 private:
-	virtual inline void on_notify() {};
+	virtual inline void on_notify(T& item) {};
 	virtual inline void on_completed() {};
 	// virtual inline void on_error() = 0;
 };

@@ -27,10 +27,8 @@ public:
 	{}
 
 private:
-	void on_notify() override;
-	void on_completed() override
-	{
-	}
+	void on_notify(std::shared_ptr<UimfFrame>& item) override;
+	void on_completed() override;
 };
 
 #endif // ZMQ_ACQUIRED_DATA_SUBSCRIBER_H
