@@ -15,19 +15,11 @@
 class UimfWriter {
 private:
 	static const std::string frames_table_name;
-
 	std::mutex sync;
 	SQLite::Database db;
 
-
 public:
-	UimfWriter(std::string file) 
-		: db(file, SQLite::OPEN_READWRITE)
-	{}
-	~UimfWriter()
-	{
-		//db.exec("PRAGMA journal_mode=WAL;");
-	}
+	UimfWriter(std::string file);
 
 	int write_scan_data(const UimfFrame& frame);
 	void update_timing_information(const UimfFrame& frame, double timestamp_sample_period_s);
