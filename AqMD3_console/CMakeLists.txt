@@ -36,6 +36,7 @@ add_executable (AqMD3_console
 	src/zmqacquireddatasubscriber.cpp
 	src/uimfframewritersubscriber.cpp
 	src/uimfacquisitionrecord.cpp
+	src/massspec/toftiminginformation.cpp
 	include/server.h
 	include/server.h
 	include/message.pb.h
@@ -51,7 +52,8 @@ add_executable (AqMD3_console
 	include/util/timehelpers.h
 	include/util/config.h  
 	include/uimfacquisitionrecord.h 
-	include/util/uimfhelpers.h)
+	include/util/uimfhelpers.h
+	include/massspec/toftiminginformation.h)
 target_include_directories(AqMD3_console PRIVATE ${PICOSHA2_INCLUDE_DIRS})
 
 target_link_libraries(AqMD3_console PRIVATE cppzmq cppzmq-static)
