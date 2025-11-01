@@ -120,14 +120,17 @@ void ProcessSubject::on_notify(UimfAcquisitionRecord& item)
 		//	
 		//	Publisher<segment_ptr>::notify(results, SubscriberType::BOTH);
 		//}
-
+#if TIMING_INFORMATION
 		auto start = std::chrono::high_resolution_clock::now();
+#endif
 		auto result = item.to_frame();
 		auto notify_type = result->parameters().file_name.empty() ? SubscriberType::ACQUIRE : SubscriberType::BOTH;
 		Publisher<frame_ptr>::notify(result, notify_type);
+#if TIMING_INFORMATION
 		auto stop = std::chrono::high_resolution_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
 		spdlog::debug("Total time to notify: {} ms", duration.count());
+#endif
 	}
 	catch (const std::exception& ex)
 	{
