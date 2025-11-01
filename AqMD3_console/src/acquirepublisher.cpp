@@ -56,9 +56,6 @@ void AcquirePublisher::start(UimfFrameParameters parameters)
 								? (scans_total_count - scans_acquired_count)
 								: segment_size;
 
-
-							spdlog::debug("to_acquire_count: " + std::to_string(to_acquire_count));
-
 							auto data = digitizer->acquire(to_acquire_count, std::chrono::milliseconds(this->timeout));
 
 							notify(UimfAcquisitionRecord(parameters, data, scans_acquired_count), SubscriberType::BOTH);
