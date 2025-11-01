@@ -119,8 +119,8 @@ namespace AqMD3ServerTest
                 {
                     var message = new NetMQMessage();
                     message.Append("acquire");
-                    if (reqClient.TrySendMultipartMessage(TimeSpan.FromMilliseconds(35000), message))
-                        if (reqClient.TryReceiveFrameBytes(TimeSpan.FromMilliseconds(35000), out var width))
+                    if (reqClient.TrySendMultipartMessage(TimeSpan.FromMilliseconds(10000), message))
+                        if (reqClient.TryReceiveFrameBytes(TimeSpan.FromMilliseconds(10000), out var width))
                         {
                             tofWidthMessage = TofWidthMessage.Parser.ParseFrom(width);
                             if (tofWidthMessage == null)
@@ -137,8 +137,12 @@ namespace AqMD3ServerTest
                         }
                 }
 
-                Console.WriteLine($"NumSamples: {tofWidthMessage.NumSamples}");
+                Console.WriteLine("Press any Key to stop");
                 var key = Console.ReadKey().Key;
+                if (key == ConsoleKey.Tab)
+                {
+                    break;
+                }
 
                 Console.WriteLine($"Sending 'stop'");
                 using (var client = new RequestSocket("tcp://localhost:5555"))
@@ -146,10 +150,12 @@ namespace AqMD3ServerTest
                     var r = false;
                     var message = new NetMQMessage();
                     message.Append("stop");
+                    message.Append("acquire");
                     client.SendMultipartMessage(message);
                     r = client.TryReceiveFrameString(TimeSpan.FromSeconds(initTimeoutS), out var rMsgInit);
                 }
 
+                key = Console.ReadKey().Key;
                 if (key == ConsoleKey.Tab) 
                 {
                     break;
