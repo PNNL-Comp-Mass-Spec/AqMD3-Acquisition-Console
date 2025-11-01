@@ -310,7 +310,7 @@ int main(int argc, char *argv[]) {
 
 							// Start acquire. Waits for external enabe signal.
 							auto uimf_frame_params = UIMFHelpers::uimf_message_to_parameters(uimf);
-							UIMFHelpers::log_info_uimf_frame_params(uimf_frame_params);
+							//UIMFHelpers::log_debug_uimf_frame_params(uimf_frame_params);
 							controller->start(uimf_frame_params);
 
 #if TIMING_INFORMATION
@@ -371,7 +371,6 @@ int main(int argc, char *argv[]) {
 						controller = std::move(p);
 
 						auto uimf_frame_params = UIMFHelpers::create_inf_params();
-						UIMFHelpers::log_info_uimf_frame_params(uimf_frame_params);
 						controller->start(uimf_frame_params);
 
 						std::vector<std::string> to_send(2);
