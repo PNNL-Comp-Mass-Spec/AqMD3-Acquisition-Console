@@ -31,7 +31,7 @@ class Subscriber {
 private:
 	std::condition_variable sig;
 	std::mutex sig_sync;
-	std::unique_ptr<std::thread> worker_handle;
+	std::thread worker_handle;
 	std::promise<void> has_completed;
 	std::shared_future<void> stop_fut;
 	bool is_running; // TODO: make this atomic
@@ -50,8 +50,8 @@ public:
 
 	virtual ~Subscriber()
 	{
-		if (worker_handle && worker_handle->joinable()) {
-			worker_handle->join();
+		if (worker_handle.joinable()) {
+			worker_handle.join();
 		}
 	};
 
@@ -62,7 +62,7 @@ public:
 
 		if (!is_running)
 		{
-			worker_handle = std::make_unique<std::thread>([&]()
+			worker_handle = std::thread([&]()
 			{
 				is_running = true;
 				while (stop_fut.wait_for(std::chrono::seconds(0)) != std::future_status::ready || !items.empty() || !protected_queue.empty())
