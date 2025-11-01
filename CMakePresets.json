@@ -1,0 +1,41 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "x64-Debug",
+            "displayName": "x64 Debug",
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "binaryDir": "$env{USERPROFILE}/CMakeBuilds/$env{presetName}",
+            "installDir": "$env{USERPROFILE}/CMakeBuilds/$env{presetName}/install",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_TOOLCHAIN_FILE": "C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+            }
+        },
+        {
+            "name": "x64-Release",
+            "displayName": "x64 Release",
+            "generator": "Visual Studio 17 2022",
+            "architecture": "x64",
+            "binaryDir": "$env{USERPROFILE}/CMakeBuilds/$env{presetName}",
+            "installDir": "$env{USERPROFILE}/CMakeBuilds/$env{presetName}/install",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_TOOLCHAIN_FILE": "C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "x64-Debug",
+            "configurePreset": "x64-Debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "x64-Release", 
+            "configurePreset": "x64-Release",
+            "configuration": "Release"
+        }
+    ]
+}
