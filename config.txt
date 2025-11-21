@@ -7,7 +7,7 @@
 # ___________|    |_________________________TOF CLK_________________________________|    |__________ <TRG IN>
 #        ___________________________________________________________________________________________
 #       ^    
-# ______|  									ENABLE													 <I/O 2>
+# ______|                          ENABLE, HIGH TO ACQUIRE                                           <I/O 2>
 
 # The time in seconds after a trigger is detected that the acquisition firmware
 # waits before a sample can be detected.
