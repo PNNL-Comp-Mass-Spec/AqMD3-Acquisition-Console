@@ -12,24 +12,21 @@ void UimfFrameWriterSubscriber::on_notify(std::shared_ptr<UimfFrame>& item)
 {
 	try
 	{
-		spdlog::debug("Count to write UIMF: " + std::to_string(items.size()));
 		const auto params = item->parameters();
-		spdlog::debug(std::format("UIMF Write frame: {}", params.frame_number));
-		spdlog::debug(std::format("UIMF Write file: {}", params.file_name));
-		spdlog::debug(std::format("UIMF Write scan count: {}", item->data().size()));
-
+#if TIMING_INFORMATION
 		auto t1_open = std::chrono::high_resolution_clock::now();
+#endif
 		UimfWriter writer(params.file_name);
+		int b = 0;
+		b = writer.write_scan_data(*item);
+#if TIMING_INFORMATION
 		auto t2_open = std::chrono::high_resolution_clock::now();
 		auto dur_open = std::chrono::duration_cast<std::chrono::milliseconds>(t2_open - t1_open);
 		spdlog::debug(std::format("Time to write (ms): {}", dur_open.count()));
 
-#if TIMING_INFORMATION
 		auto t1 = std::chrono::high_resolution_clock::now();
 		std::cout << "START FRAME WRITE: " << timestamp_now() << std::endl;
 #endif
-		int b = 0;
-		b = writer.write_scan_data(*item);
 
 		//// Optionally write timestamp information
 		//if (write_timestamps)
