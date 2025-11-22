@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
 			{
 				for (const auto& command : req.payload)
 				{
-					spdlog::info("command: " + command);
+					spdlog::debug("command: " + command);
 
 					if (command == "num instruments")
 					{
