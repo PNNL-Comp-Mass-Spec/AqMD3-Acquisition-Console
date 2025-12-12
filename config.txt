@@ -39,3 +39,6 @@ AcquisitionMaxBufferCount=20
 
 # The reserve space for samples in a single buffer.
 AcquisitionBufferReserveElementsCount=2048
+
+# Sets log level
+LogLevel=info
