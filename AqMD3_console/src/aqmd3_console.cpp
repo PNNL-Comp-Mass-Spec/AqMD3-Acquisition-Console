@@ -29,6 +29,9 @@
 #include <iostream>
 #include <tuple>
 #include <string>
+#include <map>
+#include <cctype>
+#include <optional>
 using std::cerr;
 #include <windows.h>
 #include "../include/diagnostic/datageneratorcontext.h"
@@ -74,6 +77,7 @@ uint64_t acquisition_initial_buffer_count = 40;
 uint64_t acquisition_max_buffer_count = 100;
 //int32_t trigger_events_per_read_count = 100;
 uint64_t acquisition_buffer_reserve_elements_count = 2048;
+std::string log_level = "info";
 
 
 static void print_config_value(const std::string& key, const std::string &value, bool is_found) {
@@ -90,7 +94,7 @@ static void print_config_value(const std::string& key, const std::string &value,
 	spdlog::info(msg);
 }
 
-void configure_logger()
+void configure_logger(spdlog::level::level_enum log_level)
 {
 	try 
 	{
@@ -101,7 +105,7 @@ void configure_logger()
 		console_sink->set_level(spdlog::level::trace);
 
 		auto logger = std::make_shared<spdlog::logger>("aqmd3", spdlog::sinks_init_list( { daily_sink, console_sink }));
-		logger->set_level(spdlog::level::trace);
+		logger->set_level(log_level);
 		spdlog::set_default_logger(logger);
 
 		spdlog::info("Logger initialized");
@@ -112,41 +116,76 @@ void configure_logger()
 	}
 }
 
-void configure_settings()
+std::optional<Config> configure_settings()
 {
 	auto config = Config("config.txt");
 	bool has_config = config.exists();
-	config.read();
+	std::optional<Config> return_config;
 
-	auto config_found = (has_config ? "config found\n" : "no config found, using default values\n");
-	spdlog::info(config_found);
+	if (has_config)
+	{
+		config.read();
 
-	post_trigger_delay = config.has_key("PostTriggerDelay") ? std::stod(config.get_value("PostTriggerDelay")) : post_trigger_delay;
+		post_trigger_delay = config.has_key("PostTriggerDelay") ? std::stod(config.get_value("PostTriggerDelay")) : post_trigger_delay;
+		estimated_trigger_rearm_time = config.has_key("TriggerRearmDeadTime") ? std::stod(config.get_value("TriggerRearmDeadTime")) : estimated_trigger_rearm_time;
+		resource_name = config.has_key("ResourceName") ? config.get_value("ResourceName") : resource_name;
+		notify_on_scans_count = config.has_key("NotifyOnScansCount") ? std::stoull(config.get_value("NotifyOnScansCount")) : notify_on_scans_count;
+		acquisition_timeout_ms = config.has_key("AcquisitionTimeoutMs") ? std::stoll(config.get_value("AcquisitionTimeoutMs")) : acquisition_timeout_ms;
+		acquisition_initial_buffer_count = config.has_key("AcquisitionInitialBufferCount") ? std::stoull(config.get_value("AcquisitionInitialBufferCount")) : acquisition_initial_buffer_count;
+		acquisition_max_buffer_count = config.has_key("AcquisitionMaxBufferCount") ? std::stoull(config.get_value("AcquisitionMaxBufferCount")) : acquisition_max_buffer_count;
+		acquisition_buffer_reserve_elements_count = config.has_key("AcquisitionBufferReserveElementsCount") ? std::stoull(config.get_value("AcquisitionBufferReserveElementsCount")) : acquisition_buffer_reserve_elements_count;
+		log_level = config.has_key("LogLevel") ? config.get_value("LogLevel") : log_level;
+
+		return_config = config;
+	}
+
+	return return_config;
+}
+
+void print_config(Config& config)
+{
 	print_config_value("PostTriggerDelay", std::to_string(post_trigger_delay), config.has_key("PostTriggerDelay"));
-
-	estimated_trigger_rearm_time = config.has_key("TriggerRearmDeadTime") ? std::stod(config.get_value("TriggerRearmDeadTime")) : estimated_trigger_rearm_time;
 	print_config_value("TriggerRearmDeadTime", std::to_string(estimated_trigger_rearm_time), config.has_key("TriggerRearmDeadTime"));
-
-	resource_name = config.has_key("ResourceName") ? config.get_value("ResourceName") : resource_name;
 	print_config_value("ResourceName", resource_name, config.has_key("ResourceName"));
-
-	notify_on_scans_count = config.has_key("NotifyOnScansCount") ? std::stoull(config.get_value("NotifyOnScansCount")) : notify_on_scans_count;
 	print_config_value("NotifyOnScansCount", std::to_string(notify_on_scans_count), config.has_key("NotifyOnScansCount"));
-
-	acquisition_timeout_ms = config.has_key("AcquisitionTimeoutMs") ? std::stoll(config.get_value("AcquisitionTimeoutMs")) : acquisition_timeout_ms;
 	print_config_value("AcquisitionTimeoutMs", std::to_string(acquisition_timeout_ms), config.has_key("AcquisitionTimeoutMs"));
-
-	acquisition_initial_buffer_count = config.has_key("AcquisitionInitialBufferCount") ? std::stoull(config.get_value("AcquisitionInitialBufferCount")) : acquisition_initial_buffer_count;
 	print_config_value("AcquisitionInitialBufferCount", std::to_string(acquisition_initial_buffer_count), config.has_key("AcquisitionInitialBufferCount"));
-
-	acquisition_max_buffer_count = config.has_key("AcquisitionMaxBufferCount") ? std::stoull(config.get_value("AcquisitionMaxBufferCount")) : acquisition_max_buffer_count;
 	print_config_value("AcquisitionMaxBufferCount", std::to_string(acquisition_max_buffer_count), config.has_key("AcquisitionMaxBufferCount"));
-
-	//trigger_events_per_read_count = config.has_key("TriggerEventsPerReadCount") ? std::stoi(config.get_value("TriggerEventsPerReadCount")) : trigger_events_per_read_count;
-	//print_config_value("TriggerEventsPerReadCount", std::to_string(trigger_events_per_read_count), config.has_key("TriggerEventsPerReadCount"));
-
-	acquisition_buffer_reserve_elements_count = config.has_key("AcquisitionBufferReserveElementsCount") ? std::stoull(config.get_value("AcquisitionBufferReserveElementsCount")) : acquisition_buffer_reserve_elements_count;
 	print_config_value("AcquisitionBufferReserveElementsCount", std::to_string(acquisition_buffer_reserve_elements_count), config.has_key("AcquisitionBufferReserveElementsCount"));
+}
+
+std::map<std::string, spdlog::level::level_enum> get_log_levels_map()
+{
+	std::map<std::string, spdlog::level::level_enum> log_levels_map;
+	log_levels_map["trace"] = spdlog::level::level_enum::trace;
+	log_levels_map["debug"] = spdlog::level::level_enum::debug;
+	log_levels_map["info"] = spdlog::level::level_enum::info;
+	log_levels_map["warn"] = spdlog::level::level_enum::warn;
+	log_levels_map["err"] = spdlog::level::level_enum::err;
+	log_levels_map["critical"] = spdlog::level::level_enum::critical;
+	log_levels_map["off"] = spdlog::level::level_enum::off;
+	
+	return log_levels_map;
+}
+
+spdlog::level::level_enum get_log_level_from_string(const std::string& level_str)
+{
+	auto log_levels_map = get_log_levels_map();
+	std::string level_str_lower = "";
+	spdlog::level::level_enum level_enum_value = spdlog::level::level_enum::info;
+
+	for (auto c : level_str)
+	{
+		level_str_lower += std::tolower(c);
+	}
+
+	auto it = log_levels_map.find(level_str_lower);
+	if (it != log_levels_map.end())
+	{
+		level_enum_value = it->second;
+	}
+
+	return level_enum_value;
 }
 
 int main(int argc, char *argv[]) {
@@ -154,8 +193,19 @@ int main(int argc, char *argv[]) {
 	{
 		// Disable 'Quick Edit Mode' since it can cause the application to hang during acquisition
 		disable_quick_edit();
-		configure_logger();
-		configure_settings();
+		auto config = configure_settings();
+		if (!config)
+		{
+			configure_logger(spdlog::level::level_enum::info);
+			spdlog::info("No config found, using default values.");
+		}
+		else
+		{
+			auto log_level_str = config->has_key("LogLevel") ? config->get_value("LogLevel") : "info";
+			auto log_level = get_log_level_from_string(log_level_str);
+			configure_logger(log_level);
+			print_config(*config);
+		}
 
 #if TEST_ACQUIRE
 		std::unique_ptr<SA220> digitizer = std::make_unique<SA220>(resource_name, true);
